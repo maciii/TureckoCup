@@ -1,0 +1,45 @@
+{
+  "id": "kaya-palazzo-golf-course",
+  "name": "Kaya Palazzo",
+  "club": "Kaya Palazzo Golf Club",
+  "country": "TR",
+  "holeCount": 18,
+  "pars": [5, 4, 4, 3, 5, 3, 4, 4, 5, 4, 3, 4, 5, 3, 4, 3, 4, 5],
+  "strokeIndex": [5, 9, 1, 17, 3, 13, 11, 15, 7, 16, 8, 12, 4, 14, 10, 18, 2, 6],
+  "tees": [
+    {
+      "id": "white",
+      "name": "White",
+      "courseRating": 71,
+      "slopeRating": 127,
+      "par": 72,
+      "distance": 5942
+    },
+    {
+      "id": "yellow",
+      "name": "Yellow",
+      "courseRating": 69.4,
+      "slopeRating": 121,
+      "par": 72,
+      "distance": 5604
+    },
+    {
+      "id": "blue",
+      "name": "Blue",
+      "courseRating": 72.6,
+      "slopeRating": 127,
+      "par": 72,
+      "distance": 5239
+    },
+    {
+      "id": "red",
+      "name": "Red",
+      "courseRating": 70.4,
+      "slopeRating": 122,
+      "par": 72,
+      "distance": 4911
+    }
+  ],
+  "attribution": "Scorekarta a slope tabulka klubu (owltourism.com/EN/scorecards-slope-ratings-belek); modra a cervena normy damske (Back a Standard Tees Ladies)",
+  "catalogUpdatedAt": "2026-08-09T00:00:00.000Z"
+}

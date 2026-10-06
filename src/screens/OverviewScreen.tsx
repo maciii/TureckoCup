@@ -1,0 +1,304 @@
+import { useMemo, useState } from 'react'
+import { useData } from '../data'
+import { summarizeTournament } from '../evaluations/tournament'
+import { t } from '../i18n'
+import { navigate } from '../nav'
+import type { Route } from '../nav'
+import { usePwaInstall } from '../pwa'
+import {
+  FlagMark,
+  Header,
+  MenuIcon,
+  Pill,
+  Section,
+  StatusChip,
+  TeamBadge,
+  formatDate,
+  playerLabel,
+  teamName,
+} from './common'
+import GameResults from './GameResults'
+import MenuSheet from './MenuSheet'
+
+/**
+ * Přehled - veřejná domovská obrazovka: týmové skóre, aktuální kolo s živými
+ * tabulkami, seznam kol, jednotlivci a duely pozic přes celý turnaj.
+ */
+export default function OverviewScreen({ playRoute }: { playRoute: Route | null }) {
+  const { state, meta } = useData()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const { isStandalone, isMobile } = usePwaInstall()
+  const summary = useMemo(
+    () => summarizeTournament(state.rounds, state.players),
+    [state.rounds, state.players],
+  )
+  const live = state.rounds.find((r) => r.status === 'live')
+  const current =
+    live ??
+    [...state.rounds].reverse().find((r) => r.status === 'finished') ??
+    state.rounds.find((r) => r.status === 'planned')
+  const currentEvaluation = summary.rounds.find((entry) => entry.round.id === current?.id)
+  const teams = state.tournament?.teams
+  const played = summary.rounds.filter((e) => e.round.status === 'finished').length
+  const total = summary.teamPoints.A + summary.teamPoints.B
+  const barA = total > 0 ? (summary.teamPoints.A / total) * 100 : 0
+  const barB = total > 0 ? (summary.teamPoints.B / total) * 100 : 0
+  const dates = state.rounds.length
+    ? `${formatDate(state.rounds[0]!.date)} – ${formatDate(state.rounds[state.rounds.length - 1]!.date)}`
+    : ''
+
+  return (
+    <div className="screen">
+      <Header
+        title={t('app.name')}
+        left={
+          <button
+            type="button"
+            className="icon-button"
+            onClick={() => setMenuOpen(true)}
+            aria-label={t('nav.menu')}
+          >
+            <MenuIcon />
+          </button>
+        }
+        right={
+          playRoute ? (
+            <button
+              type="button"
+              className="icon-button"
+              onClick={() => navigate(playRoute)}
+              aria-label={t('nav.play')}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 20h4l10-10-4-4L4 16z" />
+                <path d="M12 8l4 4" />
+              </svg>
+            </button>
+          ) : undefined
+        }
+      />
+
+      <main className="content">
+        {meta.mode === 'local' && <p className="notice info">{t('app.demoMode')}</p>}
+        {meta.error && (
+          <p className="notice error" role="alert">
+            {meta.error}
+          </p>
+        )}
+
+        <div className="hero">
+          <span className="hero-mark">
+            <FlagMark size={30} />
+          </span>
+          <h1>{state.tournament?.name ?? t('app.name')}</h1>
+          <p>
+            {state.tournament
+              ? `Belek · ${dates}`
+              : meta.status === 'loading'
+                ? t('app.loading')
+                : t('app.noTournament')}
+          </p>
+        </div>
+
+        {!state.tournament && meta.status !== 'loading' && (
+          <p className="hint center px">{t('app.noTournamentHint')}</p>
+        )}
+
+        {state.tournament && (
+          <>
+            <div className="divider" />
+            <p className="eyebrow">{t('overview.teamScore')}</p>
+            <div className="score-hero">
+              <span className="score-side">
+                <Pill teamId="A" size="lg">
+                  {summary.teamPoints.A}
+                </Pill>
+                <span className="score-name">{teamName('A', teams)}</span>
+              </span>
+              <span className="score-side">
+                <Pill teamId="B" size="lg">
+                  {summary.teamPoints.B}
+                </Pill>
+                <span className="score-name">{teamName('B', teams)}</span>
+              </span>
+            </div>
+            <div className="score-bar">
+              <span className="seg-a" style={{ width: `${barA}%` }} />
+              <span className="seg-b" style={{ width: `${barB}%` }} />
+            </div>
+            <p className="hint center px" style={{ marginTop: 8 }}>
+              {t('overview.played', { played, total: state.rounds.length })}
+              {summary.provisional ? ` · ${t('overview.provisional')}` : ''}
+            </p>
+          </>
+        )}
+
+        {state.rounds.length > 0 && (
+          <>
+            <p className="eyebrow">{t('overview.rounds')}</p>
+            <div className="list">
+              {state.rounds.map((round) => {
+                const points = summary.rounds.find(
+                  (e) => e.round.id === round.id,
+                )?.teamPoints
+                const isLive = round.status === 'live'
+                return (
+                  <button
+                    key={round.id}
+                    type="button"
+                    className={`row${isLive ? ' live' : ''}`}
+                    onClick={() => navigate({ view: 'round', roundId: round.id })}
+                  >
+                    <span className="row-main">
+                      <span className="row-title">
+                        <span>
+                          {t('round.title', { number: round.number })} ·{' '}
+                          {round.course.name}
+                        </span>
+                      </span>
+                      <span className="row-meta">
+                        {formatDate(round.date)}
+                        {' · '}
+                        <StatusChip status={round.status} />
+                      </span>
+                    </span>
+                    {points && round.status !== 'planned' && (
+                      <span
+                        className="row-right"
+                        style={{ flexDirection: 'row', gap: 4 }}
+                      >
+                        <Pill teamId="A">{points.A}</Pill>
+                        <Pill teamId="B">{points.B}</Pill>
+                      </span>
+                    )}
+                    <span className="chev">›</span>
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )}
+
+        {current && currentEvaluation && (
+          <>
+            <div className="divider" style={{ marginTop: 10 }} />
+            <p className="eyebrow">
+              {live
+                ? t('overview.currentRound')
+                : t('round.title', { number: current.number })}{' '}
+              · {current.course.name}
+            </p>
+            {currentEvaluation.results.map((result) => (
+              <GameResults
+                key={result.game.id}
+                round={current}
+                players={state.players}
+                result={result}
+                teams={teams}
+              />
+            ))}
+          </>
+        )}
+
+        {summary.rounds.length > 0 && (
+          <Section
+            title={t('overview.individuals')}
+            note={t('overview.individualsHint')}
+            accent="gold"
+          >
+            <ol className="list" style={{ listStyle: 'none', margin: 0 }}>
+              {summary.individuals.map((entry) => (
+                <li
+                  key={entry.id}
+                  className={`row${entry.position === 1 && entry.rounds > 0 ? ' leader' : ''}`}
+                >
+                  <span className="position">
+                    {entry.rounds > 0 ? entry.position : '·'}
+                  </span>
+                  <span className="row-main">
+                    <span className="row-title">
+                      <TeamBadge teamId={entry.teamId} />
+                      <span>{playerLabel(state.players, entry.id)}</span>
+                    </span>
+                    <span className="row-meta">
+                      {t('common.skins', { count: entry.skins })} ·{' '}
+                      {t('common.rounds', { count: entry.rounds })}
+                    </span>
+                  </span>
+                  <Pill teamId={entry.teamId}>{entry.stableford}</Pill>
+                </li>
+              ))}
+            </ol>
+          </Section>
+        )}
+
+        {summary.positions.some((p) => p.rounds > 0) && (
+          <Section
+            title={t('overview.positions')}
+            note={t('overview.positionsHint')}
+            accent="navy"
+          >
+            <ul className="list" style={{ listStyle: 'none', margin: 0 }}>
+              {summary.positions.map((balance) => (
+                <li key={balance.position} className="duel">
+                  <span className="duel-side">
+                    <span className="nm">
+                      <TeamBadge teamId="A" />
+                      <span>
+                        {playerLabel(
+                          state.players,
+                          current?.positions.A[balance.position - 1] ?? '',
+                        )}
+                      </span>
+                    </span>
+                  </span>
+                  <span className="duel-center">
+                    <span className="v">
+                      {balance.wins.A}
+                      {balance.halves > 0
+                        ? ` : ${balance.wins.B} (${balance.halves}×½)`
+                        : ` : ${balance.wins.B}`}
+                    </span>
+                    <div className="m">
+                      {t('overview.positionShort')} {balance.position}
+                    </div>
+                  </span>
+                  <span className="duel-side right">
+                    <span className="nm">
+                      <span>
+                        {playerLabel(
+                          state.players,
+                          current?.positions.B[balance.position - 1] ?? '',
+                        )}
+                      </span>
+                      <TeamBadge teamId="B" />
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        )}
+
+        {!isStandalone && isMobile && (
+          <div className="soft-card" style={{ marginTop: 24 }}>
+            <strong style={{ fontSize: 13, fontWeight: 800 }}>
+              {t('overview.installApp')}
+            </strong>
+            <p className="hint" style={{ marginTop: 4 }}>
+              {t('overview.installHint')}
+            </p>
+          </div>
+        )}
+      </main>
+
+      {menuOpen && (
+        <MenuSheet
+          onClose={() => setMenuOpen(false)}
+          playRoute={playRoute}
+          current="overview"
+        />
+      )}
+    </div>
+  )
+}

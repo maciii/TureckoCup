@@ -1,0 +1,17 @@
+node_modules/
+dist/
+dev-dist/
+*.local
+.env
+.DS_Store
+.vite/
+
+# Playwright: reporty, stopy a screenshoty z e2e testů
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+.firebase/

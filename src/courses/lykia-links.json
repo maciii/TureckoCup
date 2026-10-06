@@ -1,0 +1,53 @@
+{
+  "id": "lykia-links",
+  "name": "Lykia Links",
+  "club": "Lykia Links Golf Antalya",
+  "country": "TR",
+  "holeCount": 18,
+  "pars": [4, 5, 4, 3, 4, 5, 4, 3, 4, 4, 4, 4, 5, 4, 3, 5, 4, 4],
+  "strokeIndex": [4, 14, 2, 6, 12, 8, 10, 18, 16, 7, 9, 5, 1, 15, 13, 11, 3, 17],
+  "tees": [
+    {
+      "id": "black",
+      "name": "Black",
+      "courseRating": 78,
+      "slopeRating": 140,
+      "par": 73,
+      "distance": 7030
+    },
+    {
+      "id": "white",
+      "name": "White",
+      "courseRating": 74.7,
+      "slopeRating": 133,
+      "par": 73,
+      "distance": 6398
+    },
+    {
+      "id": "gold",
+      "name": "Gold",
+      "courseRating": 71.7,
+      "slopeRating": 126,
+      "par": 73,
+      "distance": 5791
+    },
+    {
+      "id": "red",
+      "name": "Red",
+      "courseRating": 73.6,
+      "slopeRating": 130,
+      "par": 73,
+      "distance": 5159
+    },
+    {
+      "id": "blue",
+      "name": "Blue",
+      "courseRating": 65.7,
+      "slopeRating": 115,
+      "par": 73,
+      "distance": 4762
+    }
+  ],
+  "attribution": "Scorekarta a slope tabulka klubu (owltourism.com/EN/scorecards-slope-ratings-belek); hriste je par 73, bila norma 74,7 ze slope tabulky (scorekarta uvadi 74,0), cervena norma damska, modra panska",
+  "catalogUpdatedAt": "2026-08-09T00:00:00.000Z"
+}
