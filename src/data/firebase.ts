@@ -73,14 +73,23 @@ export function loadFirebase(): Promise<FirebaseBundle> {
 
     let db: Firestore
     let memoryOnly = false
+    // Playwright WebKit na Linuxu neudrží streamovací kanál Firestoru; testy
+    // iOS profilu proti emulátorům proto jedou přes long polling. Produkce
+    // nechává automatickou detekci SDK.
+    const transport =
+      emulatorHost && import.meta.env.VITE_FIREBASE_LONG_POLLING
+        ? { experimentalForceLongPolling: true }
+        : {}
     try {
       db = firestoreModule.initializeFirestore(app, {
+        ...transport,
         localCache: firestoreModule.persistentLocalCache({
           tabManager: firestoreModule.persistentMultipleTabManager(),
         }),
       })
     } catch {
       db = firestoreModule.initializeFirestore(app, {
+        ...transport,
         localCache: firestoreModule.memoryLocalCache(),
       })
       memoryOnly = true

@@ -53,8 +53,7 @@ test.afterEach(async ({}, testInfo) => {
   for (const line of consoleLines.slice(-120)) console.log(line)
   for (const { name, page } of pages) {
     const text = await page
-      .locator('body')
-      .innerText({ timeout: 2000 })
+      .evaluate(() => document.querySelector('#root')?.textContent ?? '(bez #root)')
       .catch(() => '(nečitelné)')
     console.log(`--- obrazovka ${name}: ${page.url()} ---\n${text.slice(0, 1200)}`)
   }

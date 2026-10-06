@@ -23,6 +23,8 @@ interface ImportMetaEnv {
    * a Firestore (8089). Platí jen ve vývojovém serveru, produkce ho ignoruje.
    */
   readonly VITE_FIREBASE_EMULATOR?: string
+  /** Jen pro testy s emulátory: Firestore přes long polling místo streamování. */
+  readonly VITE_FIREBASE_LONG_POLLING?: string
 }
 
 interface ImportMeta {
