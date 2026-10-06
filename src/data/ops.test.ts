@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { EMPTY_STATE } from '../model/types'
 import type { TournamentState } from '../model/types'
 import { SEED_ACCESS, SEED_PLAYERS, SEED_TOURNAMENT, seedRounds } from './seed'
-import { DELETE_FIELD, applyOp, opToWrites } from './ops'
+import {
+  DELETE_FIELD,
+  applyOp,
+  checkOp,
+  findInvalidValue,
+  findInvalidWrite,
+  opProblemMessage,
+  opToWrites,
+} from './ops'
 import type { Op, OpMeta } from './ops'
 
 const meta: OpMeta = {
@@ -139,5 +147,79 @@ describe('applyOp a opToWrites se shodují', () => {
     expect(writes).toHaveLength(1 + 1 + 8 + 5)
     const round = writes.find((w) => w.path.join('/') === 'rounds/r1')!
     expect(round.data).toHaveProperty('scores.p8')
+  })
+})
+
+describe('kontrola dat podle pravidel Firestoru', () => {
+  it('findInvalidValue najde undefined i díru v poli', () => {
+    expect(findInvalidValue({ a: 1, b: undefined })).toBe('b')
+    expect(findInvalidValue(undefined)).toBe('/')
+    const sparse: string[] = []
+    sparse[2] = 'x'
+    expect(findInvalidValue({ positions: { A: sparse } })).toBe('positions.A[0]')
+  })
+
+  it('findInvalidValue najde pole v poli', () => {
+    expect(findInvalidValue({ flights: [['p1']] })).toBe('flights[0]')
+  })
+
+  it('platná data i sentinely projdou', () => {
+    expect(
+      findInvalidValue({
+        'scores.p1.0': 4,
+        'scores.p1.1': DELETE_FIELD,
+        flights: [{ players: ['p1'], startHole: 0 }],
+        positions: { A: ['p1', '', '', ''] },
+      }),
+    ).toBeNull()
+  })
+
+  it('findInvalidWrite vrátí cestu dokumentu a pole', () => {
+    const state = initial()
+    const sparse: string[] = []
+    sparse[1] = 'p1'
+    const writes = opToWrites(
+      {
+        kind: 'updateRound',
+        roundId: 'r1',
+        patch: { positions: { A: sparse, B: ['p2', 'p4', 'p6', 'p8'] } },
+      },
+      meta,
+      state,
+    )
+    expect(findInvalidWrite(writes)).toBe('rounds/r1/positions.A[0]')
+  })
+
+  it('zápis skóre (field path s tečkami) je platný', () => {
+    const state = initial()
+    const writes = opToWrites(
+      { kind: 'setScore', roundId: 'r1', playerId: 'p1', hole: 0, value: 4 },
+      meta,
+      state,
+    )
+    expect(findInvalidWrite(writes)).toBeNull()
+  })
+})
+
+describe('checkOp - stejná pravidla pro ukázkový režim i Firestore', () => {
+  const score: Op = { kind: 'setScore', roundId: 'r1', playerId: 'p1', hole: 0, value: 4 }
+  const config: Op = { kind: 'updateRound', roundId: 'r1', patch: { status: 'live' } }
+
+  it('visitor nezapíše nic', () => {
+    expect(checkOp(score, 'visitor', [])).toEqual({ kind: 'signInFirst' })
+  })
+
+  it('zapisovatel zapíše skóre, ale ne konfiguraci kola', () => {
+    expect(checkOp(score, 'writer', opToWrites(score, meta, initial()))).toBeNull()
+    expect(checkOp(config, 'writer', [])).toEqual({ kind: 'adminOnly' })
+  })
+
+  it('admin projde, ale neplatná data ne', () => {
+    expect(checkOp(config, 'admin', opToWrites(config, meta, initial()))).toBeNull()
+    const problem = checkOp(config, 'admin', [
+      { path: ['rounds', 'r1'], mode: 'update', data: { note: undefined } },
+    ])
+    expect(problem).toEqual({ kind: 'invalidData', field: 'rounds/r1/note' })
+    expect(opProblemMessage(problem!)).toContain('rounds/r1/note')
   })
 })

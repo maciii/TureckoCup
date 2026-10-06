@@ -15,6 +15,7 @@ import { TEAM_IDS } from '../model/types'
 import {
   assignPosition,
   courseHandicapOf,
+  normalizePositions,
   hasHandicap,
   playerName,
   shortName,
@@ -269,8 +270,8 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
                       // Firestore zápis odmítl.
                       patch({
                         positions: {
-                          A: assignPosition(round.positions.A, -1, ''),
-                          B: assignPosition(round.positions.B, -1, ''),
+                          A: normalizePositions(round.positions.A),
+                          B: normalizePositions(round.positions.B),
                           [teamId]: assignPosition(
                             round.positions[teamId],
                             slot,

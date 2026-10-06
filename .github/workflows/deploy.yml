@@ -11,10 +11,11 @@ permissions:
   pages: write
   id-token: write
 
-# Starší běh stejné větve se zruší; nasazení samo má vlastní frontu níž.
+# Starší běh vývojové větve se zruší. Na main ne - zrušení by mohlo přerušit
+# rozběhnuté nasazení; běhy main se řadí za sebe.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build:

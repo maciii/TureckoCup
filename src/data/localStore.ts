@@ -2,7 +2,7 @@ import type { EditRecord, TournamentState } from '../model/types'
 import { EMPTY_STATE } from '../model/types'
 import { t } from '../i18n'
 import type { Op } from './ops'
-import { applyOp, findInvalidWrite, opToWrites, requiresAdmin } from './ops'
+import { applyOp, checkOp, opProblemMessage, opToWrites } from './ops'
 import type { Listener, Role, Store, StoreMeta } from './store'
 import { STORAGE_PREFIX } from './store'
 import { SEED_ACCESS, SEED_PLAYERS, SEED_TOURNAMENT, seedRounds } from './seed'
@@ -120,27 +120,19 @@ export function createLocalStore(options: { seed?: boolean } = {}): Store {
       return () => listeners.delete(listener)
     },
     dispatch(op: Op) {
-      if (role === 'visitor') {
-        error = t('error.signInFirst')
-        notify()
-        return
-      }
-      // Stejné kontroly jako Firestore adapter a rules, aby ukázkový režim
-      // (a e2e testy nad ním) neprošly tam, kde by produkce zápis odmítla.
-      if (requiresAdmin(op) && role !== 'admin') {
-        error = t('error.adminOnly')
-        notify()
-        return
-      }
-      const invalid = findInvalidWrite(
+      // Stejná kontrola jako Firestore adapter (role jako rules, data jako
+      // Firestore), aby ukázkový režim a e2e nepřijaly, co produkce odmítne.
+      const problem = checkOp(
+        op,
+        role,
         opToWrites(
           op,
           { uid: `demo-${role}`, clientAt: new Date().toISOString(), appVersion: 'demo' },
           state,
         ),
       )
-      if (invalid) {
-        error = t('error.invalidData', { field: invalid })
+      if (problem) {
+        error = opProblemMessage(problem)
         notify()
         return
       }

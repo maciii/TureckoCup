@@ -24,11 +24,15 @@ export async function setIdentity(
   await page.waitForSelector('.screen')
 }
 
-/** Čistý start: prázdné úložiště, ukázková data se založí znovu. */
+/**
+ * Čistý start: prázdné úložiště, ukázková data se založí znovu. Stejná adresa
+ * s hashem je navigace v rámci dokumentu bez načtení, proto `reload()`.
+ */
 export async function resetDemo(page: Page): Promise<void> {
   await open(page)
   await page.evaluate(() => localStorage.clear())
-  await open(page)
+  await page.reload()
+  await page.waitForSelector('.screen')
 }
 
 /** Stránka nesmí vodorovně přetékat - na telefonu by se celá posouvala do strany. */

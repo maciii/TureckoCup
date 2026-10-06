@@ -66,7 +66,8 @@ Změny jsou operace `Op` v `src/data/ops.ts`; `applyOp()` je aplikuje na
 místní stav a `opToWrites()` je přeloží na zápisy do Firestore. Obě jsou čisté
 a test `ops.test.ts` hlídá, že dávají totéž - ukázkový režim tak nelže.
 
-Před každou změnou oba adaptery projdou zápisy funkcí `findInvalidWrite()`:
+Před každou změnou oba adaptery zavolají společnou `checkOp()` (role jako
+rules, data přes `findInvalidWrite()`):
 Firestore odmítne `undefined` (i jako díru v poli) a pole v poli, ale
 localStorage by je přijal. Kontrola tak chybu ukáže už v ukázkovém režimu
 a v e2e testech, ne až na hřišti. Ukázkový režim také odmítne admin operaci
@@ -145,6 +146,8 @@ se bere ze Secrets (viz [`setup-firebase.md`](setup-firebase.md)).
   rules (`npm run test:e2e:firebase`): admin se přihlásí Googlem a založí
   turnaj, uloží pozice, hráč se přihlásí anonymně, bez oprávnění dostane
   hlášku s uid, po přidání uid zapisuje a visitor na třetím telefonu vidí
-  skóre živě. V CI jde přihlášení skutečným popupem emulátoru, lokálně
+  skóre živě. Druhý scénář vypne signál: zápis se ukáže hned s odznakem
+  „neodesláno“, jde zapisovat dál a po návratu signálu se odešle. V CI jde
+  přihlášení skutečným popupem emulátoru, lokálně
   (bez přístupu na apis.google.com) přes testovací háček ve vývojovém buildu
 - `rules/` - testy `firestore.rules` v emulátoru (`npm run test:rules`), i v CI

@@ -26,9 +26,9 @@ import {
   DELETE_FIELD,
   SERVER_TIME,
   applyOp,
-  findInvalidWrite,
+  checkOp,
+  opProblemMessage,
   opToWrites,
-  requiresAdmin,
 } from './ops'
 import { BOOTSTRAP_ADMIN_EMAIL } from './seed'
 import type { Account, Listener, Role, Store, StoreMeta, SyncStatus } from './store'
@@ -277,10 +277,6 @@ export function createFireStore(tournamentId: string): Store {
         fail(t('error.signInFirst'))
         return
       }
-      if (requiresAdmin(op) && role !== 'admin') {
-        fail(t('error.adminOnly'))
-        return
-      }
       const writes = opToWrites(
         op,
         {
@@ -291,9 +287,9 @@ export function createFireStore(tournamentId: string): Store {
         },
         state,
       )
-      const invalid = findInvalidWrite(writes)
-      if (invalid) {
-        fail(t('error.invalidData', { field: invalid }))
+      const problem = checkOp(op, role, writes)
+      if (problem) {
+        fail(opProblemMessage(problem))
         return
       }
       // Optimistická odezva: snímek z cache dorazí vzápětí a stav přepíše.
@@ -302,18 +298,23 @@ export function createFireStore(tournamentId: string): Store {
 
       const signedIn = account
       const reject = (err: unknown) => {
-        const code =
-          typeof err === 'object' && err && 'code' in err
-            ? String((err as { code: unknown }).code)
-            : ''
-        const denied = code === 'permission-denied'
-        const reason = denied
-          ? op.kind === 'setScore'
-            ? t('play.notWriter', { account: signedIn.email || signedIn.uid })
-            : t('error.adminOnly')
-          : err instanceof Error
+        // Rules odmítnou zápis skóre i od zapisovatele, když je kolo mezitím
+        // uzavřené (fronta offline zápisů po návratu signálu). Hláška
+        // o chybějícím oprávnění by pak poslala admina hledat jinou chybu.
+        const denied = codeOf(err) === 'permission-denied'
+        const round =
+          op.kind === 'setScore'
+            ? state.rounds.find((r) => r.id === op.roundId)
+            : undefined
+        const reason = !denied
+          ? err instanceof Error
             ? err.message
             : String(err)
+          : op.kind !== 'setScore'
+            ? t('error.adminOnly')
+            : round?.status === 'finished'
+              ? t('play.roundFinished')
+              : t('play.notWriter', { account: signedIn.email || signedIn.uid })
         if (op.kind !== 'setScore') {
           fail(t('error.changeRejected', { reason }))
           return

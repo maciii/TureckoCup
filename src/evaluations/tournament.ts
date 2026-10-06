@@ -119,7 +119,9 @@ export function summarizeTournament(
     for (const result of entry.results) {
       if (result.game.kind !== 'position-duel') continue
       for (const duel of result.duels ?? []) {
-        if (duel.position === undefined) continue
+        // Jména i výsledky jen z dohraných duelů - bilance je „přes odehraná
+        // kola“, hráč z rozehraného kola by dostal cizí výsledky.
+        if (!duel.finished || duel.position === undefined) continue
         const balance = positions[duel.position - 1]
         if (!balance) continue
         for (const side of duel.sides) {
@@ -127,7 +129,6 @@ export function summarizeTournament(
           const seen = balance.players[side.teamId]
           for (const id of side.players) if (!seen.includes(id)) seen.push(id)
         }
-        if (!duel.finished) continue
         balance.rounds += 1
         if (duel.leader === null) balance.halves += 1
         else {

@@ -7,6 +7,8 @@ import type {
   TournamentState,
 } from '../model/types'
 import { holeKey } from '../model/round'
+import { t } from '../i18n'
+import type { Role } from './store'
 
 /**
  * Operace nad stavem turnaje.
@@ -204,7 +206,7 @@ export function requiresAdmin(op: Op): boolean {
  * přijal - chyba by se pak poprvé ukázala až na hřišti.
  */
 export function findInvalidValue(value: unknown, path = ''): string | null {
-  if (value === undefined) return path || '(kořen)'
+  if (value === undefined) return path || '/'
   if (Array.isArray(value)) {
     for (let index = 0; index < value.length; index += 1) {
       const at = `${path}[${index}]`
@@ -224,11 +226,42 @@ export function findInvalidValue(value: unknown, path = ''): string | null {
   return null
 }
 
-/** První neplatná hodnota ve všech zápisech operace. */
+/**
+ * První neplatná hodnota ve všech zápisech operace, jako cesta dokumentu
+ * a pole: `rounds/r1/positions.A[0]`. Field path update (`scores.p1.0`)
+ * zůstává jedním klíčem.
+ */
 export function findInvalidWrite(writes: Write[]): string | null {
   for (const write of writes) {
     const found = findInvalidValue(write.data)
     if (found) return [...write.path, found].join('/')
   }
   return null
+}
+
+/** Proč by produkce operaci odmítla dřív, než ji vůbec pošle. */
+export type OpProblem =
+  { kind: 'signInFirst' } | { kind: 'adminOnly' } | { kind: 'invalidData'; field: string }
+
+/**
+ * Společná kontrola obou adapterů (role jako v rules, data jako ve
+ * Firestoru). Díky jedné funkci ukázkový režim a e2e testy nepřijmou nic,
+ * co by produkce odmítla.
+ */
+export function checkOp(op: Op, role: Role, writes: Write[]): OpProblem | null {
+  if (role === 'visitor') return { kind: 'signInFirst' }
+  if (requiresAdmin(op) && role !== 'admin') return { kind: 'adminOnly' }
+  const field = findInvalidWrite(writes)
+  return field ? { kind: 'invalidData', field } : null
+}
+
+export function opProblemMessage(problem: OpProblem): string {
+  switch (problem.kind) {
+    case 'signInFirst':
+      return t('error.signInFirst')
+    case 'adminOnly':
+      return t('error.adminOnly')
+    case 'invalidData':
+      return t('error.invalidData', { field: problem.field })
+  }
 }

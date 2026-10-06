@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { findInvalidValue } from '../data/ops'
-import { assignPosition } from './round'
+import { assignPosition, normalizePositions } from './round'
 
 describe('assignPosition', () => {
   it('doplní prázdné pozice, nikdy nenechá díru v poli', () => {
@@ -36,21 +36,9 @@ describe('assignPosition', () => {
   })
 })
 
-describe('findInvalidValue', () => {
-  it('najde undefined i díru v poli', () => {
-    expect(findInvalidValue({ a: 1, b: undefined })).toBe('b')
-    const sparse: string[] = []
-    sparse[2] = 'x'
-    expect(findInvalidValue({ positions: { A: sparse } })).toBe('positions.A[0]')
-  })
-
-  it('najde pole v poli', () => {
-    expect(findInvalidValue({ flights: [['p1']] })).toBe('flights[0]')
-  })
-
-  it('platná data projdou', () => {
-    expect(
-      findInvalidValue({ scores: { p1: { '0': 4 } }, flights: [{ players: ['p1'] }] }),
-    ).toBeNull()
+describe('normalizePositions', () => {
+  it('vrátí vždy čtyři místa bez děr', () => {
+    expect(normalizePositions(undefined)).toEqual(['', '', '', ''])
+    expect(normalizePositions(['p1'])).toEqual(['p1', '', '', ''])
   })
 })

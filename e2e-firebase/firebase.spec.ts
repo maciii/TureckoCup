@@ -187,3 +187,65 @@ async function readFirstFlightPlayer(request: APIRequestContext): Promise<string
   const flight = doc.fields.flights.arrayValue.values[0].mapValue.fields
   return flight.players.arrayValue.values[0].stringValue as string
 }
+
+test('zápis bez signálu čeká ve frontě a po návratu signálu se odešle', async ({
+  page,
+  request,
+}) => {
+  await clearEmulators(request)
+  const admin = page
+  await googleSignIn(admin, ADMIN_EMAIL, 'Mac')
+  await admin.getByRole('button', { name: 'Inicializovat turnaj' }).click()
+  await expect
+    .poll(async () => Boolean(await readDoc(request, 'tournaments/tc26/rounds/r1')))
+    .toBe(true)
+  await admin.goto('/#/admin/round/r1')
+  await admin.getByRole('button', { name: 'Živě' }).click()
+  await expect
+    .poll(async () => {
+      const doc = await readDoc(request, 'tournaments/tc26/rounds/r1')
+      return doc?.fields.status.stringValue
+    })
+    .toBe('live')
+
+  // Admin zapisuje sám (smí všechno); obrazovka je načtená, pak vypadne signál.
+  await admin.goto('/#/play/r1/0')
+  const rows = admin.locator('.player-row')
+  await expect(rows).toHaveCount(4, { timeout: 20_000 })
+  const firstPlayer = await readFirstFlightPlayer(request)
+  await admin.context().setOffline(true)
+
+  await rows.nth(0).locator('.step-button').last().click()
+  await expect(rows.nth(0).locator('.mark')).toHaveText('5')
+  // Zápis se nečeká: obrazovka ho ukazuje hned a hlásí neodeslaný stav.
+  await expect(admin.locator('.tag', { hasText: /neodeslan/ })).toBeVisible()
+  await admin.waitForTimeout(1500)
+  const offlineDoc = await readDoc(request, 'tournaments/tc26/rounds/r1')
+  expect(
+    offlineDoc.fields.scores.mapValue.fields[firstPlayer]?.mapValue.fields?.['0'],
+  ).toBeUndefined()
+
+  // Další jamka jde zapisovat i bez signálu.
+  for (let i = 1; i < 4; i += 1) await rows.nth(i).locator('.score-value').click()
+  await admin
+    .getByRole('button', { name: /Další jamka/ })
+    .last()
+    .click()
+  await expect(admin.locator('.hole-info')).toContainText('Jamka 2 z 18')
+
+  await admin.context().setOffline(false)
+  await expect
+    .poll(
+      async () => {
+        const doc = await readDoc(request, 'tournaments/tc26/rounds/r1')
+        return doc?.fields.scores.mapValue.fields[firstPlayer]?.mapValue.fields?.['0']
+          ?.integerValue
+      },
+      { timeout: 45_000 },
+    )
+    .toBe('5')
+  await expect(admin.locator('.tag', { hasText: /neodeslan/ })).toHaveCount(0, {
+    timeout: 30_000,
+  })
+  await expect(admin.locator('.notice.error')).toHaveCount(0)
+})

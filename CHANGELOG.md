@@ -23,6 +23,9 @@ Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 - Odmítnutý zápis kvůli oprávnění řekne, který účet (e-mail nebo uid) admin
   musí přidat, a jmenuje hráče přezdívkou.
 - Skript zvyšování verze synchronizuje i `package-lock.json`.
+- Zápis odmítnutý proto, že admin mezitím kolo uzavřel, hlásí uzavřené kolo,
+  ne chybějící oprávnění.
+- Nasazení z `main` už nezruší novější push uprostřed nasazování.
 - Tlačítko zvednutí jamky je větší (38 px), odebrání hry chce potvrzení.
 
 ### Přidáno
@@ -31,7 +34,8 @@ Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
   a úzký Galaxy S9+ v Chromiu. CI pouští e2e i testy security rules a nasazuje
   jen po jejich úspěchu.
 - E2E proti emulátorům Firebase: celý turnajový den přes produkční datovou
-  vrstvu a ostré rules (Google admin, anonymní hráč, živá synchronizace).
+  vrstvu a ostré rules (Google admin, anonymní hráč, živá synchronizace,
+  zápis bez signálu a jeho odeslání po návratu signálu).
 - Hláška o nepovedeném přihlášení obsahuje kód chyby Firebase.
 - Test katalogu textů hlídá mrtvé klíče; texty datové vrstvy jsou v katalogu.
 

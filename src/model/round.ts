@@ -261,6 +261,13 @@ export function flightCurrentHole(round: TournamentRound, flight: Flight): numbe
   return order[order.length - 1] ?? 0
 }
 
+/** Pozice týmu vždy jako čtyři prvky, prázdné místo `''` (Firestore neumí díru). */
+export function normalizePositions(
+  current: readonly (PlayerId | null | undefined)[] | undefined,
+): PlayerId[] {
+  return Array.from({ length: 4 }, (_, index) => current?.[index] ?? '')
+}
+
 /**
  * Nový seznam pozic týmu po výběru hráče na pozici `slot` (0-3).
  *
@@ -274,7 +281,7 @@ export function assignPosition(
   slot: number,
   playerId: PlayerId,
 ): PlayerId[] {
-  const list = Array.from({ length: 4 }, (_, index) => current?.[index] ?? '')
+  const list = normalizePositions(current)
   if (slot < 0 || slot > 3) return list
   const previous = list[slot] ?? ''
   if (playerId) {
