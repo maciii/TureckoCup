@@ -75,7 +75,8 @@ npm run test:rules # security rules v emulátoru Firestoru (Java)
     jen světlé, žádné `#hex` v komponentách), komentáře vysvětlují proč.
 11. **Firebase se importuje jen dynamicky a jen z `src/data/`.**
 12. **Emulátory a testovací háčky jen za `import.meta.env.DEV`** a
-    `VITE_FIREBASE_EMULATOR` - produkční build je nesmí obsahovat.
+    `VITE_FIREBASE_EMULATOR` (také `VITE_FIREBASE_LONG_POLLING`) - produkční
+    build je nesmí obsahovat.
 
 ## Struktura ve zkratce
 

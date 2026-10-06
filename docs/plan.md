@@ -95,6 +95,7 @@ Podrobně v [`architecture.md`](architecture.md). Ve zkratce:
 | Firebase není nastavená do 8. 10. | aplikace běží v ukázkovém režimu na jednom telefonu; skóre lze přepsat do Firestoru později přes Admin (opravy) |
 | Google popup blokovaný na iOS     | převzatý `preloadAuth()`, návod: nejdřív instalovat PWA, pak se přihlásit v ní                                  |
 | Souběžný zápis dvou flightů       | jedna buňka na zápis, rules kontrolují vnořenou úroveň                                                          |
-| Výpadek signálu                   | trvalá cache Firestoru, zápis nikdy nečeká na síť, odznak „neodesláno“                                          |
+| Výpadek signálu                   | trvalá cache Firestoru, zápis nikdy nečeká na síť, odznak „neodesláno“; e2e test proti emulátoru                |
+| Živá synchronizace na iPhonu      | e2e ve WebKitu jen přes long polling (omezení Playwrightu); ověřit na skutečných iPhonech při zkoušce 7. 10.    |
 | Chyba v hracím HCP                | tabulka v Admin → kolo s ručním přepisem; test s reálnými CR/SR                                                 |
 | Změna formátu her během turnaje   | hry jsou konfigurace, raw skóre se nemění                                                                       |

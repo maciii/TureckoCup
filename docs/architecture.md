@@ -147,7 +147,8 @@ se bere ze Secrets (viz [`setup-firebase.md`](setup-firebase.md)).
   turnaj, uloží pozice, hráč se přihlásí anonymně, bez oprávnění dostane
   hlášku s uid, po přidání uid zapisuje a visitor na třetím telefonu vidí
   skóre živě. Druhý scénář vypne signál: zápis se ukáže hned s odznakem
-  „neodesláno“, jde zapisovat dál a po návratu signálu se odešle. V CI jde
+  „neodesláno“, jde zapisovat dál a po návratu signálu se odešle. iOS profil
+  (WebKit) jede přes long polling Firestoru, viz rozhodnutí 14. V CI jde
   přihlášení skutečným popupem emulátoru, lokálně
   (bez přístupu na apis.google.com) přes testovací háček ve vývojovém buildu
 - `rules/` - testy `firestore.rules` v emulátoru (`npm run test:rules`), i v CI

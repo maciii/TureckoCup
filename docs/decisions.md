@@ -125,6 +125,14 @@ proti emulátorům s ostrými rules. Projekt `demo-tc26` emulátory nikdy
 nepustí na skutečný Firebase. Napojení na emulátory i háček pro přihlášení
 existují jen ve vývojovém serveru.
 
+Playwright WebKit na Linuxu (síťová vrstva libsoup) neudrží streamovací kanál
+Firestoru: požadavky WebChannel končí „WebKit encountered an internal error“.
+Skutečné Safari na iPhonu má jinou síťovou vrstvu a SDK si v produkci samo
+přepne na long polling, když streamování selže. Test iOS profilu proti
+emulátorům proto běží přes long polling na vlastním dev serveru; Android
+testuje výchozí přenos. Živou synchronizaci na skutečném iPhonu ověří zkouška
+nanečisto (`setup-firebase.md`, krok 7).
+
 ## Otevřené otázky
 
 - Hlavní hra kola a její bodování (do rozhodnutí je týmové skóre jen Team
