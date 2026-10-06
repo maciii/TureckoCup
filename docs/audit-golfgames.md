@@ -15,21 +15,21 @@ referencí podle specifikace.
 
 ## 1. Technická platforma Golfgames (ověřeno ze zdrojáků)
 
-| Oblast          | Stav v Golfgames                                                                 | Pro Turecko Cup                          |
-| --------------- | -------------------------------------------------------------------------------- | ---------------------------------------- |
-| Jazyk/build     | React 19.2, TypeScript 7.0 (`strict`, `noUncheckedIndexedAccess`), Vite 8.2      | převzít 1:1                              |
-| Testy           | Vitest 4 (`src/**/*.test.ts`, jen matematika), Playwright 1.62 (jen rozvržení)   | převzít přístup                          |
-| PWA             | `vite-plugin-pwa` 1.3, `autoUpdate`, Workbox precache, Firebase chunk vynechaný | převzít                                  |
-| Formát          | Prettier 3 (bez středníků, single quotes, šířka 90), bez ESLintu (TS 7)          | převzít                                  |
-| Node            | 22 (`.nvmrc`)                                                                    | převzít                                  |
-| Backend         | **žádný**; `localStorage` je zdroj pravdy, Firestore je nepovinné zrcadlo        | **zásadní rozdíl**, viz §4               |
-| Auth            | Firebase Auth, Google popup s `select_account`, redirect jako záloha             | převzít mechaniku, změnit roli           |
-| Firestore       | `users/{uid}/rounds/{id}`, `users/{uid}/prefs/app`, rules = jen vlastník         | **nový model + role**, viz §4            |
-| Functions       | žádné (plán Spark, Blaze zakázán)                                                | žádné; vše na klientu + rules            |
-| Hosting         | GitHub Pages + vlastní doména, workflow `deploy.yml` (typecheck→test→format→build)| převzít, nová doména / podcesta          |
-| i18n            | vlastní (`cs.ts` zdroj klíčů, `en.ts` typově kontrolovaný), žádná knihovna       | převzít; stačí **jen čeština** (viz §5)  |
-| Vzhled          | jediný `styles.css` (3 289 řádků), tmavé/světlé schéma jako CSS proměnné         | převzít tokeny a komponenty, viz §3      |
-| Runtime deps    | pouze `react`, `react-dom`, `firebase`                                           | stejné                                   |
+| Oblast       | Stav v Golfgames                                                                   | Pro Turecko Cup                         |
+| ------------ | ---------------------------------------------------------------------------------- | --------------------------------------- |
+| Jazyk/build  | React 19.2, TypeScript 7.0 (`strict`, `noUncheckedIndexedAccess`), Vite 8.2        | převzít 1:1                             |
+| Testy        | Vitest 4 (`src/**/*.test.ts`, jen matematika), Playwright 1.62 (jen rozvržení)     | převzít přístup                         |
+| PWA          | `vite-plugin-pwa` 1.3, `autoUpdate`, Workbox precache, Firebase chunk vynechaný    | převzít                                 |
+| Formát       | Prettier 3 (bez středníků, single quotes, šířka 90), bez ESLintu (TS 7)            | převzít                                 |
+| Node         | 22 (`.nvmrc`)                                                                      | převzít                                 |
+| Backend      | **žádný**; `localStorage` je zdroj pravdy, Firestore je nepovinné zrcadlo          | **zásadní rozdíl**, viz §4              |
+| Auth         | Firebase Auth, Google popup s `select_account`, redirect jako záloha               | převzít mechaniku, změnit roli          |
+| Firestore    | `users/{uid}/rounds/{id}`, `users/{uid}/prefs/app`, rules = jen vlastník           | **nový model + role**, viz §4           |
+| Functions    | žádné (plán Spark, Blaze zakázán)                                                  | žádné; vše na klientu + rules           |
+| Hosting      | GitHub Pages + vlastní doména, workflow `deploy.yml` (typecheck→test→format→build) | převzít, nová doména / podcesta         |
+| i18n         | vlastní (`cs.ts` zdroj klíčů, `en.ts` typově kontrolovaný), žádná knihovna         | převzít; stačí **jen čeština** (viz §5) |
+| Vzhled       | jediný `styles.css` (3 289 řádků), tmavé/světlé schéma jako CSS proměnné           | převzít tokeny a komponenty, viz §3     |
+| Runtime deps | pouze `react`, `react-dom`, `firebase`                                             | stejné                                  |
 
 Závěr: technologie se **shodují s předpoklady specifikace** (kap. 3). Jediná
 položka, kterou spec uvádí a Golfgames nemá, jsou Firebase Functions; nejsou
@@ -59,18 +59,18 @@ nad nový model (viz plán), vzorce a testy zůstanou.
 
 ### 2.2 Hry (`src/games/`)
 
-| Hra v Golfgames                         | Použití v Turecko Cupu                                                  |
-| --------------------------------------- | ----------------------------------------------------------------------- |
-| `skins.ts` – `skinResults()`            | **Individual Skins** (přes flight nebo přes všech 8) i **Team Skins**   |
-|                                          | (strana = tým, rána strany = lepší míč týmu). Přenos banku, dělená jamka, |
-|                                          | potvrzení parem, vzdaná jamka – vše hotové a otestované (418 ř. testů). |
-| `stableford.ts` + `holeStablefordPoints` | **Individuální Stableford** netto, 1:1.                                 |
-| `match.ts` (jádro jamkovky)             | Kandidát pro **soutěž podle pozic** (A1 vs B1 jako jamkovka) a pro       |
-|                                          | případný formát hlavní hry (four-ball). Stav zápasu, dormie, `3&2`.      |
-| `shared.ts` – `teamBestBall()`, `CONCEDED`| sdílené pomocné výpočty pro lepší míč a vzdanou jamku                   |
-| `sideBets.ts`                            | extra body jako vedlejší sázka – pokud se budou hrát bonusy             |
-| `types.ts` – `rankRows()`               | řazení se sdílenými pozicemi (1, 1, 3), nehrající na konec              |
-| `bestAggregate.ts`, `leftRight.ts`, `dots.ts`, `foursome.ts` | zatím nepotřebné, dostupné                        |
+| Hra v Golfgames                                              | Použití v Turecko Cupu                                                    |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| `skins.ts` – `skinResults()`                                 | **Individual Skins** (přes flight nebo přes všech 8) i **Team Skins**     |
+|                                                              | (strana = tým, rána strany = lepší míč týmu). Přenos banku, dělená jamka, |
+|                                                              | potvrzení parem, vzdaná jamka – vše hotové a otestované (418 ř. testů).   |
+| `stableford.ts` + `holeStablefordPoints`                     | **Individuální Stableford** netto, 1:1.                                   |
+| `match.ts` (jádro jamkovky)                                  | Kandidát pro **soutěž podle pozic** (A1 vs B1 jako jamkovka) a pro        |
+|                                                              | případný formát hlavní hry (four-ball). Stav zápasu, dormie, `3&2`.       |
+| `shared.ts` – `teamBestBall()`, `CONCEDED`                   | sdílené pomocné výpočty pro lepší míč a vzdanou jamku                     |
+| `sideBets.ts`                                                | extra body jako vedlejší sázka – pokud se budou hrát bonusy               |
+| `types.ts` – `rankRows()`                                    | řazení se sdílenými pozicemi (1, 1, 3), nehrající na konec                |
+| `bestAggregate.ts`, `leftRight.ts`, `dots.ts`, `foursome.ts` | zatím nepotřebné, dostupné                                                |
 
 Rozhraní `GameDefinition` (computeStandings/holeSummary/headerSummary/
 scorecard dekorace) je dobře navržené pro **jednu hru nad jedním kolem**.
@@ -91,12 +91,12 @@ seznam `GameDefinition` aplikovaných na jeden `TournamentRound` (viz plán).
 Všechna čtyři turnajová hřiště **v katalogu jsou** s pary, SI, CR i SR
 (zdroj: scorekarty a slope tabulky klubů, aktualizováno 9. 8. 2026):
 
-| Kolo | Hřiště (spec)       | `id` v katalogu            | Par | Mužská odpaliště (CR / SR)                        |
-| ---: | ------------------- | -------------------------- | --: | ------------------------------------------------- |
-|    1 | Cullinan Aspendos   | `aspendos`                 |  72 | White 70,5/130 · Yellow 68,1/118                  |
-|    2 | Lykia Links         | `lykia-links`              |  73 | Black 78,0/140 · White 74,7/133 · Gold 71,7/126 · Blue 65,7/115 |
-|    3 | Carya               | `belek-carya`              |  72 | Black 74,9/145 · White 72,3/136 · Yellow 70,4/130 |
-|  4,5 | Kaya Palazzo        | `kaya-palazzo-golf-course` |  72 | White 71,0/127 · Yellow 69,4/121                  |
+| Kolo | Hřiště (spec)     | `id` v katalogu            | Par | Mužská odpaliště (CR / SR)                                      |
+| ---: | ----------------- | -------------------------- | --: | --------------------------------------------------------------- |
+|    1 | Cullinan Aspendos | `aspendos`                 |  72 | White 70,5/130 · Yellow 68,1/118                                |
+|    2 | Lykia Links       | `lykia-links`              |  73 | Black 78,0/140 · White 74,7/133 · Gold 71,7/126 · Blue 65,7/115 |
+|    3 | Carya             | `belek-carya`              |  72 | Black 74,9/145 · White 72,3/136 · Yellow 70,4/130               |
+|  4,5 | Kaya Palazzo      | `kaya-palazzo-golf-course` |  72 | White 71,0/127 · Yellow 69,4/121                                |
 
 Poznámky k ověření:
 
@@ -170,7 +170,7 @@ CHANGELOG, texty jen v `i18n`, barvy jen přes proměnné, komentáře „proč�
    `createRound()` i obrazovky s tím počítají. Turnajové kolo má 8 hráčů ve
    2 flightech.
 2. **Sdílený stav mezi zařízeními a uživateli.** Golfgames synchronizuje data
-   *jednoho* účtu; „sdílená kola mezi hráči“ je v `decisions.md` výslovně
+   _jednoho_ účtu; „sdílená kola mezi hráči“ je v `decisions.md` výslovně
    odložená otevřená otázka (pozvání, oprávnění, souběžný zápis).
 3. **Role** (Visitor / Player / Administrator) a veřejné čtení bez přihlášení.
    Dnešní `firestore.rules` pouští jen vlastníka k vlastním datům.
@@ -190,17 +190,17 @@ CHANGELOG, texty jen v `i18n`, barvy jen přes proměnné, komentáře „proč�
 
 ## 4. Záměrné rozdíly proti Golfgames (nutno zdokumentovat a otestovat)
 
-| #  | Golfgames                                   | Turecko Cup 26                                                                | Důvod                                              |
-| -- | ------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------- |
-| R1 | `localStorage` je zdroj pravdy, cloud zrcadlo | **Firestore je zdroj pravdy** turnaje; `localStorage` jen cache + offline fronta | 8 lidí, 2 flighty, visitoři – data musí být sdílená |
-| R2 | Přihlášení je nepovinné a nic nemění        | Čtení veřejné, **zápis vyžaduje přihlášení** Googlem a roli                   | spec §4                                            |
-| R3 | Rules: jen vlastník                         | Rules: `tournaments/*` čtení pro všechny, zápis skóre pro hráče v kole, konfigurace jen admin (uid/e-mail v `admins`) | spec §4                     |
-| R4 | `Round` = 1–4 hráči, jedna hra              | `TournamentRound` = 8 hráčů, 2 flighty, **seznam her** (evaluací)             | spec §1, §6, §8                                    |
-| R5 | Hra se vybírá při založení kola             | Hry a soutěž podle pozic jdou **přidat/změnit kdykoli**; raw skóre se nemění  | spec §8 „retrospektivní výpočet“                   |
-| R6 | Peněžní vyrovnání (`money.ts`)              | Mimo rozsah v první verzi                                                     | spec nezmiňuje peníze                              |
-| R7 | Dvojjazyčnost cs/en                         | Jen čeština (i18n infrastruktura zůstává, `en.ts` se nepřidává)               | uzavřená skupina 8 Čechů; šetří čas                |
-| R8 | Konflikty: vyhrává novější `updatedAt` celého kola | Konflikty **per buňka** (hráč × jamka) – zápis nastavuje jen svou buňku přes `updateDoc` s field path | dva flighty zapisují současně do jednoho kola |
-| R9 | Smazání skóre jen přidržením hráčem         | Stejně + **admin může opravit cokoli**, oprava se loguje (`audit` pole)       | spec §4 „opravovat výsledky“                       |
+| #   | Golfgames                                          | Turecko Cup 26                                                                                                        | Důvod                                               |
+| --- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| R1  | `localStorage` je zdroj pravdy, cloud zrcadlo      | **Firestore je zdroj pravdy** turnaje; `localStorage` jen cache + offline fronta                                      | 8 lidí, 2 flighty, visitoři – data musí být sdílená |
+| R2  | Přihlášení je nepovinné a nic nemění               | Čtení veřejné, **zápis vyžaduje přihlášení** Googlem a roli                                                           | spec §4                                             |
+| R3  | Rules: jen vlastník                                | Rules: `tournaments/*` čtení pro všechny, zápis skóre pro hráče v kole, konfigurace jen admin (uid/e-mail v `admins`) | spec §4                                             |
+| R4  | `Round` = 1–4 hráči, jedna hra                     | `TournamentRound` = 8 hráčů, 2 flighty, **seznam her** (evaluací)                                                     | spec §1, §6, §8                                     |
+| R5  | Hra se vybírá při založení kola                    | Hry a soutěž podle pozic jdou **přidat/změnit kdykoli**; raw skóre se nemění                                          | spec §8 „retrospektivní výpočet“                    |
+| R6  | Peněžní vyrovnání (`money.ts`)                     | Mimo rozsah v první verzi                                                                                             | spec nezmiňuje peníze                               |
+| R7  | Dvojjazyčnost cs/en                                | Jen čeština (i18n infrastruktura zůstává, `en.ts` se nepřidává)                                                       | uzavřená skupina 8 Čechů; šetří čas                 |
+| R8  | Konflikty: vyhrává novější `updatedAt` celého kola | Konflikty **per buňka** (hráč × jamka) – zápis nastavuje jen svou buňku přes `updateDoc` s field path                 | dva flighty zapisují současně do jednoho kola       |
+| R9  | Smazání skóre jen přidržením hráčem                | Stejně + **admin může opravit cokoli**, oprava se loguje (`audit` pole)                                               | spec §4 „opravovat výsledky“                        |
 
 Pravidla, která **přebíráme beze změny** jako nepřekročitelná: zapsané skóre se
 nikdy nemaže změnou nastavení (přepočet místo mazání), kolo si nese kopii

@@ -984,8 +984,8 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 10px 10px 10px 12px;
   border-radius: 14px;
   background: var(--bg-elevated);
 }
@@ -1000,10 +1000,27 @@ a {
 .player-name {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
   font-size: 17px;
   font-weight: 600;
+}
+
+/* Zvednutí jamky: menší než krokovač, ať jméno nepřijde o místo. */
+.pickup-button {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-input);
+  color: var(--text-dim);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.pickup-button.active {
+  background: var(--score-triple);
+  color: var(--score-triple-ink);
 }
 
 .player-name-text {
@@ -1043,7 +1060,7 @@ a {
 }
 
 .step-button {
-  width: var(--tap);
+  width: 44px;
   height: var(--tap);
   border-radius: 12px;
   background: var(--bg-input);
@@ -1059,7 +1076,7 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 50px;
+  min-width: 46px;
   height: var(--tap);
   user-select: none;
   -webkit-user-select: none;

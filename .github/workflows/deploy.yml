@@ -1,0 +1,88 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Kontrola typů
+        run: npm run typecheck
+      - name: Testy výpočtů
+        run: npm run test
+      - name: Kontrola formátování
+        run: npm run format:check
+
+      # Vypíše, co z konfigurace Firebase dorazilo (jen délky, ne hodnoty).
+      - name: Kontrola konfigurace Firebase
+        env:
+          API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY || vars.VITE_FIREBASE_API_KEY }}
+          AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN || vars.VITE_FIREBASE_AUTH_DOMAIN }}
+          PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID || vars.VITE_FIREBASE_PROJECT_ID }}
+          APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID || vars.VITE_FIREBASE_APP_ID }}
+        run: |
+          missing=0
+          for name in API_KEY AUTH_DOMAIN PROJECT_ID APP_ID; do
+            value="${!name}"
+            if [ -n "$value" ]; then
+              echo "VITE_FIREBASE_$name: vyplněno, ${#value} znaků"
+            else
+              echo "VITE_FIREBASE_$name: CHYBÍ"
+              missing=1
+            fi
+          done
+          if [ "$missing" = "1" ]; then
+            echo ""
+            echo "Aplikace se nasadí, ale ukáže hlášku 'Turnaj není připojený'."
+            echo "Doplň hodnoty v Settings -> Secrets and variables -> Actions (docs/setup-firebase.md)."
+          fi
+
+      - name: Build
+        run: npm run build
+        env:
+          # GitHub Pages bez vlastní domény servíruje z podcesty repozitáře.
+          BASE_PATH: /TureckoCup/
+          VITE_COURSES_URL: ${{ vars.VITE_COURSES_URL }}
+          VITE_TOURNAMENT_ID: ${{ vars.VITE_TOURNAMENT_ID }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY || vars.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN || vars.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID || vars.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID || vars.VITE_FIREBASE_APP_ID }}
+
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

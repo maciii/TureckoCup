@@ -37,12 +37,12 @@ i přihlášení).
    nickname `tureckocup` → Register app (Hosting nezaškrtávat).
 2. Z ukázky `firebaseConfig` opsat čtyři hodnoty:
 
-   | Hodnota       | Kam                         |
-   | ------------- | --------------------------- |
-   | `apiKey`      | `VITE_FIREBASE_API_KEY`     |
-   | `authDomain`  | `VITE_FIREBASE_AUTH_DOMAIN` |
-   | `projectId`   | `VITE_FIREBASE_PROJECT_ID`  |
-   | `appId`       | `VITE_FIREBASE_APP_ID`      |
+   | Hodnota      | Kam                         |
+   | ------------ | --------------------------- |
+   | `apiKey`     | `VITE_FIREBASE_API_KEY`     |
+   | `authDomain` | `VITE_FIREBASE_AUTH_DOMAIN` |
+   | `projectId`  | `VITE_FIREBASE_PROJECT_ID`  |
+   | `appId`      | `VITE_FIREBASE_APP_ID`      |
 
    Údaje nejsou tajné (u Firebase jsou veřejné z principu), zabezpečení stojí
    na pravidlech z kroku 3.
@@ -86,10 +86,10 @@ i přihlášení).
 
 ## Časté problémy
 
-| Projev                                  | Příčina                                                       |
-| --------------------------------------- | ------------------------------------------------------------- |
-| „Turnaj není připojený“                 | chybí secrets v GitHubu (krok 5) nebo build běžel bez nich    |
-| Přihlášení se otevře a hned zavře       | blokované vyskakovací okno; zkusit v nainstalované PWA        |
-| „Zápis odmítnut“                        | e-mail není v oprávněních, nebo kolo je uzavřené              |
-| Visitor nic nevidí, „Chybí oprávnění“   | nenasazená pravidla (krok 3)                                  |
-| Data se neukládají, „Chybí oprávnění“   | e-mail není ověřený u Googlu, nebo chybí v `private/access`   |
+| Projev                                | Příčina                                                     |
+| ------------------------------------- | ----------------------------------------------------------- |
+| „Turnaj není připojený“               | chybí secrets v GitHubu (krok 5) nebo build běžel bez nich  |
+| Přihlášení se otevře a hned zavře     | blokované vyskakovací okno; zkusit v nainstalované PWA      |
+| „Zápis odmítnut“                      | e-mail není v oprávněních, nebo kolo je uzavřené            |
+| Visitor nic nevidí, „Chybí oprávnění“ | nenasazená pravidla (krok 3)                                |
+| Data se neukládají, „Chybí oprávnění“ | e-mail není ověřený u Googlu, nebo chybí v `private/access` |

@@ -1,0 +1,53 @@
+{
+  "id": "belek-carya",
+  "name": "Carya",
+  "club": "Carya Golf Club",
+  "country": "TR",
+  "holeCount": 18,
+  "pars": [4, 3, 4, 4, 4, 3, 5, 3, 4, 5, 4, 5, 4, 3, 5, 4, 4, 4],
+  "strokeIndex": [16, 12, 8, 4, 6, 10, 2, 14, 18, 5, 1, 13, 9, 17, 11, 15, 3, 7],
+  "tees": [
+    {
+      "id": "black",
+      "name": "Black",
+      "courseRating": 74.9,
+      "slopeRating": 145,
+      "par": 72,
+      "distance": 6605
+    },
+    {
+      "id": "white",
+      "name": "White",
+      "courseRating": 72.3,
+      "slopeRating": 136,
+      "par": 72,
+      "distance": 6149
+    },
+    {
+      "id": "yellow",
+      "name": "Yellow",
+      "courseRating": 70.4,
+      "slopeRating": 130,
+      "par": 72,
+      "distance": 5750
+    },
+    {
+      "id": "blue",
+      "name": "Blue",
+      "courseRating": 73.9,
+      "slopeRating": 133,
+      "par": 72,
+      "distance": 5393
+    },
+    {
+      "id": "red",
+      "name": "Red",
+      "courseRating": 71,
+      "slopeRating": 127,
+      "par": 72,
+      "distance": 4862
+    }
+  ],
+  "attribution": "Scorekarta a slope tabulka klubu (owltourism.com/EN/scorecards-slope-ratings-belek); modra a cervena normy damske",
+  "catalogUpdatedAt": "2026-08-09T00:00:00.000Z"
+}

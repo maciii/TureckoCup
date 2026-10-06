@@ -85,13 +85,13 @@ Zásady:
 Jedno kolo má seznam her; každá hra je `{ id, kind, scope, options }` a
 vyhodnocuje se nezávisle nad stejnými `scores`:
 
-| `kind`                 | `scope`                       | Implementace (převzato z Golfgames)                                     |
-| ---------------------- | ----------------------------- | ----------------------------------------------------------------------- |
-| `individual-stableford`| všech 8 (netto)               | `holeStablefordPoints` + `rankRows`                                     |
-| `individual-skins`     | `flight` nebo `all` [P flight]| projekce flightu na `Round` se 4 hráči → `skinResults()`                 |
-| `team-skins`           | Team A vs Team B              | projekce na `Round` se 2 „hráči“ = týmy, skóre strany = lepší netto míč týmu (`teamBestBall`), pak `skinResults()` |
-| `team-match` [P]       | A vs B, four-ball per flight  | `match.ts` – `matchStateOf()` se stranami dvojic                         |
-| `position-duel`        | A{n} vs B{n}, n = 1..4        | konfigurovatelný formát: `strokes-gross`, `strokes-net`, `stableford`, `match-play`; vše nad projekcí 2 hráčů |
+| `kind`                  | `scope`                        | Implementace (převzato z Golfgames)                                                                                |
+| ----------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `individual-stableford` | všech 8 (netto)                | `holeStablefordPoints` + `rankRows`                                                                                |
+| `individual-skins`      | `flight` nebo `all` [P flight] | projekce flightu na `Round` se 4 hráči → `skinResults()`                                                           |
+| `team-skins`            | Team A vs Team B               | projekce na `Round` se 2 „hráči“ = týmy, skóre strany = lepší netto míč týmu (`teamBestBall`), pak `skinResults()` |
+| `team-match` [P]        | A vs B, four-ball per flight   | `match.ts` – `matchStateOf()` se stranami dvojic                                                                   |
+| `position-duel`         | A{n} vs B{n}, n = 1..4         | konfigurovatelný formát: `strokes-gross`, `strokes-net`, `stableford`, `match-play`; vše nad projekcí 2 hráčů      |
 
 Každý `kind` je modul v `src/evaluations/<kind>.ts` s rozhraním
 
@@ -99,8 +99,8 @@ Každý `kind` je modul v `src/evaluations/<kind>.ts` s rozhraním
 interface Evaluation {
   kind: string
   compute(round: TournamentRound, players: Player[], cfg: GameConfig): StandingsSection[]
-  holeSummary?(round, players, cfg, hole): HoleSummary[]       // průběžný stav u jamky
-  teamPoints?(sections): { A: number; B: number }               // příspěvek do hlavního týmového skóre
+  holeSummary?(round, players, cfg, hole): HoleSummary[] // průběžný stav u jamky
+  teamPoints?(sections): { A: number; B: number } // příspěvek do hlavního týmového skóre
 }
 ```
 
@@ -155,15 +155,15 @@ nebo admin.
 
 ### 2.7 Obrazovky
 
-| Obrazovka          | Kdo        | Obsah                                                                       |
-| ------------------ | ---------- | --------------------------------------------------------------------------- |
-| Leaderboard (home) | všichni    | Team A : B, aktuální kolo s live stavem, jednotlivci, duely pozic, menu     |
-| Kolo               | všichni    | scorekarta obou flightů, výsledky každé hry kola, přepínač hry              |
-| Zápis skóre        | Player     | flight hráče, 4 řádky, −/par/+ jako Golfgames, hlavička s průběžným skins   |
-| Hráči a týmy       | všichni / admin edituje | soupiska, HCP, tým, pozice, e-mail                             |
-| Admin – kolo       | Admin      | hřiště z katalogu, odpaliště (společné + per hráč), hrací HCP, flighty, hry, par opravy, status |
-| Admin – opravy     | Admin      | scorekarta s možností změnit libovolnou buňku, log oprav                    |
-| Účet               | všichni    | přihlášení Googlem (převzatý tok), moje role, můj hráč                       |
+| Obrazovka          | Kdo                     | Obsah                                                                                           |
+| ------------------ | ----------------------- | ----------------------------------------------------------------------------------------------- |
+| Leaderboard (home) | všichni                 | Team A : B, aktuální kolo s live stavem, jednotlivci, duely pozic, menu                         |
+| Kolo               | všichni                 | scorekarta obou flightů, výsledky každé hry kola, přepínač hry                                  |
+| Zápis skóre        | Player                  | flight hráče, 4 řádky, −/par/+ jako Golfgames, hlavička s průběžným skins                       |
+| Hráči a týmy       | všichni / admin edituje | soupiska, HCP, tým, pozice, e-mail                                                              |
+| Admin – kolo       | Admin                   | hřiště z katalogu, odpaliště (společné + per hráč), hrací HCP, flighty, hry, par opravy, status |
+| Admin – opravy     | Admin                   | scorekarta s možností změnit libovolnou buňku, log oprav                                        |
+| Účet               | všichni                 | přihlášení Googlem (převzatý tok), moje role, můj hráč                                          |
 
 Vzhled: tokeny a komponenty Golfgames (tmavé/světlé schéma, značky skóre,
 `.screen`/`.content`, scorekarta). Vlastní je jen barva/akcent turnaje a
@@ -313,12 +313,12 @@ scripts/ bump-version.mjs, gen-icons.mjs, seed-tournament.mjs
 
 ## 7. Rizika a opatření
 
-| Riziko                                   | Opatření                                                                 |
-| ---------------------------------------- | ------------------------------------------------------------------------ |
-| Nestihne se MVP do 8. 10.                | Fáze 1 obsahuje jen zápis, Firestore, 3 evaluace a leaderboard; vše ostatní je dopočitatelné z raw dat později. Záložní plán: 1. kolo zapsat na papír a doplnit přes admin opravy. |
-| Google popup blokovaný na iOS            | převzatý `preloadAuth()` + redirect fallback; authorized domain nastavit hned ve Fázi 0 |
-| Souběžný zápis dvou flightů              | field-path update per buňka, jeden dokument na kolo, test v emulátoru     |
-| Výpadek signálu na hřišti                | Firestore offline cache, zápis se nikdy neblokuje na síti; UI ukazuje „čeká na odeslání“ |
-| Chyba v hracím HCP                        | admin vidí a může přepsat hodnotu; test s reálnými CR/SR                   |
-| Změna formátu her během turnaje          | hry jsou konfigurace, raw skóre se nemění; přepočet je okamžitý           |
-| Spec neúplná                             | předpoklady `[P]` v tomto dokumentu, každý jde změnit v adminu            |
+| Riziko                          | Opatření                                                                                                                                                                           |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Nestihne se MVP do 8. 10.       | Fáze 1 obsahuje jen zápis, Firestore, 3 evaluace a leaderboard; vše ostatní je dopočitatelné z raw dat později. Záložní plán: 1. kolo zapsat na papír a doplnit přes admin opravy. |
+| Google popup blokovaný na iOS   | převzatý `preloadAuth()` + redirect fallback; authorized domain nastavit hned ve Fázi 0                                                                                            |
+| Souběžný zápis dvou flightů     | field-path update per buňka, jeden dokument na kolo, test v emulátoru                                                                                                              |
+| Výpadek signálu na hřišti       | Firestore offline cache, zápis se nikdy neblokuje na síti; UI ukazuje „čeká na odeslání“                                                                                           |
+| Chyba v hracím HCP              | admin vidí a může přepsat hodnotu; test s reálnými CR/SR                                                                                                                           |
+| Změna formátu her během turnaje | hry jsou konfigurace, raw skóre se nemění; přepočet je okamžitý                                                                                                                    |
+| Spec neúplná                    | předpoklady `[P]` v tomto dokumentu, každý jde změnit v adminu                                                                                                                     |

@@ -18,9 +18,13 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(version),
   },
   build: {
+    // Firebase chunk má 700 kB a je záměrně jeden - předcachuje se celý.
+    chunkSizeWarningLimit: 1000,
     rolldownOptions: {
       output: {
-        // Firebase má vlastní chunk, aby ho šlo vynechat z předcachování.
+        // Firebase má vlastní chunk: načítá se dynamicky až s datovou vrstvou,
+        // ale service worker ho předcachuje - bez něj by aplikace bez signálu
+        // nenaběhla (na rozdíl od Golfgames je tu Firebase celá datová vrstva).
         codeSplitting: {
           groups: [{ name: 'firebase', test: /node_modules[\\/]@?firebase/ }],
         },
@@ -56,8 +60,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        // Firebase se stahuje až při přihlášení a jen online.
-        globIgnores: ['**/firebase*.js'],
+        // Firebase chunk je přes 700 kB; výchozí limit 2 MB stačí, ale ať je
+        // to vidět: offline start bez SDK by znamenal prázdnou obrazovku.
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         navigateFallback: `${base}index.html`,
       },
     }),
