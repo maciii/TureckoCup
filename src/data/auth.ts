@@ -10,7 +10,8 @@ import type { Account } from './store'
  * Jakékoli čekání na síť mezitím gesto „spotřebuje" a Safari okno zablokuje.
  * Proto se SDK načte předem (`preloadAuth`) a `signInWithGoogle()` pak popup
  * otevírá synchronně, bez jediného `await` před sebou. Přesměrování zůstává
- * jako záloha, ale na GitHub Pages v Safari spolehlivé není.
+ * jako záloha; v Safari je spolehlivé jen s `authDomain` na doméně aplikace
+ * (viz docs/setup-firebase.md, přihlášení na iPhonu).
  */
 
 type AuthModule = typeof import('firebase/auth')

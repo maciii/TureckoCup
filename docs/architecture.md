@@ -124,11 +124,15 @@ zapisovaná jamka se drží v localStorage per kolo a flight.
 
 ## Build a nasazení
 
-`vite.config.ts`: PWA manifest, `BASE_PATH=/TureckoCup/` na GitHub Pages,
-Firebase ve vlastním chunku (předcachovaném). Workflow `deploy.yml` na každém
+`vite.config.ts`: PWA manifest, aplikace z kořene domény, Firebase ve
+vlastním chunku (předcachovaném). `firebase.json` nastavuje Hosting: HTML,
+service worker a manifest bez cache (nová verze se projeví hned), soubory
+s hashem v `assets/` s roční cache. Workflow `deploy.yml` na každém
 pushi kontroluje typy, testy a formát, pouští e2e testy na telefonech
 (iOS ve WebKitu, Android v Chromiu) a testy security rules v emulátoru;
-z `main` nasazuje, jen když prošlo všechno. Konfigurace Firebase
+z `main` nasazuje na Firebase Hosting (akce `action-hosting-deploy`, servisní
+účet jen s rolí pro Hosting), jen když prošlo všechno. Pravidla databáze
+workflow nenasazuje. Konfigurace Firebase
 se bere ze Secrets (viz [`setup-firebase.md`](setup-firebase.md)).
 
 ## Testy

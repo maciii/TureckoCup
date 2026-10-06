@@ -4,8 +4,8 @@ import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// Bez vlastní domény běží aplikace na GitHub Pages pod cestou repozitáře;
-// CI ji nastaví přes BASE_PATH, vlastní doména vede na '/'.
+// Firebase Hosting servíruje aplikaci z kořene domény (<projekt>.web.app).
+// BASE_PATH zůstává pro případ hostingu pod podcestou.
 const base = process.env.BASE_PATH ?? '/'
 
 const { version } = JSON.parse(readFileSync('./package.json', 'utf8')) as {

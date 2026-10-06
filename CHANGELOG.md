@@ -3,6 +3,23 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.4.0] – 2026-10-06
+
+### Změněno
+
+- **Hosting na Firebase místo GitHub Pages.** GitHub Pages zdarma vyžadují
+  veřejný repozitář; Firebase Hosting na plánu Spark funguje i ze
+  soukromého. Aplikace běží z kořene domény `https://<id-projektu>.web.app`,
+  workflow nasazuje přes servisní účet jen s rolí pro Hosting.
+- Hlavičky cache: HTML, service worker a manifest bez cache, soubory
+  s hashem s roční cache.
+
+### Pro administrátora
+
+- Nový krok v `docs/setup-firebase.md`: Hosting a servisní účet, pátý secret
+  `FIREBASE_SERVICE_ACCOUNT`. Doménu `maciii.github.io` už není potřeba
+  autorizovat.
+
 ## [0.3.0] – 2026-10-06
 
 ### Opraveno

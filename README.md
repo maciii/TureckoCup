@@ -4,8 +4,9 @@ Turnajová golfová aplikace pro 8 hráčů: živý zápis skóre po jamkách, t
 individuální vyhodnocení ze stejných raw dat (Stableford, Skins, Team Skins,
 duely pozic), veřejný leaderboard bez přihlášení a administrace turnaje.
 
-**Živá verze:** https://maciii.github.io/TureckoCup/
-(ukázkový režim bez Firebase: https://maciii.github.io/TureckoCup/?demo=1)
+**Živá verze:** `https://<id-projektu>.web.app` na Firebase Hosting
+(ukázkový režim bez přihlášení a databáze: stejná adresa s `?demo=1`).
+Adresu určí id projektu Firebase, viz [`docs/setup-firebase.md`](docs/setup-firebase.md).
 
 Aplikace je PWA – přidá se na plochu telefonu a běží i bez signálu; zápisy se
 odešlou po návratu připojení. Design a výpočty handicapů vycházejí

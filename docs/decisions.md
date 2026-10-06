@@ -1,7 +1,7 @@
 # Rozhodnutí a jejich důvody
 
 Formát: kontext → rozhodnutí → důsledek. Rozhodnutí převzatá z Golfgames
-(PWA na Pages, Spark, tmavé a světlé schéma, zápis par doprostřed, testuje se
+(PWA, Spark, tmavé a světlé schéma, zápis par doprostřed, testuje se
 matematika) tu nejsou zopakovaná - viz `docs/decisions.md` tam.
 
 ## 1. Firestore je zdroj pravdy, ne localStorage
@@ -65,10 +65,18 @@ Vazba účet → hráč by byla složitost bez užitku.
 **Proč.** Změna indexu nebo pozice třetí den nesmí přepočítat odehraná kola.
 Allowance per hra, aby stejné kolo mohlo mít Skins na 100 % a zápas na 90 %.
 
-## 7. Hosting na `maciii.github.io/TureckoCup/` bez vlastní domény
+## 7. Hosting na Firebase (`<id-projektu>.web.app`) bez vlastní domény
 
-**Proč.** Změna originu později by všem zrušila instalaci PWA, přihlášení
-i offline cache. Vlastní doména až po turnaji.
+**Kontext.** GitHub Pages zdarma jen pro veřejné repozitáře. Veřejný kód by
+ukázal e-maily adminů a soupisku hráčů.
+
+**Rozhodnutí.** Firebase Hosting na plánu Spark: zdarma, repozitář zůstává
+soukromý, doménu Firebase sám autorizuje pro přihlášení a na stejné doméně
+běží i přihlašovací stránka (`/__/auth/handler`) - to umožní spolehlivější
+přihlášení na iPhonu, když se `authDomain` přepne na `web.app`.
+
+**Proč bez vlastní domény.** Změna originu později by všem zrušila instalaci
+PWA, přihlášení i offline cache. Vlastní doména až po turnaji.
 
 ## 8. Firebase chunk je předcachovaný
 

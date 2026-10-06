@@ -9,8 +9,8 @@ PWA pro golfový turnaj **Turecko Cup 26**: 8 hráčů, 2 týmy po 4, 2 flighty,
 5 kol v říjnu 2026. Živý zápis skóre po jamkách, paralelní vyhodnocení více
 her ze stejných raw dat (Stableford, Skins, Team Skins, duely pozic), veřejný
 leaderboard bez přihlášení, administrace jedním adminem. React 19 +
-TypeScript 7 + Vite 8, Firebase (Auth + Firestore na plánu Spark), GitHub
-Pages. Jen česky.
+TypeScript 7 + Vite 8, Firebase (Auth + Firestore + Hosting na plánu Spark).
+Jen česky.
 
 Infrastruktura, výpočty handicapů a ovládání zápisu jsou převzaté z
 [`maciii/golfgames`](https://github.com/maciii/golfgames), vizuální design ze
@@ -48,7 +48,7 @@ npm run test:rules # security rules v emulátoru Firestoru (Java)
 3. `npm run check` musí projít.
 4. Zvedni verzi (`node scripts/bump-version.mjs`, `npm run bump:minor`) a
    zapiš věcnou změnu do `CHANGELOG.md`.
-5. Nasazuje se **z `main`** na https://maciii.github.io/TureckoCup/.
+5. Nasazuje se **z `main`** na Firebase Hosting (`https://<id-projektu>.web.app`).
 
 ## Nepřekročitelná pravidla
 
@@ -70,7 +70,7 @@ npm run test:rules # security rules v emulátoru Firestoru (Java)
    `hasPendingWrites`, odmítnutí rules se zachytí z promise do `meta.error`.
 8. **Produkce bez konfigurace Firebase nikdy nespadne na localStorage.**
    Ukázkový režim jen ve vývoji nebo s `?demo=1`.
-9. **Nic placeného.** Firebase jen na Sparku, hosting GitHub Pages.
+9. **Nic placeného.** Firebase jen na Sparku (i Hosting), repozitář soukromý.
 10. **Texty jen v `src/i18n/cs.ts`**, barvy jen přes CSS proměnné (schéma je
     jen světlé, žádné `#hex` v komponentách), komentáře vysvětlují proč.
 11. **Firebase se importuje jen dynamicky a jen z `src/data/`.**
@@ -91,6 +91,7 @@ src/
   i18n/         cs.ts (jediný katalog), plural.ts
   nav.ts        hash navigace, pwa.ts, swipeBack.ts (převzato)
 firestore.rules  pravidla zabezpečení (nasazují se ručně z konzole)
+firebase.json    Hosting (hlavičky cache), emulátory
 e2e/             Playwright v ukázkovém režimu: smoke, play, admin, layout
 e2e-firebase/    Playwright proti emulátorům: produkční datová vrstva a rules
 rules/           testy firestore.rules v emulátoru

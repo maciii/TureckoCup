@@ -8,8 +8,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 # Starší běh vývojové větve se zruší. Na main ne - zrušení by mohlo přerušit
 # rozběhnuté nasazení; běhy main se řadí za sebe.
@@ -62,8 +60,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # GitHub Pages bez vlastní domény servíruje z podcesty repozitáře.
-          BASE_PATH: /TureckoCup/
+          # Firebase Hosting servíruje z kořene domény <projekt>.web.app.
+          BASE_PATH: /
           VITE_COURSES_URL: ${{ vars.VITE_COURSES_URL }}
           VITE_TOURNAMENT_ID: ${{ vars.VITE_TOURNAMENT_ID }}
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY || vars.VITE_FIREBASE_API_KEY }}
@@ -71,11 +69,13 @@ jobs:
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID || vars.VITE_FIREBASE_PROJECT_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID || vars.VITE_FIREBASE_APP_ID }}
 
-      - name: Upload Pages artifact
+      - name: Uložit build pro nasazení
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: dist
           path: dist
+          retention-days: 1
 
   # Telefony: iOS profily ve skutečném WebKitu (engine Safari), Android v Chromiu.
   # Oficiální image Playwrightu má prohlížeče i systémové knihovny, instalace
@@ -128,17 +128,33 @@ jobs:
       - name: Testy security rules
         run: npm run test:rules
 
+  # Nasazení na Firebase Hosting (plán Spark, zdarma, i ze soukromého repozitáře).
   deploy:
     needs: [build, e2e, rules]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     concurrency:
-      group: pages
+      group: deploy
       cancel-in-progress: false
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Kontrola přístupu k Firebase Hosting
+        env:
+          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID || vars.VITE_FIREBASE_PROJECT_ID }}
+        run: |
+          missing=0
+          [ -n "$SERVICE_ACCOUNT" ] || { echo "::error::Chybí secret FIREBASE_SERVICE_ACCOUNT (docs/setup-firebase.md, krok 5)."; missing=1; }
+          [ -n "$PROJECT_ID" ] || { echo "::error::Chybí secret VITE_FIREBASE_PROJECT_ID (docs/setup-firebase.md, krok 4)."; missing=1; }
+          exit $missing
+      - name: Nasadit na Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ secrets.VITE_FIREBASE_PROJECT_ID || vars.VITE_FIREBASE_PROJECT_ID }}
+          channelId: live

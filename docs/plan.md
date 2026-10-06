@@ -20,12 +20,11 @@ změnit konfigurací v aplikaci.
 
 ### Co musí udělat administrátor (blokuje ostrý provoz)
 
-1. Projít [`setup-firebase.md`](setup-firebase.md) (Settings → Pages →
-   Source: **GitHub Actions**, jinak nasazení končí chybou 404): Firebase projekt,
+1. Projít [`setup-firebase.md`](setup-firebase.md): Firebase projekt,
    Google + Anonymous přihlášení, Firestore `eur3`, **vložit
-   `firestore.rules`**, authorized domain `maciii.github.io`, čtyři secrets
-   do GitHubu, Pages = GitHub Actions.
-2. Otevřít https://maciii.github.io/TureckoCup/ v nainstalované PWA,
+   `firestore.rules`**, Hosting, servisní účet pro nasazení a pět secrets
+   do GitHubu.
+2. Otevřít `https://<id-projektu>.web.app` v nainstalované PWA,
    přihlásit se jako `mac.kubecka@gmail.com`, **Inicializovat turnaj**.
 3. Doplnit oprávnění zapisovatelů (e-maily), HCP indexy čtyř hráčů, týmy,
    pozice, odpaliště a flighty; rozhodnout formát hlavní hry (kap. 4).
@@ -36,8 +35,8 @@ Do té doby jde všechno vyzkoušet v ukázkovém režimu
 
 ## 1. Cíl a hranice
 
-Samostatná PWA (`maciii/TureckoCup`, vlastní Firebase projekt, GitHub Pages
-pod `/TureckoCup/`). Golfgames se nemění; převzaté jsou WHS výpočty,
+Samostatná PWA (`maciii/TureckoCup`, soukromý repozitář, vlastní Firebase
+projekt, Firebase Hosting na `<id-projektu>.web.app`). Golfgames se nemění; převzaté jsou WHS výpočty,
 infrastruktura, design a mechanika přihlášení. Mimo rozsah: peníze,
 angličtina, ruční zadávání hřišť, extra body v UI.
 
