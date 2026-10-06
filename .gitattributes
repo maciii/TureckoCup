@@ -1,0 +1,6 @@
+# Konce řádků drží LF na všech platformách.
+#
+# Bez tohohle si Windows s core.autocrlf=true rozbalí pracovní kopii do CRLF,
+# jenže prettier píše LF - a `npm run check`, který je podle AGENTS.md podmínkou
+# commitu, pak na Windows nemůže projít, i když je obsah v pořádku.
+* text=auto eol=lf

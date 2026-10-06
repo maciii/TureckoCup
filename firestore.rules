@@ -1,0 +1,117 @@
+rules_version = '2';
+
+// Pravidla zabezpečení Firestore pro Turecko Cup 26.
+//
+// Tři role:
+//   Visitor      čte všechno veřejné bez přihlášení (turnaj, hráči, kola, log úprav)
+//   Zapisovatel  přihlášený Googlem s e-mailem v private/access.writerEmails
+//                (nebo anonymní účet s uid ve writerUids); smí měnit jen jednu
+//                buňku skóre/bonusů na jeden zápis v kole, které není uzavřené
+//   Admin        e-mail v private/access.adminEmails nebo bootstrap e-mail níž;
+//                smí vše
+//
+// Soukromé údaje (e-maily) leží v tournaments/{tid}/private/access, který čte
+// jen admin; get() v pravidlech čtecí omezení obchází, takže whitelist funguje.
+//
+// Nasazení: Firebase Console -> Firestore Database -> Rules -> vložit a publikovat.
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function verified() {
+      return signedIn() && request.auth.token.email_verified == true;
+    }
+
+    function email() {
+      return request.auth.token.email.lower();
+    }
+
+    function accessPath(tid) {
+      return /databases/$(db)/documents/tournaments/$(tid)/private/access;
+    }
+
+    function access(tid) {
+      return get(accessPath(tid)).data;
+    }
+
+    // Bootstrap e-mail řeší slepici a vejce: při založení turnaje dokument
+    // private/access ještě neexistuje. `||` toleruje chybu na jedné straně.
+    function isAdmin(tid) {
+      return verified()
+        && (email() == 'mac.kubecka@gmail.com'
+            || (exists(accessPath(tid)) && email() in access(tid).adminEmails));
+    }
+
+    function isWriter(tid) {
+      return isAdmin(tid)
+        || (verified() && exists(accessPath(tid)) && email() in access(tid).writerEmails)
+        || (signedIn() && exists(accessPath(tid)) && request.auth.uid in access(tid).writerUids);
+    }
+
+    // 0 = zvednutá jamka, jinak rány. Chybějící klíč = nezapsáno.
+    function validStrokes(v) {
+      return v is int && v >= 0 && v <= 20;
+    }
+
+    // Jeden zápis = jedna buňka (hráč × jamka) ve skóre a případně v bonusech,
+    // a k tomu lastEdit, který říká, která buňka to je. Kontroluje se i vnořená
+    // úroveň, jinak by šlo jedním zápisem přepsat celou mapu skóre.
+    function validScoreEdit() {
+      let before = resource.data;
+      let after = request.resource.data;
+      let e = after.lastEdit;
+      let p = e.playerId;
+      let h = e.hole;
+      return before.status != 'finished'
+        && after.diff(before).affectedKeys().hasOnly(['scores', 'bonuses', 'lastEdit'])
+        && e.keys().hasOnly(['playerId', 'hole', 'by', 'at'])
+        && e.by == request.auth.uid
+        && e.at == request.time
+        && p in before.playerIds
+        && h.matches('^([0-9]|1[0-7])$')
+        && after.scores.diff(before.scores).affectedKeys().hasOnly([p])
+        && after.scores[p].diff(before.scores[p]).affectedKeys().hasOnly([h])
+        && (!(h in after.scores[p]) || validStrokes(after.scores[p][h]))
+        && after.bonuses.diff(before.bonuses).affectedKeys().hasOnly([p])
+        && after.bonuses[p].diff(before.bonuses[p]).affectedKeys().hasOnly([h])
+        && (!(h in after.bonuses[p])
+            || (after.bonuses[p][h] is list && after.bonuses[p][h].size() <= 8));
+    }
+
+    match /tournaments/{tid} {
+      allow read: if true;
+      allow write: if isAdmin(tid);
+
+      match /private/{doc} {
+        allow read, write: if isAdmin(tid);
+      }
+
+      match /players/{pid} {
+        allow read: if true;
+        allow write: if isAdmin(tid);
+      }
+
+      match /rounds/{rid} {
+        allow read: if true;
+        allow create, delete: if isAdmin(tid);
+        allow update: if isAdmin(tid) || (isWriter(tid) && validScoreEdit());
+
+        // Log úprav skóre: jen přidávání, nikdy změna ani mazání.
+        match /edits/{eid} {
+          allow read: if true;
+          allow create: if isWriter(tid)
+            && request.resource.data.by == request.auth.uid
+            && request.resource.data.at == request.time;
+          allow update, delete: if false;
+        }
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

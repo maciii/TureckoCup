@@ -1,0 +1,1536 @@
+/**
+ * Jediný stylopis aplikace. Barevná schémata jsou jen jiné hodnoty týchž
+ * proměnných (převzato z Golfgames, rozhodnutí #38 tam): tmavé v `:root`,
+ * světlé v `[data-theme='light']`. Zbytek stylopisu o schématu neví - kdo
+ * sáhne po natvrdo zapsané barvě, udělá pravidlo, které v druhém schématu
+ * nebude fungovat. Výjimkou jsou značky skóre, které jsou v obou stejné.
+ */
+:root {
+  color-scheme: dark;
+
+  --bg: #0f1c14;
+  --bg-elevated: #17281d;
+  --bg-input: #1e3326;
+  --line: #2a4433;
+  --text: #eef4ef;
+  --text-dim: #9fb4a6;
+  --accent: #4ade80;
+  --accent-dark: #16a34a;
+  --info: #7dd3fc;
+  --over: #fca5a5;
+  --danger: var(--score-birdie);
+  --scrim: rgba(0, 0, 0, 0.55);
+
+  /* Barvy týmů - turnajová řeč: A je teplá, B studená. Stejné v obou schématech. */
+  --team-a: #f2c14e;
+  --team-a-ink: #14210f;
+  --team-b: #7dd3fc;
+  --team-b-ink: #14210f;
+
+  --score-eagle: #f2c14e;
+  --score-eagle-ink: #14210f;
+  --score-birdie: #e8402a;
+  --score-birdie-ink: #fff;
+  --score-par: #3b9ce8;
+  --score-par-ink: #14210f;
+  --score-bogey: #5bb85b;
+  --score-bogey-ink: #14210f;
+  --score-double: #8a8a8a;
+  --score-double-ink: #fff;
+  --score-triple: #1c1c1c;
+  --score-triple-ink: #fff;
+  --score-triple-gap: #8a8a8a;
+  --scorecard-summary: #24402e;
+
+  --tap: 48px;
+  --app-max-width: 560px;
+  --screen-padding: 20px;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #eef2ea;
+  --bg-elevated: #ffffff;
+  --bg-input: #e6ede2;
+  --line: #ccd8c7;
+  --text: #14241a;
+  --text-dim: #5a6f60;
+  --accent: #15803d;
+  --accent-dark: #15803d;
+  --info: #0b6ea8;
+  --over: #b4342a;
+  --danger: #b4342a;
+  --scrim: rgba(15, 28, 20, 0.4);
+  --team-b: #0b6ea8;
+  --team-b-ink: #fff;
+  --score-triple-gap: #eef0ec;
+  --scorecard-summary: #dde7d8;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.4;
+  overscroll-behavior: none;
+}
+
+#root {
+  min-height: 100%;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+a {
+  color: var(--accent);
+}
+
+/* --- rozvržení obrazovky ------------------------------------------------ */
+
+/* Obrazovka je vysoká jako displej a sama se neposouvá; roluje jen `.content`. */
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  width: 100%;
+  max-width: var(--app-max-width);
+  margin-inline: auto;
+  overflow: hidden;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+
+.app-header {
+  padding: 14px var(--screen-padding) 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.screen-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.screen-header-row h1 {
+  flex: 1;
+}
+
+.subtitle {
+  margin: 2px 0 0;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.content {
+  flex: 1;
+  padding: var(--screen-padding);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.app-footer {
+  padding: 12px var(--screen-padding) calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.footer-row {
+  display: flex;
+  gap: 10px;
+}
+
+.footer-row > button {
+  flex: 1;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+}
+
+.section-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-mark svg {
+  flex: none;
+  color: var(--accent);
+}
+
+.brand-mark em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+/* --- tlačítka ----------------------------------------------------------- */
+
+.primary-button,
+.secondary-button {
+  width: 100%;
+  min-height: var(--tap);
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.primary-button {
+  background: var(--accent-dark);
+  color: #fff;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+  background: var(--bg-input);
+  color: var(--text-dim);
+  cursor: default;
+}
+
+.secondary-button {
+  background: var(--bg-input);
+  color: var(--text);
+}
+
+.link-button {
+  align-self: center;
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 550;
+  padding: 8px;
+  min-height: var(--tap);
+}
+
+.link-button.inline {
+  padding: 0;
+  min-height: auto;
+}
+
+.danger-button {
+  width: 100%;
+  min-height: var(--tap);
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 17px;
+  background: color-mix(in srgb, var(--danger) 22%, var(--bg-elevated));
+  color: var(--danger);
+}
+
+.icon-button {
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  font-size: 20px;
+  line-height: 1;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-arrow {
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  font-size: 26px;
+  line-height: 1;
+  color: var(--text);
+  flex: none;
+}
+
+.nav-arrow:disabled {
+  opacity: 0.3;
+}
+
+/* --- formuláře ---------------------------------------------------------- */
+
+.name-input,
+.value-input,
+.select-input {
+  min-height: var(--tap);
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg-input);
+  color: var(--text);
+  /* 16px brání iOS Safari v automatickém zoomu při zaostření pole. */
+  font-size: 16px;
+  font: inherit;
+  width: 100%;
+}
+
+.value-input {
+  width: 90px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.name-input::placeholder {
+  color: var(--text-dim);
+}
+
+.name-input:focus,
+.value-input:focus,
+.select-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.field-label {
+  flex: 1 1 140px;
+  min-width: 0;
+  font-size: 15px;
+}
+
+.field-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.field-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.segmented {
+  display: flex;
+  gap: 6px;
+  background: var(--bg-elevated);
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.segment {
+  flex: 1;
+  min-height: var(--tap);
+  border-radius: 9px;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 0 8px;
+}
+
+.segment.selected {
+  background: var(--accent-dark);
+  color: #fff;
+}
+
+.segmented.compact .segment {
+  min-height: 40px;
+  font-size: 14px;
+}
+
+.switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--tap);
+  font-size: 15px;
+  width: 100%;
+  text-align: left;
+}
+
+.switch-track {
+  flex: none;
+  width: 46px;
+  height: 28px;
+  border-radius: 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--line);
+  position: relative;
+  transition: background 120ms ease-out;
+}
+
+.switch-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: transform 120ms ease-out;
+}
+
+.switch.on .switch-track {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+.switch.on .switch-track::after {
+  background: #fff;
+  transform: translateX(18px);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 18px;
+  background: var(--bg-input);
+  border: 1px solid var(--line);
+  font-size: 14px;
+  font-weight: 550;
+}
+
+.chip.selected {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.chip-meta {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.notice {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.notice.error {
+  background: color-mix(in srgb, var(--danger) 18%, var(--bg-elevated));
+  color: var(--danger);
+}
+
+.notice.info {
+  background: color-mix(in srgb, var(--info) 14%, var(--bg-elevated));
+}
+
+.bullet-list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* --- menu (výsuvný panel zleva) ------------------------------------------ */
+
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  background: var(--scrim);
+  animation: menu-fade 150ms ease-out;
+}
+
+.menu-drawer {
+  width: 82%;
+  max-width: 320px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: calc(20px + env(safe-area-inset-top)) 16px
+    calc(16px + env(safe-area-inset-bottom));
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+  animation: menu-slide 180ms ease-out;
+}
+
+@keyframes menu-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes menu-slide {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+.menu-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.menu-drawer-head h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+}
+
+.menu-drawer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menu-drawer-item {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0 6px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.menu-drawer-item:active,
+.menu-drawer-item.selected {
+  background: var(--bg-input);
+}
+
+.menu-drawer-icon {
+  flex: none;
+  display: flex;
+  color: var(--accent);
+  width: 22px;
+  justify-content: center;
+}
+
+.menu-drawer-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.menu-drawer-count {
+  flex: none;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.menu-drawer-divider {
+  height: 1px;
+  margin: 10px 2px;
+  background: var(--line);
+}
+
+.menu-drawer-foot {
+  margin: auto 0 0;
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.menu-drawer-version {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.menu-drawer-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu-drawer-setting .segmented {
+  background: var(--bg-input);
+}
+
+/* --- leaderboard ----------------------------------------------------------- */
+
+.team-score {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 14px;
+  border-radius: 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+}
+
+.team-score-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.team-score-name {
+  font-size: 14px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.team-score-value {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.team-score-vs {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.team-a .team-score-name,
+.team-a .team-score-value,
+.team-a-text {
+  color: var(--team-a);
+}
+
+.team-b .team-score-name,
+.team-b .team-score-value,
+.team-b-text {
+  color: var(--team-b);
+}
+
+.team-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.team-badge.team-a {
+  background: var(--team-a);
+  color: var(--team-a-ink);
+}
+
+.team-badge.team-b {
+  background: var(--team-b);
+  color: var(--team-b-ink);
+}
+
+.round-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.round-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  width: 100%;
+}
+
+.round-card.live {
+  border-color: var(--accent);
+}
+
+.round-card-number {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-input);
+  font-weight: 700;
+}
+
+.round-card-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.round-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.round-card-meta {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.round-card-status {
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.round-card.live .round-card-status {
+  color: var(--accent);
+}
+
+/* --- výsledkové tabulky --------------------------------------------------- */
+
+.standings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.standing {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--bg-elevated);
+  border: 1.5px solid transparent;
+}
+
+.standing.leader {
+  border-color: var(--accent);
+}
+
+.position {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-dim);
+  min-width: 26px;
+}
+
+.standing.leader .position {
+  color: var(--accent);
+}
+
+.standing-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.standing-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.standing-detail {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-dim);
+}
+
+.standing-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-variant-numeric: tabular-nums;
+}
+
+.standing-score strong {
+  font-size: 22px;
+}
+
+.standing-secondary {
+  font-size: 13px;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+.duel {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--bg-elevated);
+}
+
+.duel-side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.duel-side.right {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.duel-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.duel-value {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.duel-side.winning .duel-name {
+  color: var(--accent);
+}
+
+.duel-state {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* --- hlavička jamky a zápis skóre ---------------------------------------- */
+
+.hole-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hole-center {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.hole-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+.hole-number.par-3 {
+  background: var(--score-birdie);
+  color: var(--score-birdie-ink);
+}
+
+.hole-number.par-4 {
+  background: var(--score-bogey);
+  color: var(--score-bogey-ink);
+}
+
+.hole-number.par-5 {
+  background: var(--score-par);
+  color: var(--score-par-ink);
+}
+
+.hole-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.hole-meta strong {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.game-header-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.game-header-entry {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+}
+
+.game-header-entry strong {
+  color: var(--text);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.game-header-entry.highlight strong {
+  color: var(--score-eagle);
+}
+
+.player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.player-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--bg-elevated);
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.player-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.player-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-mark {
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.player-mark.strokes {
+  letter-spacing: 1px;
+  color: var(--accent);
+}
+
+.player-mark.gain {
+  color: var(--score-eagle);
+}
+
+.player-total {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.step-button {
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: 12px;
+  background: var(--bg-input);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.step-button:disabled {
+  opacity: 0.4;
+}
+
+.score-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  height: var(--tap);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.pending-badge {
+  font-size: 12px;
+  color: var(--score-eagle);
+  font-weight: 600;
+}
+
+/* --- značky skóre --------------------------------------------------------- */
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  flex: none;
+}
+
+.mark.eagle,
+.mark.birdie {
+  border-radius: 50%;
+}
+
+.mark.par,
+.mark.bogey,
+.mark.double,
+.mark.triple {
+  border-radius: 3px;
+}
+
+.mark.eagle {
+  background: var(--score-eagle);
+  color: var(--score-eagle-ink);
+  box-shadow:
+    inset 0 0 0 2px var(--score-eagle),
+    inset 0 0 0 3.5px var(--bg-elevated);
+}
+
+.mark.birdie {
+  background: var(--score-birdie);
+  color: var(--score-birdie-ink);
+}
+
+.mark.par {
+  background: var(--score-par);
+  color: var(--score-par-ink);
+}
+
+.mark.bogey {
+  background: var(--score-bogey);
+  color: var(--score-bogey-ink);
+}
+
+.mark.double {
+  background: var(--score-double);
+  color: var(--score-double-ink);
+  box-shadow:
+    inset 0 0 0 2px var(--score-double),
+    inset 0 0 0 3.5px var(--bg-elevated);
+}
+
+.mark.triple {
+  background: var(--score-triple);
+  color: var(--score-triple-ink);
+  box-shadow:
+    inset 0 0 0 1.5px var(--score-triple),
+    inset 0 0 0 2.5px var(--score-triple-gap),
+    inset 0 0 0 4px var(--score-triple),
+    inset 0 0 0 5px var(--score-triple-gap);
+}
+
+.mark.empty {
+  color: var(--line);
+}
+
+.mark.large {
+  width: 38px;
+  height: 38px;
+  font-size: 20px;
+}
+
+/* --- scorekarta ----------------------------------------------------------- */
+
+.scorecard-wrap {
+  overflow-x: auto;
+  border-radius: 14px;
+  background: var(--bg-elevated);
+}
+
+.scorecard {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+}
+
+.scorecard th,
+.scorecard td {
+  padding: 7px 4px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+}
+
+.scorecard thead th {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  position: sticky;
+  top: 0;
+  background: var(--bg-elevated);
+  z-index: 1;
+}
+
+.scorecard tbody th {
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.scorecard .par-cell {
+  color: var(--text-dim);
+}
+
+.col-name {
+  display: block;
+  max-width: 56px;
+  margin: 0 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scorecard .player-col-a {
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg-elevated));
+}
+
+.scorecard .player-col-b {
+  background: color-mix(in srgb, var(--accent) 2%, var(--bg-elevated));
+}
+
+.scorecard .group-row th {
+  font-size: 11px;
+  border-bottom: none;
+  padding-bottom: 2px;
+}
+
+.scorecard .extra-col {
+  border-left: 1px solid var(--line);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.scorecard-player-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 24px;
+}
+
+.scorecard-hcp-dots {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+.scorecard td.skin-awarded {
+  background: color-mix(in srgb, var(--score-eagle) 30%, var(--bg-elevated));
+  box-shadow: inset 0 0 0 1.5px
+    color-mix(in srgb, var(--score-eagle) 72%, var(--bg-elevated));
+}
+
+.scorecard tbody tr.scorecard-turn-row > th,
+.scorecard tbody tr.scorecard-turn-row > td,
+.scorecard tfoot tr > th,
+.scorecard tfoot tr > td {
+  background: var(--scorecard-summary);
+  font-weight: 700;
+  border-top: 1px solid var(--line);
+}
+
+.scorecard tfoot td,
+.scorecard tfoot th {
+  border-bottom: none;
+}
+
+.scorecard tbody tr.scorecard-turn-row .scorecard-turn-label,
+.scorecard tfoot tr > th {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.scorecard tbody td {
+  padding: 8px 5px;
+}
+
+.scorecard tr.current-hole > th,
+.scorecard tr.current-hole > td {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* --- vysunovací panel zespodu ---------------------------------------------- */
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--scrim);
+}
+
+.sheet {
+  width: 100%;
+  max-width: var(--app-max-width);
+  max-height: 85dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+  border-radius: 18px 18px 0 0;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+}
+
+.sheet-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.option-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  border: 1.5px solid transparent;
+}
+
+.option-row.selected {
+  border-color: var(--accent);
+  background: var(--bg-input);
+}
+
+.option-check {
+  flex: 0 0 auto;
+  width: 22px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.option-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.option-title {
+  font-weight: 600;
+}
+
+.option-meta {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* --- hráči a admin ---------------------------------------------------------- */
+
+.players-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg-elevated);
+}
+
+.players-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.players-meta {
+  font-size: 13px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 12px;
+  align-items: center;
+}
+
+.admin-grid .value-input {
+  width: 76px;
+}
+
+.tee-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  flex: none;
+}
+
+.table-plain {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table-plain th,
+.table-plain td {
+  padding: 8px 6px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.table-plain th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.table-plain td.num,
+.table-plain th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.account-name {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  margin-right: 6px;
+}
+
+.status-dot.synced {
+  background: var(--accent);
+}
+
+.status-dot.offline,
+.status-dot.error {
+  background: var(--over);
+}
+
+.pwa-install {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+/* --- responzivita ------------------------------------------------------------ */
+
+@media (max-width: 360px) {
+  :root {
+    --screen-padding: 14px;
+  }
+
+  .app-header h1 {
+    font-size: 19px;
+  }
+
+  .segment {
+    padding-inline: 6px;
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 600px) {
+  :root {
+    --app-max-width: 620px;
+    --screen-padding: 28px;
+  }
+}
+
+@media (min-width: 900px) {
+  :root {
+    --app-max-width: 720px;
+  }
+
+  .screen {
+    border-inline: 1px solid var(--line);
+  }
+
+  .link-button:hover {
+    text-decoration: underline;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .app-header {
+    padding-block: 10px 8px;
+  }
+
+  .content {
+    gap: 14px;
+    padding-block: 12px;
+  }
+
+  .app-footer {
+    padding-block: 8px;
+  }
+
+  .sheet {
+    max-height: 94dvh;
+  }
+}
