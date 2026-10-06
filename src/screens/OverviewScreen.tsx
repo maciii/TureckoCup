@@ -4,15 +4,18 @@ import { summarizeTournament } from '../evaluations/tournament'
 import { t } from '../i18n'
 import { navigate } from '../nav'
 import type { Route } from '../nav'
-import { TEAM_IDS } from '../model/types'
 import { usePwaInstall } from '../pwa'
 import {
-  BrandMark,
+  FlagMark,
+  Header,
+  MenuIcon,
+  Pill,
   Section,
+  StatusChip,
   TeamBadge,
   formatDate,
   playerLabel,
-  roundTitle,
+  teamName,
 } from './common'
 import GameResults from './GameResults'
 import MenuSheet from './MenuSheet'
@@ -36,34 +39,44 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
     state.rounds.find((r) => r.status === 'planned')
   const currentEvaluation = summary.rounds.find((entry) => entry.round.id === current?.id)
   const teams = state.tournament?.teams
+  const played = summary.rounds.filter((e) => e.round.status === 'finished').length
+  const total = summary.teamPoints.A + summary.teamPoints.B
+  const barA = total > 0 ? (summary.teamPoints.A / total) * 100 : 0
+  const barB = total > 0 ? (summary.teamPoints.B / total) * 100 : 0
+  const dates = state.rounds.length
+    ? `${formatDate(state.rounds[0]!.date)} – ${formatDate(state.rounds[state.rounds.length - 1]!.date)}`
+    : ''
 
   return (
     <div className="screen">
-      <header className="app-header">
-        <div className="screen-header-row">
+      <Header
+        title={t('app.name')}
+        left={
           <button
             type="button"
             className="icon-button"
             onClick={() => setMenuOpen(true)}
             aria-label={t('nav.menu')}
           >
-            ☰
+            <MenuIcon />
           </button>
-          <h1>
-            <BrandMark />
-          </h1>
-          {playRoute && (
+        }
+        right={
+          playRoute ? (
             <button
               type="button"
               className="icon-button"
               onClick={() => navigate(playRoute)}
               aria-label={t('nav.play')}
             >
-              ✎
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 20h4l10-10-4-4L4 16z" />
+                <path d="M12 8l4 4" />
+              </svg>
             </button>
-          )}
-        </div>
-      </header>
+          ) : undefined
+        }
+      />
 
       <main className="content">
         {meta.mode === 'local' && <p className="notice info">{t('app.demoMode')}</p>}
@@ -72,60 +85,110 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
             {meta.error}
           </p>
         )}
+
+        <div className="hero">
+          <span className="hero-mark">
+            <FlagMark size={30} />
+          </span>
+          <h1>{state.tournament?.name ?? t('app.name')}</h1>
+          <p>
+            {state.tournament
+              ? `Belek · ${dates}`
+              : meta.status === 'loading'
+                ? t('app.loading')
+                : t('app.noTournament')}
+          </p>
+        </div>
+
         {!state.tournament && meta.status !== 'loading' && (
-          <div className="notice">
-            <strong>{t('app.noTournament')}</strong>
-            <p className="hint">{t('app.noTournamentHint')}</p>
-          </div>
+          <p className="hint center px">{t('app.noTournamentHint')}</p>
         )}
 
         {state.tournament && (
-          <Section title={t('overview.teamScore')}>
-            <div className="team-score">
-              <span className="team-score-side team-a">
-                <span className="team-score-name">{teams?.A.name}</span>
-                <span className="team-score-value">{summary.teamPoints.A}</span>
+          <>
+            <div className="divider" />
+            <p className="eyebrow">{t('overview.teamScore')}</p>
+            <div className="score-hero">
+              <span className="score-side">
+                <Pill teamId="A" size="lg">
+                  {summary.teamPoints.A}
+                </Pill>
+                <span className="score-name">{teamName('A', teams)}</span>
               </span>
-              <span className="team-score-vs">:</span>
-              <span className="team-score-side team-b">
-                <span className="team-score-name">{teams?.B.name}</span>
-                <span className="team-score-value">{summary.teamPoints.B}</span>
+              <span className="score-side">
+                <Pill teamId="B" size="lg">
+                  {summary.teamPoints.B}
+                </Pill>
+                <span className="score-name">{teamName('B', teams)}</span>
               </span>
             </div>
-            {summary.provisional && <p className="hint">{t('overview.provisional')}</p>}
-          </Section>
+            <div className="score-bar">
+              <span className="seg-a" style={{ width: `${barA}%` }} />
+              <span className="seg-b" style={{ width: `${barB}%` }} />
+            </div>
+            <p className="hint center px" style={{ marginTop: 8 }}>
+              {t('overview.played', { played, total: state.rounds.length })}
+              {summary.provisional ? ` · ${t('overview.provisional')}` : ''}
+            </p>
+          </>
         )}
 
-        {current && (
-          <Section
-            title={
-              live
+        {state.rounds.length > 0 && (
+          <>
+            <p className="eyebrow">{t('overview.rounds')}</p>
+            <div className="list">
+              {state.rounds.map((round) => {
+                const points = summary.rounds.find(
+                  (e) => e.round.id === round.id,
+                )?.teamPoints
+                const isLive = round.status === 'live'
+                return (
+                  <button
+                    key={round.id}
+                    type="button"
+                    className={`row${isLive ? ' live' : ''}`}
+                    onClick={() => navigate({ view: 'round', roundId: round.id })}
+                  >
+                    <span className="row-main">
+                      <span className="row-title">
+                        <span>
+                          {t('round.title', { number: round.number })} ·{' '}
+                          {round.course.name}
+                        </span>
+                      </span>
+                      <span className="row-meta">
+                        {formatDate(round.date)}
+                        {' · '}
+                        <StatusChip status={round.status} />
+                      </span>
+                    </span>
+                    {points && round.status !== 'planned' && (
+                      <span
+                        className="row-right"
+                        style={{ flexDirection: 'row', gap: 4 }}
+                      >
+                        <Pill teamId="A">{points.A}</Pill>
+                        <Pill teamId="B">{points.B}</Pill>
+                      </span>
+                    )}
+                    <span className="chev">›</span>
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )}
+
+        {current && currentEvaluation && (
+          <>
+            <div className="divider" style={{ marginTop: 10 }} />
+            <p className="eyebrow">
+              {live
                 ? t('overview.currentRound')
-                : t('round.title', { number: current.number })
-            }
-            action={
-              <button
-                type="button"
-                className="link-button inline"
-                onClick={() => navigate({ view: 'round', roundId: current.id })}
-              >
-                {t('overview.openRound')}
-              </button>
-            }
-          >
-            <button
-              type="button"
-              className={`round-card${current.status === 'live' ? ' live' : ''}`}
-              onClick={() => navigate({ view: 'round', roundId: current.id })}
-            >
-              <span className="round-card-number">{current.number}</span>
-              <span className="round-card-main">
-                <span className="round-card-title">{current.course.name}</span>
-                <span className="round-card-meta">{formatDate(current.date)}</span>
-              </span>
-              <span className="round-card-status">{t(`status.${current.status}`)}</span>
-            </button>
-            {currentEvaluation?.results.map((result) => (
+                : t('round.title', { number: current.number })}{' '}
+              · {current.course.name}
+            </p>
+            {currentEvaluation.results.map((result) => (
               <GameResults
                 key={result.game.id}
                 round={current}
@@ -134,97 +197,82 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
                 teams={teams}
               />
             ))}
-          </Section>
-        )}
-
-        {state.rounds.length > 0 && (
-          <Section title={t('overview.rounds')}>
-            <div className="round-list">
-              {state.rounds.map((round) => {
-                const points = summary.rounds.find(
-                  (e) => e.round.id === round.id,
-                )?.teamPoints
-                return (
-                  <button
-                    key={round.id}
-                    type="button"
-                    className={`round-card${round.status === 'live' ? ' live' : ''}`}
-                    onClick={() => navigate({ view: 'round', roundId: round.id })}
-                  >
-                    <span className="round-card-number">{round.number}</span>
-                    <span className="round-card-main">
-                      <span className="round-card-title">{roundTitle(round)}</span>
-                      <span className="round-card-meta">
-                        {formatDate(round.date)}
-                        {points ? ` · ${points.A} : ${points.B}` : ''}
-                      </span>
-                    </span>
-                    <span className="round-card-status">
-                      {t(`status.${round.status}`)}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </Section>
+          </>
         )}
 
         {summary.rounds.length > 0 && (
-          <Section title={t('overview.individuals')}>
-            <p className="hint">{t('overview.individualsHint')}</p>
-            <ol className="standings">
+          <Section
+            title={t('overview.individuals')}
+            note={t('overview.individualsHint')}
+            accent="gold"
+          >
+            <ol className="list" style={{ listStyle: 'none', margin: 0 }}>
               {summary.individuals.map((entry) => (
                 <li
                   key={entry.id}
-                  className={`standing${entry.position === 1 && entry.rounds > 0 ? ' leader' : ''}`}
+                  className={`row${entry.position === 1 && entry.rounds > 0 ? ' leader' : ''}`}
                 >
                   <span className="position">
                     {entry.rounds > 0 ? entry.position : '·'}
                   </span>
-                  <span className="standing-name">
-                    <span className="standing-name-row">
+                  <span className="row-main">
+                    <span className="row-title">
                       <TeamBadge teamId={entry.teamId} />
                       <span>{playerLabel(state.players, entry.id)}</span>
                     </span>
-                    <span className="standing-detail">
-                      {t('common.skins', { count: entry.skins })}
+                    <span className="row-meta">
+                      {t('common.skins', { count: entry.skins })} ·{' '}
+                      {t('common.rounds', { count: entry.rounds })}
                     </span>
                   </span>
-                  <span className="standing-score">
-                    <strong>{entry.stableford}</strong>
-                    <span className="standing-secondary">
-                      {t('common.points', { count: entry.stableford })}
-                    </span>
-                  </span>
+                  <Pill teamId={entry.teamId}>{entry.stableford}</Pill>
                 </li>
               ))}
             </ol>
           </Section>
         )}
 
-        {summary.rounds.length > 0 && summary.positions.some((p) => p.rounds > 0) && (
-          <Section title={t('overview.positions')}>
-            <p className="hint">{t('overview.positionsHint')}</p>
-            <ul className="standings">
+        {summary.positions.some((p) => p.rounds > 0) && (
+          <Section
+            title={t('overview.positions')}
+            note={t('overview.positionsHint')}
+            accent="navy"
+          >
+            <ul className="list" style={{ listStyle: 'none', margin: 0 }}>
               {summary.positions.map((balance) => (
                 <li key={balance.position} className="duel">
                   <span className="duel-side">
-                    <span className="duel-name">
-                      {TEAM_IDS[0]}
-                      {balance.position}
+                    <span className="nm">
+                      <TeamBadge teamId="A" />
+                      <span>
+                        {playerLabel(
+                          state.players,
+                          current?.positions.A[balance.position - 1] ?? '',
+                        )}
+                      </span>
                     </span>
-                    <span className="duel-value">{balance.wins.A}</span>
                   </span>
-                  <span className="duel-state">
-                    {balance.wins.A} : {balance.wins.B}
-                    {balance.halves > 0 ? ` (${balance.halves}×½)` : ''}
+                  <span className="duel-center">
+                    <span className="v">
+                      {balance.wins.A}
+                      {balance.halves > 0
+                        ? ` : ${balance.wins.B} (${balance.halves}×½)`
+                        : ` : ${balance.wins.B}`}
+                    </span>
+                    <div className="m">
+                      {t('overview.positionShort')} {balance.position}
+                    </div>
                   </span>
                   <span className="duel-side right">
-                    <span className="duel-name">
-                      {TEAM_IDS[1]}
-                      {balance.position}
+                    <span className="nm">
+                      <span>
+                        {playerLabel(
+                          state.players,
+                          current?.positions.B[balance.position - 1] ?? '',
+                        )}
+                      </span>
+                      <TeamBadge teamId="B" />
                     </span>
-                    <span className="duel-value">{balance.wins.B}</span>
                   </span>
                 </li>
               ))}
@@ -232,19 +280,25 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
           </Section>
         )}
 
-        {summary.rounds.length === 0 && state.tournament && (
-          <p className="hint">{t('overview.noRounds')}</p>
-        )}
-
         {!isStandalone && isMobile && (
-          <section className="pwa-install">
-            <strong>{t('overview.installApp')}</strong>
-            <p className="hint">{t('overview.installHint')}</p>
-          </section>
+          <div className="soft-card" style={{ marginTop: 24 }}>
+            <strong style={{ fontSize: 13, fontWeight: 800 }}>
+              {t('overview.installApp')}
+            </strong>
+            <p className="hint" style={{ marginTop: 4 }}>
+              {t('overview.installHint')}
+            </p>
+          </div>
         )}
       </main>
 
-      {menuOpen && <MenuSheet onClose={() => setMenuOpen(false)} playRoute={playRoute} />}
+      {menuOpen && (
+        <MenuSheet
+          onClose={() => setMenuOpen(false)}
+          playRoute={playRoute}
+          current="overview"
+        />
+      )}
     </div>
   )
 }

@@ -11,12 +11,12 @@ změnit konfigurací v aplikaci.
 
 ## Stav k 6. 10. 2026
 
-| Fáze                                            | Stav                                                                 |
-| ----------------------------------------------- | -------------------------------------------------------------------- |
-| 0 Základ projektu                               | hotovo                                                               |
-| 1 MVP (model, evaluace, datová vrstva, obrazovky)| hotovo, `npm run check` a Playwright smoke zelené                     |
-| 2 Pozice, agregace, hlavní hra                  | duely pozic a agregace přes kola hotové; hlavní hra čeká na rozhodnutí |
-| Provoz                                          | **čeká na administrátora** – Firebase a GitHub podle `setup-firebase.md` |
+| Fáze                                              | Stav                                                                     |
+| ------------------------------------------------- | ------------------------------------------------------------------------ |
+| 0 Základ projektu                                 | hotovo                                                                   |
+| 1 MVP (model, evaluace, datová vrstva, obrazovky) | hotovo, `npm run check` a Playwright smoke zelené                        |
+| 2 Pozice, agregace, hlavní hra                    | duely pozic a agregace přes kola hotové; hlavní hra čeká na rozhodnutí   |
+| Provoz                                            | **čeká na administrátora** – Firebase a GitHub podle `setup-firebase.md` |
 
 ### Co musí udělat administrátor (blokuje ostrý provoz)
 
@@ -72,27 +72,27 @@ Podrobně v [`architecture.md`](architecture.md). Ve zkratce:
 
 ## 4. Rozhodnutí administrátora (předpoklady `[P]` v aplikaci)
 
-| Téma                     | Výchozí stav v aplikaci                                       | Kde změnit                 |
-| ------------------------ | ------------------------------------------------------------- | -------------------------- |
-| Odpaliště                | bílá pro všechny `[P]`                                        | Admin → kolo → Odpaliště   |
-| Hlavní hra kola          | není; týmové skóre tvoří jen Team Skins (označeno předběžné)  | Admin → kolo → Hry         |
-| Team Skins               | lepší netto míč týmu, přenos banku, 1 bod za skin `[P]`       | Admin → kolo → Hry         |
-| Individual Skins         | ve flightu `[P]`, přenos banku                                | Admin → kolo → Hry         |
-| Allowance                | 100 % `[P]`                                                   | Admin → kolo → Hry         |
-| Duely pozic              | netto rány `[P]`, nevstupují do týmového skóre                | Admin → kolo → Hry         |
-| Týmy a pozice            | zástupné rozdělení ze seedu `[P]`                             | Admin → Hráči, Admin → kolo |
-| Flighty                  | A1 A2 B1 B2 / A3 A4 B3 B4 `[P]`, start z jedničky             | Admin → kolo → Flighty     |
-| Lykia Links CR           | 74,7 (slope tabulka) `[P]`                                    | ruční přepis hracího HCP   |
-| Chybějící HCP            | Soldík, Jarin, Radek, Honza hrají s nulou a otazníkem         | Admin → Hráči              |
-| Zapisovatelé             | `mac.kubecka@gmail.com`, `bezdekf@gmail.com`                  | Admin → Oprávnění          |
+| Téma             | Výchozí stav v aplikaci                                      | Kde změnit                  |
+| ---------------- | ------------------------------------------------------------ | --------------------------- |
+| Odpaliště        | bílá pro všechny `[P]`                                       | Admin → kolo → Odpaliště    |
+| Hlavní hra kola  | není; týmové skóre tvoří jen Team Skins (označeno předběžné) | Admin → kolo → Hry          |
+| Team Skins       | lepší netto míč týmu, přenos banku, 1 bod za skin `[P]`      | Admin → kolo → Hry          |
+| Individual Skins | ve flightu `[P]`, přenos banku                               | Admin → kolo → Hry          |
+| Allowance        | 100 % `[P]`                                                  | Admin → kolo → Hry          |
+| Duely pozic      | netto rány `[P]`, nevstupují do týmového skóre               | Admin → kolo → Hry          |
+| Týmy a pozice    | zástupné rozdělení ze seedu `[P]`                            | Admin → Hráči, Admin → kolo |
+| Flighty          | A1 A2 B1 B2 / A3 A4 B3 B4 `[P]`, start z jedničky            | Admin → kolo → Flighty      |
+| Lykia Links CR   | 74,7 (slope tabulka) `[P]`                                   | ruční přepis hracího HCP    |
+| Chybějící HCP    | Soldík, Jarin, Radek, Honza hrají s nulou a otazníkem        | Admin → Hráči               |
+| Zapisovatelé     | `mac.kubecka@gmail.com`, `bezdekf@gmail.com`                 | Admin → Oprávnění           |
 
 ## 5. Rizika a opatření
 
-| Riziko                                  | Opatření                                                                  |
-| --------------------------------------- | ------------------------------------------------------------------------- |
-| Firebase není nastavená do 8. 10.       | aplikace běží v ukázkovém režimu na jednom telefonu; skóre lze přepsat do Firestoru později přes Admin (opravy) |
-| Google popup blokovaný na iOS           | převzatý `preloadAuth()`, návod: nejdřív instalovat PWA, pak se přihlásit v ní |
-| Souběžný zápis dvou flightů             | jedna buňka na zápis, rules kontrolují vnořenou úroveň                     |
-| Výpadek signálu                         | trvalá cache Firestoru, zápis nikdy nečeká na síť, odznak „neodesláno“    |
-| Chyba v hracím HCP                      | tabulka v Admin → kolo s ručním přepisem; test s reálnými CR/SR           |
-| Změna formátu her během turnaje         | hry jsou konfigurace, raw skóre se nemění                                 |
+| Riziko                            | Opatření                                                                                                        |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Firebase není nastavená do 8. 10. | aplikace běží v ukázkovém režimu na jednom telefonu; skóre lze přepsat do Firestoru později přes Admin (opravy) |
+| Google popup blokovaný na iOS     | převzatý `preloadAuth()`, návod: nejdřív instalovat PWA, pak se přihlásit v ní                                  |
+| Souběžný zápis dvou flightů       | jedna buňka na zápis, rules kontrolují vnořenou úroveň                                                          |
+| Výpadek signálu                   | trvalá cache Firestoru, zápis nikdy nečeká na síť, odznak „neodesláno“                                          |
+| Chyba v hracím HCP                | tabulka v Admin → kolo s ručním přepisem; test s reálnými CR/SR                                                 |
+| Změna formátu her během turnaje   | hry jsou konfigurace, raw skóre se nemění                                                                       |

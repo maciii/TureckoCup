@@ -3,6 +3,22 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.2.0] – 2026-10-06
+
+### Změněno
+
+- **Vzhled podle Zavařovák Cupu:** světlý tichý podklad, Inter, skóre
+  v barevných pilulkách týmů, seznamy s děliči místo karet, nadpisy sekcí
+  s barevným proužkem, scorekarta jako klasická karta po devítkách, kompaktní
+  hlavička zápisu jamky s kolečkem a šipkami. Tmavé schéma zrušeno.
+- Značky skóre podle golfové konvence: kolečko pod par (birdie červeně,
+  eagle zlatě), čtverec nad par (modře), par bez zvýraznění.
+
+### Přidáno
+
+- Log úprav skóre v Admin → kolo, anonymní přihlášení pro hráče bez Googlu,
+  testy security rules v emulátoru (`npm run test:rules`).
+
 ## [0.1.0] – 2026-10-06
 
 ### Přidáno

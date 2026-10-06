@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import { useData } from '../data'
 import { evaluateRound } from '../evaluations'
 import { skinsAtStake } from '../evaluations/skins'
@@ -22,7 +23,7 @@ import {
   strokesReceived,
 } from '../model/round'
 import { goBack, navigate } from '../nav'
-import { ScoreMark, TeamBadge, formatToPar, sideLabel } from './common'
+import { Header, ScoreMark, TeamBadge, formatToPar, sideLabel } from './common'
 import Scorecard from './Scorecard'
 
 const LONG_PRESS_MS = 500
@@ -34,27 +35,26 @@ interface Props {
 }
 
 /**
- * Zápis skóre po jamkách - stavěno na hraní jednou rukou (vzor Golfgames):
- * velká tlačítka −/+, klepnutí na číslo vloží par, přidržení zápis smaže,
- * vlastní tlačítko „Zvedl". Čtyři hráči se musí vejít na displej bez
- * rolování.
+ * Zápis skóre po jamkách - jedna obrazovka na jamku. Ovládání z Golfgames
+ * (klepnutí vloží par, −/+ upraví rány, přidržení smaže), vzhled ze
+ * Zavařováku (kolečko jamky, šipky po stranách, rány jako stepper v řádku
+ * hráče). Čtyři hráči se musí vejít na displej bez rolování.
  */
 export default function PlayScreen({ roundId, flight }: Props) {
   const { state, meta, store } = useData()
   const round = state.rounds.find((r) => r.id === roundId)
   const flightEntry = flight !== null ? round?.flights[flight] : undefined
-  const [hole, setHole] = useState<number>(() => readHole(roundId, flight))
+  const [hole, setHole] = useState<number>(() => readHole(roundId, flight) ?? 0)
   const [showCard, setShowCard] = useState(false)
   const longPress = useRef<{ timer: number | null; fired: boolean }>({
     timer: null,
     fired: false,
   })
 
-  // Při prvním otevření flightu skočit na jamku, kde flight nejspíš je.
+  // Při otevření flightu skočit na jamku, kde flight nejspíš je.
   useEffect(() => {
     if (!round || !flightEntry) return
-    const stored = readHole(roundId, flight, true)
-    setHole(stored ?? flightCurrentHole(round, flightEntry))
+    setHole(readHole(roundId, flight) ?? flightCurrentHole(round, flightEntry))
     // Jen při změně flightu/kola, ne při každém zápisu.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roundId, flight])
@@ -75,7 +75,9 @@ export default function PlayScreen({ roundId, flight }: Props) {
   if (!round) {
     return (
       <Shell title={t('play.title')}>
-        {meta.status === 'loading' ? t('app.loading') : t('common.dash')}
+        <p className="hint center px" style={{ paddingTop: 24 }}>
+          {meta.status === 'loading' ? t('app.loading') : t('common.dash')}
+        </p>
       </Shell>
     )
   }
@@ -88,7 +90,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
     return (
       <Shell title={t('play.title')} subtitle={round.course.name}>
         {!canWrite && <p className="notice">{t('play.signInRequired')}</p>}
-        <h2 className="section-title">{t('play.chooseFlight')}</h2>
+        <p className="eyebrow">{t('play.chooseFlight')}</p>
         <ul className="option-list">
           {round.flights.map((entry, index) => (
             <li key={index}>
@@ -97,7 +99,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
                 className="option-row"
                 onClick={() => navigate({ view: 'play', roundId, flight: index }, true)}
               >
-                <span className="option-main">
+                <span className="row-main">
                   <span className="option-title">
                     {t('round.flight', { number: index + 1 })}
                   </span>
@@ -105,6 +107,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
                     {sideLabel(state.players, entry.players)}
                   </span>
                 </span>
+                <span className="chev">›</span>
               </button>
             </li>
           ))}
@@ -122,6 +125,10 @@ export default function PlayScreen({ roundId, flight }: Props) {
   const stablefordGame = round.games.find((g) => g.kind === 'individual-stableford')
   const skinsResult = results.find((r) => r.game.kind === 'individual-skins')
   const teamSkinsResult = results.find((r) => r.game.kind === 'team-skins')
+  const holeComplete = flightEntry.players.every(
+    (id) => scoreAt(round, id, hole) !== undefined,
+  )
+  const canGoNext = orderIndex < count - 1
 
   function setScore(playerId: PlayerId, value: number | null) {
     if (!entryEnabled) return
@@ -141,6 +148,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
     longPress.current.timer = window.setTimeout(() => {
       longPress.current.fired = true
       setScore(playerId, null)
+      navigator.vibrate?.(30)
     }, LONG_PRESS_MS)
   }
 
@@ -169,61 +177,25 @@ export default function PlayScreen({ roundId, flight }: Props) {
 
   return (
     <div className="screen">
-      <header className="app-header">
-        <div className="hole-nav">
+      <Header
+        title={`${t('round.title', { number: round.number })} · ${t('round.flight', { number: (flight ?? 0) + 1 })}`}
+        subtitle={round.course.name}
+        right={
           <button
             type="button"
-            className="nav-arrow"
-            onClick={() => (orderIndex <= 0 ? goBack() : goTo(-1))}
-            aria-label={orderIndex <= 0 ? t('common.back') : t('play.previousHole')}
+            className="icon-button"
+            onClick={() => navigate({ view: 'play', roundId, flight: null }, true)}
+            aria-label={t('play.switchFlight')}
+            title={t('play.switchFlight')}
           >
-            ‹
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="9" cy="8" r="3" />
+              <circle cx="17" cy="9" r="2.4" />
+              <path d="M3 20v-1a5 5 0 015-5h1a5 5 0 015 5v1" />
+            </svg>
           </button>
-          <div className="hole-center">
-            <span
-              className={`hole-number par-${par}`}
-              aria-label={t('common.hole', { number: hole + 1 })}
-            >
-              {hole + 1}
-            </span>
-            <div className="hole-meta">
-              <strong>
-                {t('common.par')} {par} · SI {si}
-              </strong>
-              <span className="game-header-summary">
-                {skinsResult && (
-                  <span
-                    className={`game-header-entry${flightSkins > 1 ? ' highlight' : ''}`}
-                  >
-                    <span>{t('games.individual-skins.name')}</span>
-                    <strong>{flightSkins}</strong>
-                  </span>
-                )}
-                {teamSkinsResult && (
-                  <span
-                    className={`game-header-entry${teamSkins > 1 ? ' highlight' : ''}`}
-                  >
-                    <span>{t('games.team-skins.name')}</span>
-                    <strong>{teamSkins}</strong>
-                  </span>
-                )}
-                <span className="game-header-entry">
-                  <span>{t('round.flight', { number: (flight ?? 0) + 1 })}</span>
-                </span>
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="nav-arrow"
-            onClick={() => goTo(1)}
-            disabled={orderIndex >= count - 1}
-            aria-label={t('play.nextHole')}
-          >
-            ›
-          </button>
-        </div>
-      </header>
+        }
+      />
 
       <main className="content">
         {meta.error && (
@@ -239,31 +211,80 @@ export default function PlayScreen({ roundId, flight }: Props) {
         {!canWrite && <p className="notice">{t('play.signInRequired')}</p>}
         {locked && <p className="notice">{t('play.roundFinished')}</p>}
         {notLive && <p className="notice">{t('play.roundNotLive')}</p>}
-        {meta.pending > 0 && (
-          <p className="hint pending-badge">
-            {t('play.pendingWrites', { count: meta.pending })}
-          </p>
+
+        <div className="hole-nav">
+          <button
+            type="button"
+            className="hole-arrow"
+            onClick={() => (orderIndex <= 0 ? goBack() : goTo(-1))}
+            aria-label={orderIndex <= 0 ? t('common.back') : t('play.previousHole')}
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <span
+            className="hole-number"
+            aria-label={t('common.hole', { number: hole + 1 })}
+          >
+            {hole + 1}
+          </span>
+          <button
+            type="button"
+            className={`hole-arrow${holeComplete && canGoNext ? ' go' : ''}`}
+            onClick={() => goTo(1)}
+            disabled={!canGoNext}
+            aria-label={t('play.nextHole')}
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        </div>
+        <div className="hole-info">
+          {t('common.par').toUpperCase()} {par}
+          <span className="sep">·</span>SI {si}
+          <span className="sep">·</span>
+          {t('play.holeOf', { index: orderIndex + 1, count })}
+        </div>
+        {(skinsResult || teamSkinsResult || meta.pending > 0) && (
+          <div className="stakes">
+            {skinsResult && (
+              <span className={`tag${flightSkins > 1 ? ' hot' : ''}`}>
+                {t('games.individual-skins.name')} · {flightSkins}
+              </span>
+            )}
+            {teamSkinsResult && (
+              <span className={`tag${teamSkins > 1 ? ' hot' : ' navy'}`}>
+                {t('games.team-skins.name')} · {teamSkins}
+              </span>
+            )}
+            {meta.pending > 0 && (
+              <span className="tag gold">
+                {t('play.pendingWrites', { count: meta.pending })}
+              </span>
+            )}
+          </div>
         )}
 
         <ul className="player-list">
           {flightEntry.players.map((playerId) => {
             const score = scoreAt(round, playerId, hole)
             const strokes = strokesReceived(round, playerId, hole)
-            const played = holesCompleted(round, playerId)
+            const completed = holesCompleted(round, playerId)
             const toPar = grossTotal(round, playerId) - parForPlayedHoles(round, playerId)
             const points =
               stablefordGame && score !== undefined
                 ? stablefordAt(round, playerId, hole, stablefordGame.options)
                 : undefined
             const player = state.players.find((p) => p.id === playerId)
+            const name = shortName(state.players, playerId)
             return (
               <li key={playerId} className="player-row">
                 <div className="player-info">
                   <span className="player-name">
                     <TeamBadge teamId={player?.teamId} />
-                    <span className="player-name-text">
-                      {shortName(state.players, playerId)}
-                    </span>
+                    <span className="player-name-text">{name}</span>
                     {strokes > 0 && (
                       <span
                         className="player-mark strokes"
@@ -273,14 +294,14 @@ export default function PlayScreen({ roundId, flight }: Props) {
                       </span>
                     )}
                     {!hasHandicap(round, playerId) && (
-                      <span className="player-mark">?</span>
+                      <span className="player-mark warn">?</span>
                     )}
                     {points !== undefined && (
-                      <span className="player-mark gain">{points}</span>
+                      <span className="player-mark gain">{points} b</span>
                     )}
                   </span>
                   <span className="player-total">
-                    {played === 0 && holesPlayed(round, playerId) === 0
+                    {completed === 0 && holesPlayed(round, playerId) === 0
                       ? t('play.noScore')
                       : t('play.total', {
                           strokes: grossTotal(round, playerId),
@@ -295,7 +316,8 @@ export default function PlayScreen({ roundId, flight }: Props) {
                     setScore(playerId, score === PICKED_UP ? null : PICKED_UP)
                   }
                   disabled={!entryEnabled}
-                  aria-label={`${t('play.pickedUp')}: ${shortName(state.players, playerId)}`}
+                  aria-label={`${t('play.pickedUp')}: ${name}`}
+                  title={t('play.pickedUp')}
                 >
                   ×
                 </button>
@@ -305,9 +327,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
                     className="step-button"
                     onClick={() => adjust(playerId, -1)}
                     disabled={!entryEnabled}
-                    aria-label={t('play.minus', {
-                      name: shortName(state.players, playerId),
-                    })}
+                    aria-label={t('play.minus', { name })}
                   >
                     −
                   </button>
@@ -321,9 +341,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
                     onPointerLeave={cancelLongPress}
                     onPointerCancel={cancelLongPress}
                     onContextMenu={(e) => e.preventDefault()}
-                    aria-label={t('play.score', {
-                      name: shortName(state.players, playerId),
-                    })}
+                    aria-label={t('play.score', { name })}
                   >
                     <ScoreMark score={score} par={par} large />
                   </button>
@@ -332,9 +350,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
                     className="step-button"
                     onClick={() => adjust(playerId, 1)}
                     disabled={!entryEnabled}
-                    aria-label={t('play.plus', {
-                      name: shortName(state.players, playerId),
-                    })}
+                    aria-label={t('play.plus', { name })}
                   >
                     +
                   </button>
@@ -343,24 +359,23 @@ export default function PlayScreen({ roundId, flight }: Props) {
             )
           })}
         </ul>
-        <p className="hint">{t('play.clearHint')}</p>
+        <p className="hint center px" style={{ paddingTop: 10 }}>
+          {t('play.clearHint', { par })}
+        </p>
       </main>
 
       <footer className="app-footer">
         <div className="footer-row">
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => navigate({ view: 'play', roundId, flight: null }, true)}
-          >
-            {t('play.switchFlight')}
+          <button type="button" className="btn sm" onClick={() => setShowCard(true)}>
+            {t('play.showScorecard')}
           </button>
           <button
             type="button"
-            className="secondary-button"
-            onClick={() => setShowCard(true)}
+            className={`btn sm${holeComplete && canGoNext ? ' primary' : ''}`}
+            onClick={() => goTo(1)}
+            disabled={!canGoNext}
           >
-            {t('play.showScorecard')}
+            {t('play.nextHole')} ›
           </button>
         </div>
       </footer>
@@ -372,23 +387,22 @@ export default function PlayScreen({ roundId, flight }: Props) {
           role="presentation"
         >
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="sheet-header">
-              <h2>{t('round.scorecard')}</h2>
-            </div>
+            <p className="eyebrow" style={{ marginTop: 4 }}>
+              {t('round.scorecard')} · {t('round.flight', { number: (flight ?? 0) + 1 })}
+            </p>
             <Scorecard
               round={round}
               players={state.players}
               skins={skinsResult}
+              teamSkins={teamSkinsResult}
               currentHole={hole}
               flightIndex={flight ?? undefined}
             />
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => setShowCard(false)}
-            >
-              {t('common.close')}
-            </button>
+            <div className="px" style={{ paddingTop: 14 }}>
+              <button type="button" className="btn" onClick={() => setShowCard(false)}>
+                {t('common.close')}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -403,32 +417,17 @@ function Shell({
 }: {
   title: string
   subtitle?: string
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <div className="screen">
-      <header className="app-header">
-        <div className="screen-header-row">
-          <button
-            type="button"
-            className="icon-button"
-            onClick={goBack}
-            aria-label={t('common.back')}
-          >
-            ‹
-          </button>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h1>{title}</h1>
-            {subtitle && <p className="subtitle">{subtitle}</p>}
-          </div>
-        </div>
-      </header>
+      <Header title={title} subtitle={subtitle} />
       <main className="content">{children}</main>
     </div>
   )
 }
 
-function readHole(roundId: string, flight: number | null, strict = false): number {
+function readHole(roundId: string, flight: number | null): number | undefined {
   try {
     const raw = localStorage.getItem(`${HOLE_KEY}:${roundId}:${flight}`)
     const value = raw === null ? NaN : Number.parseInt(raw, 10)
@@ -436,5 +435,5 @@ function readHole(roundId: string, flight: number | null, strict = false): numbe
   } catch {
     /* ignore */
   }
-  return strict ? (undefined as unknown as number) : 0
+  return undefined
 }

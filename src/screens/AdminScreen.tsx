@@ -5,9 +5,9 @@ import { t } from '../i18n'
 import { POSITIONS, TEAM_IDS } from '../model/types'
 import type { Player, TeamId } from '../model/types'
 import { formatHandicapIndex, parseHandicapIndex } from '../scoring/whs'
-import { goBack, navigate } from '../nav'
+import { navigate } from '../nav'
 import { APP_VERSION } from '../version'
-import { Section, TeamBadge, formatDate, roundTitle } from './common'
+import { Header, Section, StatusChip, TeamBadge, formatDate } from './common'
 
 /** Admin a účet: přihlášení, inicializace, hráči, kola, oprávnění, záloha. */
 export default function AdminScreen() {
@@ -38,21 +38,18 @@ export default function AdminScreen() {
     URL.revokeObjectURL(url)
   }
 
+  const syncLabel =
+    meta.mode === 'local'
+      ? t('admin.sync.local')
+      : meta.status === 'offline'
+        ? t('admin.sync.offline')
+        : meta.status === 'error'
+          ? t('admin.sync.error')
+          : t('admin.sync.synced')
+
   return (
     <div className="screen">
-      <header className="app-header">
-        <div className="screen-header-row">
-          <button
-            type="button"
-            className="icon-button"
-            onClick={goBack}
-            aria-label={t('common.back')}
-          >
-            ‹
-          </button>
-          <h1>{t('admin.title')}</h1>
-        </div>
-      </header>
+      <Header title={t('admin.title')} />
 
       <main className="content">
         {meta.error && (
@@ -66,18 +63,17 @@ export default function AdminScreen() {
           </button>
         )}
 
-        <Section title={t('admin.signedInAs')}>
-          <div className="card section">
-            <p className="hint">
+        <Section
+          title={t('admin.account')}
+          accent="navy"
+          right={
+            <span>
               <span className={`status-dot ${meta.status}`} />
-              {meta.mode === 'local'
-                ? t('admin.sync.local')
-                : meta.status === 'offline'
-                  ? t('admin.sync.offline')
-                  : meta.status === 'error'
-                    ? t('admin.sync.error')
-                    : t('admin.sync.synced')}
-            </p>
+              {syncLabel}
+            </span>
+          }
+        >
+          <div className="px stack">
             {meta.account ? (
               <>
                 <p className="account-name">{meta.account.name}</p>
@@ -89,32 +85,47 @@ export default function AdminScreen() {
                 </p>
                 <button
                   type="button"
-                  className="secondary-button"
+                  className="btn ghost sm"
                   onClick={() => void store.signOut()}
                 >
                   {t('admin.signOut')}
                 </button>
               </>
             ) : (
-              <button
-                type="button"
-                className="primary-button"
-                disabled={!meta.authReady}
-                onClick={() => void store.signIn()}
-              >
-                {meta.authReady ? t('admin.signIn') : t('admin.signingIn')}
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="btn primary"
+                  disabled={!meta.authReady}
+                  onClick={() => void store.signIn()}
+                >
+                  {meta.authReady ? t('admin.signIn') : t('admin.signingIn')}
+                </button>
+                <button
+                  type="button"
+                  className="btn ghost sm"
+                  onClick={() => void store.signInAnonymously()}
+                >
+                  {t('admin.signInAnonymous')}
+                </button>
+                <p className="hint">{t('admin.signInAnonymousHint')}</p>
+              </>
             )}
             <p className="hint">{t('common.version', { version: APP_VERSION })}</p>
           </div>
         </Section>
 
         {isAdmin && !state.tournament && (
-          <Section title={t('admin.initialize')}>
-            <p className="hint">{t('admin.initializeHint')}</p>
-            <button type="button" className="primary-button" onClick={initialize}>
-              {t('admin.initialize')}
-            </button>
+          <Section
+            title={t('admin.initialize')}
+            note={t('admin.initializeHint')}
+            accent="fairway"
+          >
+            <div className="px">
+              <button type="button" className="btn primary" onClick={initialize}>
+                {t('admin.initialize')}
+              </button>
+            </div>
           </Section>
         )}
 
@@ -122,34 +133,41 @@ export default function AdminScreen() {
 
         {isAdmin && state.tournament && (
           <>
-            <Section title={t('admin.rounds')}>
-              <div className="round-list">
+            <Section title={t('admin.rounds')} accent="fairway">
+              <div className="list">
                 {state.rounds.map((round) => (
                   <button
                     key={round.id}
                     type="button"
-                    className={`round-card${round.status === 'live' ? ' live' : ''}`}
+                    className={`row${round.status === 'live' ? ' live' : ''}`}
                     onClick={() => navigate({ view: 'adminRound', roundId: round.id })}
                   >
-                    <span className="round-card-number">{round.number}</span>
-                    <span className="round-card-main">
-                      <span className="round-card-title">{roundTitle(round)}</span>
-                      <span className="round-card-meta">{formatDate(round.date)}</span>
+                    <span className="row-main">
+                      <span className="row-title">
+                        <span>
+                          {t('round.title', { number: round.number })} ·{' '}
+                          {round.course.name}
+                        </span>
+                      </span>
+                      <span className="row-meta">
+                        {formatDate(round.date)} · <StatusChip status={round.status} />
+                      </span>
                     </span>
-                    <span className="round-card-status">
-                      {t(`status.${round.status}`)}
-                    </span>
+                    <span className="chev">›</span>
                   </button>
                 ))}
               </div>
             </Section>
 
-            <Section title={t('admin.players')}>
-              <p className="hint">{t('admin.playersHint')}</p>
-              {TEAM_IDS.map((teamId) => (
-                <TeamEditor key={teamId} teamId={teamId} />
-              ))}
-              <div className="card section">
+            <Section
+              title={t('admin.players')}
+              note={t('admin.playersHint')}
+              accent="gold"
+            >
+              <div className="px">
+                {TEAM_IDS.map((teamId) => (
+                  <TeamEditor key={teamId} teamId={teamId} />
+                ))}
                 {state.players.map((player) => (
                   <PlayerEditor key={player.id} player={player} />
                 ))}
@@ -158,10 +176,12 @@ export default function AdminScreen() {
 
             <AccessEditor />
 
-            <Section title={t('admin.export')}>
-              <button type="button" className="secondary-button" onClick={exportJson}>
-                {t('admin.export')}
-              </button>
+            <Section title={t('admin.export')} accent="navy">
+              <div className="px">
+                <button type="button" className="btn ghost" onClick={exportJson}>
+                  {t('admin.export')}
+                </button>
+              </div>
             </Section>
           </>
         )}
@@ -191,11 +211,11 @@ function TeamEditor({ teamId }: { teamId: TeamId }) {
       </span>
       <span className="field-input">
         <input
-          className="name-input"
+          className="input sm"
           value={name}
           onChange={(e) => setName(e.target.value)}
           onBlur={save}
-          style={{ width: 160 }}
+          style={{ width: 150 }}
         />
       </span>
     </div>
@@ -216,9 +236,9 @@ function PlayerEditor({ player }: { player: Player }) {
   }
 
   return (
-    <div className="players-row" style={{ flexWrap: 'wrap' }}>
+    <div className="field" style={{ flexWrap: 'wrap', gap: 6 }}>
       <input
-        className="name-input"
+        className="input sm"
         value={name}
         onChange={(e) => setName(e.target.value)}
         onBlur={() =>
@@ -226,11 +246,11 @@ function PlayerEditor({ player }: { player: Player }) {
           name.trim() !== player.name &&
           patch({ name: name.trim(), nick: name.trim().split(/\s+/)[0] })
         }
-        style={{ flex: '1 1 120px' }}
+        style={{ flex: '1 1 110px' }}
         aria-label={t('common.player')}
       />
       <input
-        className="value-input"
+        className="input sm num"
         inputMode="decimal"
         placeholder={t('admin.handicapIndex')}
         value={hcp}
@@ -238,14 +258,15 @@ function PlayerEditor({ player }: { player: Player }) {
         onBlur={() => patch({ handicapIndex: parseHandicapIndex(hcp) })}
         aria-label={t('admin.handicapIndex')}
         style={{
-          borderColor: player.handicapIndex === null ? 'var(--danger)' : undefined,
+          width: 64,
+          borderColor: player.handicapIndex === null ? 'var(--red)' : undefined,
         }}
       />
       <select
-        className="select-input"
+        className="input sm"
         value={player.teamId}
         onChange={(e) => patch({ teamId: e.target.value as TeamId })}
-        style={{ width: 70 }}
+        style={{ width: 58 }}
         aria-label={t('common.team')}
       >
         {TEAM_IDS.map((teamId) => (
@@ -255,12 +276,12 @@ function PlayerEditor({ player }: { player: Player }) {
         ))}
       </select>
       <select
-        className="select-input"
+        className="input sm"
         value={player.position}
         onChange={(e) =>
           patch({ position: Number(e.target.value) as Player['position'] })
         }
-        style={{ width: 70 }}
+        style={{ width: 58 }}
         aria-label={t('admin.position')}
       >
         {POSITIONS.map((position) => (
@@ -269,11 +290,6 @@ function PlayerEditor({ player }: { player: Player }) {
           </option>
         ))}
       </select>
-      {player.handicapIndex === null && (
-        <span className="hint" style={{ color: 'var(--danger)' }}>
-          {t('admin.missingHandicap')}
-        </span>
-      )}
     </div>
   )
 }
@@ -292,16 +308,19 @@ function AccessEditor() {
   function list(key: AccessKey, label: string) {
     const values = access![key]
     return (
-      <div className="field-stack">
-        <span className="section-title">{label}</span>
+      <div className="stack" style={{ paddingTop: 10 }}>
+        <span className="menu-label" style={{ padding: 0 }}>
+          {label}
+        </span>
         <div className="chip-row">
+          {values.length === 0 && <span className="hint">{t('common.dash')}</span>}
           {values.map((value) => (
             <button
               key={value}
               type="button"
               className="chip"
               onClick={() =>
-                confirm(`${t('common.cancel')}: ${value}?`) &&
+                confirm(`${t('admin.removeEmail')}: ${value}?`) &&
                 update(
                   key,
                   values.filter((v) => v !== value),
@@ -324,40 +343,32 @@ function AccessEditor() {
   }
 
   return (
-    <Section title={t('admin.access')}>
-      <p className="hint">{t('admin.accessHint')}</p>
-      <div className="card section">
-        {list('adminEmails', t('admin.adminEmails'))}
+    <Section title={t('admin.access')} note={t('admin.accessHint')} accent="red">
+      <div className="px stack">
         {list('writerEmails', t('admin.writerEmails'))}
+        {list('adminEmails', t('admin.adminEmails'))}
         {list('writerUids', t('admin.writerUids'))}
         <input
-          className="name-input"
+          className="input"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder={t('admin.addEmail')}
           inputMode="email"
           autoCapitalize="none"
+          style={{ marginTop: 8 }}
         />
         <div className="footer-row">
           <button
             type="button"
-            className="secondary-button"
+            className="btn green-soft sm"
             onClick={() => add('writerEmails')}
           >
             + {t('admin.writerEmails')}
           </button>
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => add('adminEmails')}
-          >
+          <button type="button" className="btn sm" onClick={() => add('adminEmails')}>
             + {t('admin.adminEmails')}
           </button>
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => add('writerUids')}
-          >
+          <button type="button" className="btn sm" onClick={() => add('writerUids')}>
             + uid
           </button>
         </div>

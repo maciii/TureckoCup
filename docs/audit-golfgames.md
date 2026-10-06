@@ -6,10 +6,13 @@ vyžaduje audit před implementací; tenhle dokument je jeho výstup a zároveň
 mapa toho, co se do Turecko Cupu 26 přebírá, co se adaptuje a kde se záměrně
 rozcházíme.
 
-Repozitář **Zavarovak-app** zmíněný v zadání se nepodařilo dohledat (pod
-účtem `maciii` neexistuje nebo k němu session nemá přístup). Audit designu
-a funkce proto vychází z Golfgames (Fairsome), které je zároveň hlavní
-referencí podle specifikace.
+Repozitář **zelisveprem/zavarovak-app** dodal uživatel dodatečně jako zip.
+Je to Next.js aplikace pro Zavařovák Cup (Ryder Cup formát, 12 vs 12,
+SQLite) - z ní se přebírá **design systém** (viz `decisions.md` #9): světlý
+podklad, Inter, pilulky skóre, seznamy s děliči, nadpisy s proužkem,
+scorekarta po devítkách, kompaktní hlavička zápisu jamky. Architektura
+(server, SQLite, server actions) se nepřebírá - turnaj běží bez vlastního
+serveru na Firebase.
 
 ---
 

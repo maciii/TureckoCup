@@ -1,4 +1,4 @@
-import type { TournamentState } from '../model/types'
+import type { EditRecord, TournamentState } from '../model/types'
 import { EMPTY_STATE } from '../model/types'
 import type { Op } from './ops'
 import { applyOp } from './ops'
@@ -16,6 +16,16 @@ import { SEED_ACCESS, SEED_PLAYERS, SEED_TOURNAMENT, seedRounds } from './seed'
 
 const STATE_KEY = `${STORAGE_PREFIX}state.v1`
 const IDENTITY_KEY = `${STORAGE_PREFIX}demoIdentity.v1`
+const EDITS_KEY = `${STORAGE_PREFIX}edits.v1`
+
+function readEdits(): (EditRecord & { roundId: string })[] {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(EDITS_KEY) ?? '[]')
+    return Array.isArray(parsed) ? (parsed as (EditRecord & { roundId: string })[]) : []
+  } catch {
+    return []
+  }
+}
 
 function readState(): TournamentState {
   try {
@@ -114,6 +124,28 @@ export function createLocalStore(options: { seed?: boolean } = {}): Store {
         notify()
         return
       }
+      if (op.kind === 'setScore') {
+        const before = state.rounds.find((r) => r.id === op.roundId)
+        const from = before?.scores[op.playerId]?.[String(op.hole)] ?? null
+        const edits = readEdits()
+        edits.unshift({
+          roundId: op.roundId,
+          playerId: op.playerId,
+          hole: String(op.hole),
+          from,
+          to: op.value,
+          by: `demo-${role}`,
+          byEmail: meta().account?.email,
+          at: new Date().toISOString(),
+          clientAt: new Date().toISOString(),
+          appVersion: 'demo',
+        })
+        try {
+          localStorage.setItem(EDITS_KEY, JSON.stringify(edits.slice(0, 500)))
+        } catch {
+          /* log je jen pohodlí */
+        }
+      }
       state = applyOp(state, op)
       writeState(state)
       notify()
@@ -142,6 +174,11 @@ export function createLocalStore(options: { seed?: boolean } = {}): Store {
       role = next
       persistIdentity()
       notify()
+    },
+    async loadEdits(roundId, limit = 50) {
+      return readEdits()
+        .filter((edit) => edit.roundId === roundId)
+        .slice(0, limit)
     },
   }
 

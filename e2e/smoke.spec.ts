@@ -29,12 +29,12 @@ test.beforeEach(async ({ page }) => {
 
 test('přehled ukazuje turnaj a kola bez přihlášení', async ({ page }) => {
   await open(page)
-  await expect(page.locator('.team-score')).toBeVisible()
-  await expect(page.locator('.round-card')).toHaveCount(6) // aktuální kolo + 5 v seznamu
-  await page.locator('.round-list .round-card').first().click()
+  await expect(page.locator('.score-hero').first()).toBeVisible()
+  await expect(page.locator('.list .row')).toHaveCount(5)
+  await page.locator('.list .row').first().click()
   await expect(page.locator('h1')).toContainText('Kolo 1')
   await page.getByRole('button', { name: 'Scorekarta' }).click()
-  await expect(page.locator('table.scorecard')).toBeVisible()
+  await expect(page.locator('table.scorecard').first()).toBeVisible()
   // Žádné vodorovné přetečení stránky.
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
@@ -78,8 +78,8 @@ test('admin spustí kolo, zapisovatel zapíše a visitor vidí výsledek', async
 
   // Přehled ukazuje kolo jako živé a Stableford s body.
   await open(second)
-  await expect(second.locator('.round-card.live').first()).toBeVisible()
-  await expect(second.locator('.standings').first()).toBeVisible()
+  await expect(second.locator('.row.live').first()).toBeVisible()
+  await expect(second.locator('.pill.team-a').first()).toBeVisible()
 })
 
 test('visitor nemůže zapisovat', async ({ page }) => {

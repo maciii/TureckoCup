@@ -12,9 +12,10 @@ leaderboard bez přihlášení, administrace jedním adminem. React 19 +
 TypeScript 7 + Vite 8, Firebase (Auth + Firestore na plánu Spark), GitHub
 Pages. Jen česky.
 
-Design, infrastruktura a výpočty handicapů jsou převzaté z
-[`maciii/golfgames`](https://github.com/maciii/golfgames) – audit a mapa
-znovupoužití je v [`docs/audit-golfgames.md`](docs/audit-golfgames.md).
+Infrastruktura, výpočty handicapů a ovládání zápisu jsou převzaté z
+[`maciii/golfgames`](https://github.com/maciii/golfgames), vizuální design ze
+Zavařovák Cupu (`zelisveprem/zavarovak-app`) – audit a mapa znovupoužití je
+v [`docs/audit-golfgames.md`](docs/audit-golfgames.md).
 
 ## Kde je co napsané
 
@@ -65,8 +66,8 @@ npm run test:e2e   # Playwright, telefonní profil (PW_CHROMIUM=cesta k Chromiu,
 8. **Produkce bez konfigurace Firebase nikdy nespadne na localStorage.**
    Ukázkový režim jen ve vývoji nebo s `?demo=1`.
 9. **Nic placeného.** Firebase jen na Sparku, hosting GitHub Pages.
-10. **Texty jen v `src/i18n/cs.ts`**, barvy jen přes CSS proměnné, komentáře
-    vysvětlují proč.
+10. **Texty jen v `src/i18n/cs.ts`**, barvy jen přes CSS proměnné (schéma je
+    jen světlé, žádné `#hex` v komponentách), komentáře vysvětlují proč.
 11. **Firebase se importuje jen dynamicky a jen z `src/data/`.**
 
 ## Struktura ve zkratce

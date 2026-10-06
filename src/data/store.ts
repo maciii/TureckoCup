@@ -1,4 +1,4 @@
-import type { TournamentState } from '../model/types'
+import type { EditRecord, TournamentState } from '../model/types'
 import type { Op } from './ops'
 
 /**
@@ -49,6 +49,8 @@ export interface Store {
   dismissError(): void
   /** Ukázkový režim: přepnutí identity (admin / zapisovatel / visitor). */
   setDemoIdentity?(role: Role): void
+  /** Log úprav kola, nejnovější první. */
+  loadEdits(roundId: string, limit?: number): Promise<EditRecord[]>
 }
 
 export const STORAGE_PREFIX = 'tc26.'

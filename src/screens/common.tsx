@@ -10,8 +10,9 @@ import { PICKED_UP } from '../model/types'
 import { playerById, shortName } from '../model/round'
 import type { StandingRow } from '../evaluations'
 import { dynamicKey, t } from '../i18n'
+import { goBack } from '../nav'
 
-/** Kategorie výsledku na jamce - barva i tvar značky, stejně jako v Golfgames. */
+/** Kategorie výsledku na jamce - tvar i barva značky podle golfové konvence. */
 export type ScoreCategory = 'eagle' | 'birdie' | 'par' | 'bogey' | 'double' | 'triple'
 
 export function scoreCategory(score: number, par: number): ScoreCategory {
@@ -46,10 +47,9 @@ export function ScoreMark({
     score === undefined
       ? 'empty'
       : score === PICKED_UP
-        ? 'triple'
+        ? 'picked'
         : scoreCategory(score, par)
-  const text =
-    score === undefined ? t('common.dash') : score === PICKED_UP ? '×' : String(score)
+  const text = score === undefined ? '–' : score === PICKED_UP ? '×' : String(score)
   return <span className={`mark ${category}${large ? ' large' : ''}`}>{text}</span>
 }
 
@@ -58,9 +58,34 @@ export function formatToPar(toPar: number): string {
   return toPar > 0 ? `+${toPar}` : `${toPar}`
 }
 
+export function teamClass(teamId: TeamId | undefined | null): string {
+  return teamId ? `team-${teamId.toLowerCase()}` : ''
+}
+
 export function TeamBadge({ teamId }: { teamId: TeamId | undefined }) {
   if (!teamId) return null
-  return <span className={`team-badge team-${teamId.toLowerCase()}`}>{teamId}</span>
+  return <span className={`team-badge ${teamClass(teamId)}`}>{teamId}</span>
+}
+
+/** Skóre v barevné pilulce týmu; bez týmu neutrální. */
+export function Pill({
+  teamId,
+  size,
+  tone,
+  children,
+}: {
+  teamId?: TeamId | null
+  size?: 'md' | 'lg'
+  tone?: 'green'
+  children: ReactNode
+}) {
+  return (
+    <span
+      className={`pill${size ? ` ${size}` : ''} ${teamClass(teamId)}${tone ? ` ${tone}` : ''}`}
+    >
+      {children}
+    </span>
+  )
 }
 
 export function gameTitle(game: GameConfig): string {
@@ -86,34 +111,62 @@ export function playerLabel(players: Player[], id: PlayerId): string {
   return playerById(players, id)?.name ?? id
 }
 
-/** Výsledková tabulka s pozicemi, lídr má zelený rámeček. */
+export type SectionAccent = 'navy' | 'fairway' | 'gold' | 'red' | 'team-a' | 'team-b'
+
+/** Nadpis sekce s barevným proužkem vlevo (vzor Zavařovák). */
+export function Section({
+  title,
+  note,
+  right,
+  accent = 'navy',
+  children,
+}: {
+  title: string
+  note?: string
+  right?: ReactNode
+  accent?: SectionAccent
+  children: ReactNode
+}) {
+  return (
+    <section>
+      <div className={`section-head ${accent}`}>
+        <span className="bar" />
+        <div className="section-main">
+          <div className="section-row">
+            <h2>{title}</h2>
+            {right && <span className="section-right">{right}</span>}
+          </div>
+          {note && <p className="section-note">{note}</p>}
+        </div>
+      </div>
+      {children}
+    </section>
+  )
+}
+
+/** Výsledková tabulka: řádky s děliči, hodnota v pilulce týmu, lídr zeleně. */
 export function Standings({
   rows,
   players,
   value,
-  secondary,
-  detail,
+  meta,
 }: {
   rows: StandingRow[]
   players: Player[]
   value: (row: StandingRow) => string
-  secondary?: (row: StandingRow) => string | undefined
-  detail?: (row: StandingRow) => string | undefined
+  meta?: (row: StandingRow) => string | undefined
 }) {
   if (rows.length === 0) return null
-  const showPositions = rows.length > 1
   return (
-    <ol className="standings">
+    <ol className="list" style={{ listStyle: 'none', margin: 0 }}>
       {rows.map((row) => (
         <li
           key={row.id}
-          className={`standing${row.position === 1 && row.holes > 0 ? ' leader' : ''}`}
+          className={`row${row.position === 1 && row.holes > 0 ? ' leader' : ''}`}
         >
-          {showPositions && (
-            <span className="position">{row.holes > 0 ? row.position : '·'}</span>
-          )}
-          <span className="standing-name">
-            <span className="standing-name-row">
+          <span className="position">{row.holes > 0 ? row.position : '·'}</span>
+          <span className="row-main">
+            <span className="row-title">
               <TeamBadge teamId={row.teamId} />
               <span>
                 {row.players.length === 1
@@ -121,37 +174,12 @@ export function Standings({
                   : sideLabel(players, row.players)}
               </span>
             </span>
-            {detail?.(row) && <span className="standing-detail">{detail(row)}</span>}
+            {meta?.(row) && <span className="row-meta">{meta(row)}</span>}
           </span>
-          <span className="standing-score">
-            <strong>{value(row)}</strong>
-            {secondary?.(row) && (
-              <span className="standing-secondary">{secondary(row)}</span>
-            )}
-          </span>
+          <Pill teamId={row.teamId}>{value(row)}</Pill>
         </li>
       ))}
     </ol>
-  )
-}
-
-export function Section({
-  title,
-  action,
-  children,
-}: {
-  title: string
-  action?: ReactNode
-  children: ReactNode
-}) {
-  return (
-    <section className="section">
-      <div className="section-title-row">
-        <h2 className="section-title">{title}</h2>
-        {action}
-      </div>
-      {children}
-    </section>
   )
 }
 
@@ -188,17 +216,69 @@ export function formatDate(iso: string): string {
   return date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' })
 }
 
-export function BrandMark() {
+export function FlagMark({ size = 28 }: { size?: number }) {
   return (
-    <span className="brand-mark">
-      <svg width="24" height="24" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-        <ellipse cx="32" cy="46" rx="18" ry="7" fill="currentColor" opacity="0.35" />
-        <rect x="30" y="14" width="3" height="32" rx="1.5" fill="currentColor" />
-        <path d="M33 14 L52 21 L33 28 Z" fill="#f2c14e" />
-      </svg>
-      <span>
-        Turecko <em>Cup</em> 26
-      </span>
-    </span>
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden="true">
+      <ellipse cx="32" cy="46" rx="18" ry="7" fill="#ffffff" opacity="0.35" />
+      <rect x="30" y="14" width="3" height="32" rx="1.5" fill="#ffffff" />
+      <path d="M33 14 L52 21 L33 28 Z" fill="#ffd23f" />
+    </svg>
   )
+}
+
+export function BackIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
+  )
+}
+
+export function MenuIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <line x1="4" y1="7" x2="20" y2="7" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="17" x2="20" y2="17" />
+    </svg>
+  )
+}
+
+/** Horní lišta se zpět, titulkem a volitelným podtitulkem. */
+export function Header({
+  title,
+  subtitle,
+  onBack = goBack,
+  left,
+  right,
+}: {
+  title: ReactNode
+  subtitle?: string
+  onBack?: () => void
+  left?: ReactNode
+  right?: ReactNode
+}) {
+  return (
+    <header className="app-header">
+      {left ?? (
+        <button
+          type="button"
+          className="icon-button"
+          onClick={onBack}
+          aria-label={t('common.back')}
+        >
+          <BackIcon />
+        </button>
+      )}
+      <div className="header-main">
+        <h1>{title}</h1>
+        {subtitle && <p className="subtitle">{subtitle}</p>}
+      </div>
+      {right ?? <span className="header-spacer" />}
+    </header>
+  )
+}
+
+export function StatusChip({ status }: { status: TournamentRound['status'] }) {
+  return <span className={`status-chip ${status}`}>{t(`status.${status}`)}</span>
 }

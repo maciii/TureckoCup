@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useData } from '../data'
+import type { EditRecord } from '../model/types'
 import { SEED_SCHEDULE, defaultGames, seedRoundConfig } from '../data/seed'
 import { localizedTeeName, t } from '../i18n'
 import type {
@@ -13,13 +14,13 @@ import type {
 import { TEAM_IDS } from '../model/types'
 import { courseHandicapOf, hasHandicap, playerName, shortName } from '../model/round'
 import { GAME_KINDS } from '../evaluations'
-import { goBack, navigate } from '../nav'
-import { Section, Switch, TeamBadge, formatDate, gameTitle, roundTitle } from './common'
+import { navigate } from '../nav'
+import { Header, Section, Switch, TeamBadge, formatDate, gameTitle } from './common'
 
 const STATUSES: RoundStatus[] = ['planned', 'live', 'finished']
 const FORMATS: DuelFormat[] = ['strokes-gross', 'strokes-net', 'stableford', 'match-play']
 
-/** Nastavení jednoho kola: stav, odpaliště, hrací HCP, flighty, hry, mazání. */
+/** Nastavení jednoho kola: stav, odpaliště, hrací HCP, flighty, pozice, hry, opravy. */
 export default function AdminRoundScreen({ roundId }: { roundId: string }) {
   const { state, meta, store } = useData()
   const round = state.rounds.find((r) => r.id === roundId)
@@ -27,19 +28,7 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
   if (!round || meta.role !== 'admin') {
     return (
       <div className="screen">
-        <header className="app-header">
-          <div className="screen-header-row">
-            <button
-              type="button"
-              className="icon-button"
-              onClick={goBack}
-              aria-label={t('common.back')}
-            >
-              ‹
-            </button>
-            <h1>{t('admin.title')}</h1>
-          </div>
-        </header>
+        <Header title={t('admin.title')} />
         <main className="content">
           <p className="notice">{t('admin.notAdmin')}</p>
         </main>
@@ -64,33 +53,37 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
     }
   }
 
-  const writersMissing = round.flights
-    .map((flight, index) => ({ index, flight }))
-    .filter(({ flight }) => {
-      const emails = state.access?.writerEmails ?? []
-      const admins = state.access?.adminEmails ?? []
-      // Nevíme, který e-mail patří kterému hráči; varujeme jen při prázdném whitelistu.
-      return emails.length + admins.length === 0 && flight.players.length > 0
-    })
+  const noWriters =
+    (state.access?.writerEmails.length ?? 0) +
+      (state.access?.adminEmails.length ?? 0) +
+      (state.access?.writerUids.length ?? 0) ===
+    0
+
+  const tabs = (
+    options: { id: string; label: string }[],
+    selected: string,
+    onSelect: (id: string) => void,
+  ) => (
+    <div className="tabs compact">
+      {options.map((option) => (
+        <button
+          key={option.id}
+          type="button"
+          className={`tab${selected === option.id ? ' selected' : ''}`}
+          onClick={() => onSelect(option.id)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  )
 
   return (
     <div className="screen">
-      <header className="app-header">
-        <div className="screen-header-row">
-          <button
-            type="button"
-            className="icon-button"
-            onClick={goBack}
-            aria-label={t('common.back')}
-          >
-            ‹
-          </button>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h1>{roundTitle(round)}</h1>
-            <p className="subtitle">{formatDate(round.date)}</p>
-          </div>
-        </div>
-      </header>
+      <Header
+        title={t('round.title', { number: round.number })}
+        subtitle={`${round.course.name} · ${formatDate(round.date)}`}
+      />
 
       <main className="content">
         {meta.error && (
@@ -104,208 +97,294 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
           </button>
         )}
 
-        <Section title={t('admin.roundStatus')}>
-          <div className="segmented">
-            {STATUSES.map((status) => (
-              <button
-                key={status}
-                type="button"
-                className={`segment${round.status === status ? ' selected' : ''}`}
-                onClick={() => patch({ status })}
-              >
-                {t(`status.${status}`)}
-              </button>
-            ))}
+        <Section title={t('admin.roundStatus')} accent="fairway">
+          <div className="px">
+            {tabs(
+              STATUSES.map((status) => ({ id: status, label: t(`status.${status}`) })),
+              round.status,
+              (status) => patch({ status: status as RoundStatus }),
+            )}
           </div>
         </Section>
 
-        <Section title={t('admin.defaultTee')}>
-          <div className="segmented">
-            {round.course.tees.map((tee) => (
-              <button
-                key={tee.id}
-                type="button"
-                className={`segment${round.defaultTeeId === tee.id ? ' selected' : ''}`}
-                onClick={() => patch({ defaultTeeId: tee.id })}
-                title={`${tee.courseRating ?? '?'} / ${tee.slopeRating ?? '?'}`}
-              >
-                {localizedTeeName(tee.id, tee.name)}
-              </button>
-            ))}
+        <Section
+          title={t('admin.defaultTee')}
+          accent="fairway"
+          note={round.course.tees
+            .map(
+              (tee) =>
+                `${localizedTeeName(tee.id, tee.name)} ${tee.courseRating ?? '?'}/${tee.slopeRating ?? '?'}`,
+            )
+            .join(' · ')}
+        >
+          <div className="px">
+            {tabs(
+              round.course.tees.map((tee) => ({
+                id: tee.id,
+                label: localizedTeeName(tee.id, tee.name),
+              })),
+              round.defaultTeeId,
+              (teeId) => patch({ defaultTeeId: teeId }),
+            )}
           </div>
-          <p className="hint">
-            {round.course.tees
-              .map(
-                (tee) =>
-                  `${localizedTeeName(tee.id, tee.name)} ${tee.courseRating ?? '?'}/${tee.slopeRating ?? '?'}`,
-              )
-              .join(' · ')}
-          </p>
         </Section>
 
-        <Section title={t('admin.courseHandicap')}>
-          <p className="hint">{t('admin.courseHandicapHint')}</p>
-          <table className="table-plain">
-            <thead>
-              <tr>
-                <th>{t('common.player')}</th>
-                <th className="num">{t('admin.handicapIndex')}</th>
-                <th>{t('admin.playerTee')}</th>
-                <th className="num">{t('admin.courseHandicap')}</th>
-                <th className="num">{t('admin.override')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {round.playerIds.map((id) => (
-                <HandicapRow key={id} round={round} playerId={id} onPatch={patch} />
-              ))}
-            </tbody>
-          </table>
+        <Section
+          title={t('admin.courseHandicap')}
+          note={t('admin.courseHandicapHint')}
+          accent="gold"
+        >
+          <div className="px">
+            <table className="table-plain">
+              <thead>
+                <tr>
+                  <th>{t('common.player')}</th>
+                  <th className="num">{t('admin.handicapIndexShort')}</th>
+                  <th>{t('admin.playerTee')}</th>
+                  <th className="num">{t('admin.courseHandicapShort')}</th>
+                  <th className="num">{t('admin.override')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {round.playerIds.map((id) => (
+                  <HandicapRow key={id} round={round} playerId={id} onPatch={patch} />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Section>
 
-        <Section title={t('admin.flights')}>
-          {writersMissing.map(({ index }) => (
-            <p key={index} className="notice error">
-              {t('admin.flightNoWriter', { number: index + 1 })}
-            </p>
-          ))}
-          {round.flights.map((flight, index) => (
-            <div key={index} className="card section">
-              <div className="section-title-row">
-                <span className="section-title">
-                  {t('round.flight', { number: index + 1 })}
-                </span>
-                <span className="field-input">
-                  <span className="hint">{t('admin.startHole')}</span>
-                  <select
-                    className="select-input"
-                    value={flight.startHole}
-                    style={{ width: 80 }}
-                    onChange={(e) =>
-                      patch({
-                        flights: round.flights.map((f, i) =>
-                          i === index ? { ...f, startHole: Number(e.target.value) } : f,
-                        ),
-                      })
-                    }
-                  >
-                    {[0, 9].map((start) => (
-                      <option key={start} value={start}>
-                        {start + 1}
-                      </option>
-                    ))}
-                  </select>
-                </span>
-              </div>
-              <div className="chip-row">
-                {round.playerIds.map((id) => {
-                  const inFlight = flight.players.includes(id)
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      className={`chip${inFlight ? ' selected' : ''}`}
-                      onClick={() => {
-                        const flights = round.flights.map((f, i) => {
-                          const without = f.players.filter((p) => p !== id)
-                          if (i === index)
-                            return {
-                              ...f,
-                              players: inFlight ? without : [...without, id],
-                            }
-                          return { ...f, players: inFlight ? f.players : without }
-                        })
-                        patch({ flights })
-                      }}
-                    >
-                      <TeamBadge
-                        teamId={state.players.find((p) => p.id === id)?.teamId}
-                      />
-                      {shortName(state.players, id)}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </Section>
-
-        <Section title={t('admin.position')}>
-          {TEAM_IDS.map((teamId) => (
-            <div key={teamId} className="card">
-              <div className="field-stack">
-                {[0, 1, 2, 3].map((slot) => (
-                  <div key={slot} className="field">
-                    <span className="field-label">
-                      <TeamBadge teamId={teamId} /> {slot + 1}
-                    </span>
+        <Section title={t('admin.flights')} accent="navy">
+          {noWriters && <p className="notice error">{t('admin.noWriters')}</p>}
+          <div className="px">
+            {round.flights.map((flight, index) => (
+              <div
+                key={index}
+                className="field"
+                style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}
+              >
+                <div
+                  className="section-row"
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <span className="field-label">
+                    {t('round.flight', { number: index + 1 })}
+                  </span>
+                  <span className="field-input">
+                    <span className="hint">{t('admin.startHole')}</span>
                     <select
-                      className="select-input"
-                      style={{ width: 160 }}
-                      value={round.positions[teamId]?.[slot] ?? ''}
-                      onChange={(e) => {
-                        const list = [...(round.positions[teamId] ?? [])]
-                        list[slot] = e.target.value
-                        patch({ positions: { ...round.positions, [teamId]: list } })
-                      }}
+                      className="input sm"
+                      value={flight.startHole}
+                      style={{ width: 64 }}
+                      onChange={(e) =>
+                        patch({
+                          flights: round.flights.map((f, i) =>
+                            i === index ? { ...f, startHole: Number(e.target.value) } : f,
+                          ),
+                        })
+                      }
                     >
-                      <option value="">{t('common.dash')}</option>
-                      {round.playerIds.map((id) => (
-                        <option key={id} value={id}>
-                          {playerName(state.players, id)}
+                      {[0, 9].map((start) => (
+                        <option key={start} value={start}>
+                          {start + 1}
                         </option>
                       ))}
                     </select>
-                  </div>
-                ))}
+                  </span>
+                </div>
+                <div className="chip-row">
+                  {round.playerIds.map((id) => {
+                    const inFlight = flight.players.includes(id)
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        className={`chip${inFlight ? ' selected' : ''}`}
+                        onClick={() => {
+                          const flights = round.flights.map((f, i) => {
+                            const without = f.players.filter((p) => p !== id)
+                            if (i === index)
+                              return {
+                                ...f,
+                                players: inFlight ? without : [...without, id],
+                              }
+                            return { ...f, players: inFlight ? f.players : without }
+                          })
+                          patch({ flights })
+                        }}
+                      >
+                        <TeamBadge
+                          teamId={state.players.find((p) => p.id === id)?.teamId}
+                        />
+                        {shortName(state.players, id)}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        </Section>
+
+        <Section
+          title={t('admin.positions')}
+          note={t('admin.positionsHint')}
+          accent="navy"
+        >
+          <div className="px">
+            {TEAM_IDS.map((teamId) =>
+              [0, 1, 2, 3].map((slot) => (
+                <div key={`${teamId}${slot}`} className="field">
+                  <span className="field-label">
+                    <TeamBadge teamId={teamId} /> {t('overview.positionShort')} {slot + 1}
+                  </span>
+                  <select
+                    className="input sm"
+                    style={{ width: 160 }}
+                    value={round.positions[teamId]?.[slot] ?? ''}
+                    onChange={(e) => {
+                      const list = [...(round.positions[teamId] ?? [])]
+                      list[slot] = e.target.value
+                      patch({ positions: { ...round.positions, [teamId]: list } })
+                    }}
+                  >
+                    <option value="">{t('common.dash')}</option>
+                    {round.playerIds.map((id) => (
+                      <option key={id} value={id}>
+                        {playerName(state.players, id)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )),
+            )}
+          </div>
         </Section>
 
         <Section
           title={t('admin.games')}
-          action={
+          accent="gold"
+          right={
             <button
               type="button"
-              className="link-button inline"
+              className="link-button"
               onClick={() => patch({ games: [...round.games, newGame(round)] })}
             >
               + {t('admin.addGame')}
             </button>
           }
         >
-          {round.games.map((game, index) => (
-            <GameEditor
-              key={game.id}
-              game={game}
-              round={round}
-              onChange={(next) =>
-                patch({ games: round.games.map((g, i) => (i === index ? next : g)) })
-              }
-              onRemove={() => patch({ games: round.games.filter((_, i) => i !== index) })}
-            />
-          ))}
+          <div className="px stack">
+            {round.games.map((game, index) => (
+              <GameEditor
+                key={game.id}
+                game={game}
+                round={round}
+                onChange={(next) =>
+                  patch({ games: round.games.map((g, i) => (i === index ? next : g)) })
+                }
+                onRemove={() =>
+                  patch({ games: round.games.filter((_, i) => i !== index) })
+                }
+              />
+            ))}
+          </div>
         </Section>
 
-        <Section title={t('admin.corrections')}>
-          <p className="hint">{t('admin.correctionsHint')}</p>
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => navigate({ view: 'play', roundId, flight: null })}
-          >
-            {t('round.enterScores')}
-          </button>
-          <button type="button" className="secondary-button" onClick={reseed}>
-            {t('admin.reseedRound')}
-          </button>
-          <button type="button" className="danger-button" onClick={clearScores}>
-            {t('admin.clearScores')}
-          </button>
+        <Section
+          title={t('admin.corrections')}
+          note={t('admin.correctionsHint')}
+          accent="red"
+        >
+          <div className="px stack">
+            <button
+              type="button"
+              className="btn green-soft"
+              onClick={() => navigate({ view: 'play', roundId, flight: null })}
+            >
+              {t('round.enterScores')}
+            </button>
+            <button type="button" className="btn ghost sm" onClick={reseed}>
+              {t('admin.reseedRound')}
+            </button>
+            <button type="button" className="btn red-soft sm" onClick={clearScores}>
+              {t('admin.clearScores')}
+            </button>
+          </div>
         </Section>
+
+        <EditsLog roundId={roundId} />
       </main>
     </div>
+  )
+}
+
+function EditsLog({ roundId }: { roundId: string }) {
+  const { state, store } = useData()
+  const [edits, setEdits] = useState<EditRecord[] | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  async function load() {
+    setLoading(true)
+    try {
+      setEdits(await store.loadEdits(roundId))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const value = (v: number | null) =>
+    v === null ? t('common.dash') : v === 0 ? t('common.pickedUp') : String(v)
+
+  return (
+    <Section
+      title={t('admin.edits')}
+      accent="navy"
+      right={
+        <button
+          type="button"
+          className="link-button"
+          disabled={loading}
+          onClick={() => void load()}
+        >
+          {edits === null ? t('admin.editsLoad') : t('admin.editsReload')}
+        </button>
+      }
+    >
+      <div className="px">
+        {edits !== null && edits.length === 0 && (
+          <p className="hint">{t('admin.editsEmpty')}</p>
+        )}
+        {edits !== null && edits.length > 0 && (
+          <table className="table-plain">
+            <tbody>
+              {edits.map((edit, index) => (
+                <tr key={`${edit.at}-${index}`}>
+                  <td className="hint">
+                    {new Date(String(edit.at)).toLocaleTimeString('cs-CZ', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </td>
+                  <td>
+                    {shortName(state.players, edit.playerId)} ·{' '}
+                    {t('common.hole', { number: Number(edit.hole) + 1 })}
+                  </td>
+                  <td className="num">
+                    {value(edit.from)} → {value(edit.to)}
+                  </td>
+                  <td className="hint">{edit.byEmail ?? edit.by}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </Section>
   )
 }
 
@@ -344,16 +423,14 @@ function HandicapRow({
   const { state } = useData()
   const override = round.courseHandicapOverride[playerId]
   const [draft, setDraft] = useState(override === undefined ? '' : String(override))
+  const indexValue = round.playerIndex[playerId]
   const [index, setIndex] = useState(
-    round.playerIndex[playerId] === null || round.playerIndex[playerId] === undefined
-      ? ''
-      : String(round.playerIndex[playerId]),
+    indexValue === null || indexValue === undefined ? '' : String(indexValue),
   )
   useEffect(() => setDraft(override === undefined ? '' : String(override)), [override])
   useEffect(() => {
-    const value = round.playerIndex[playerId]
-    setIndex(value === null || value === undefined ? '' : String(value))
-  }, [round.playerIndex, playerId])
+    setIndex(indexValue === null || indexValue === undefined ? '' : String(indexValue))
+  }, [indexValue])
 
   function saveOverride() {
     const value = draft.trim() === '' ? undefined : Number.parseInt(draft, 10)
@@ -376,13 +453,15 @@ function HandicapRow({
   return (
     <tr>
       <td>
-        <TeamBadge teamId={state.players.find((p) => p.id === playerId)?.teamId} />{' '}
-        {shortName(state.players, playerId)}
+        <span className="row-title" style={{ fontSize: 13 }}>
+          <TeamBadge teamId={state.players.find((p) => p.id === playerId)?.teamId} />
+          <span>{shortName(state.players, playerId)}</span>
+        </span>
       </td>
       <td className="num">
         <input
-          className="value-input"
-          style={{ width: 64, minHeight: 36 }}
+          className="input sm num"
+          style={{ width: 56 }}
           inputMode="decimal"
           value={index}
           onChange={(e) => setIndex(e.target.value)}
@@ -392,8 +471,8 @@ function HandicapRow({
       </td>
       <td>
         <select
-          className="select-input"
-          style={{ minHeight: 36, padding: '0 6px' }}
+          className="input sm"
+          style={{ padding: '0 4px', width: 72 }}
           value={round.playerTees[playerId] ?? ''}
           onChange={(e) => {
             const next = { ...round.playerTees }
@@ -410,18 +489,13 @@ function HandicapRow({
           ))}
         </select>
       </td>
-      <td
-        className="num"
-        style={{ color: hasHandicap(round, playerId) ? undefined : 'var(--danger)' }}
-      >
-        {hasHandicap(round, playerId)
-          ? courseHandicapOf(round, playerId)
-          : t('admin.missingHandicap')}
+      <td className={`num${hasHandicap(round, playerId) ? '' : ' warn'}`}>
+        {hasHandicap(round, playerId) ? courseHandicapOf(round, playerId) : '?'}
       </td>
       <td className="num">
         <input
-          className="value-input"
-          style={{ width: 56, minHeight: 36 }}
+          className="input sm num"
+          style={{ width: 48 }}
           inputMode="numeric"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -452,10 +526,10 @@ function GameEditor({
   const isSkins = game.kind === 'individual-skins' || game.kind === 'team-skins'
 
   return (
-    <div className="card section">
-      <div className="section-title-row">
+    <div style={{ borderTop: '1px solid var(--line)', paddingTop: 10 }}>
+      <div className="field" style={{ borderTop: 'none', paddingTop: 0 }}>
         <select
-          className="select-input"
+          className="input sm"
           value={game.kind}
           style={{ flex: 1 }}
           onChange={(e) => onChange({ ...game, kind: e.target.value as GameKind })}
@@ -466,7 +540,12 @@ function GameEditor({
             </option>
           ))}
         </select>
-        <button type="button" className="link-button inline" onClick={onRemove}>
+        <button
+          type="button"
+          className="link-button"
+          style={{ color: 'var(--red)' }}
+          onClick={onRemove}
+        >
           {t('admin.removeGame')}
         </button>
       </div>
@@ -483,7 +562,7 @@ function GameEditor({
       <div className="field">
         <span className="field-label">{t('admin.gameAllowance')}</span>
         <input
-          className="value-input"
+          className="input sm num"
           inputMode="numeric"
           value={Math.round(options.allowance * 100)}
           onChange={(e) =>
@@ -492,17 +571,19 @@ function GameEditor({
         />
       </div>
       {game.kind === 'individual-skins' && (
-        <div className="segmented compact">
-          {(['flight', 'all'] as const).map((scope) => (
-            <button
-              key={scope}
-              type="button"
-              className={`segment${(options.scope ?? 'flight') === scope ? ' selected' : ''}`}
-              onClick={() => setOptions({ scope })}
-            >
-              {t(scope === 'flight' ? 'admin.gameScopeFlight' : 'admin.gameScopeAll')}
-            </button>
-          ))}
+        <div className="field">
+          <div className="tabs compact" style={{ width: '100%' }}>
+            {(['flight', 'all'] as const).map((scope) => (
+              <button
+                key={scope}
+                type="button"
+                className={`tab${(options.scope ?? 'flight') === scope ? ' selected' : ''}`}
+                onClick={() => setOptions({ scope })}
+              >
+                {t(scope === 'flight' ? 'admin.gameScopeFlight' : 'admin.gameScopeAll')}
+              </button>
+            ))}
+          </div>
         </div>
       )}
       {isSkins && (
@@ -516,7 +597,7 @@ function GameEditor({
             <div className="field">
               <span className="field-label">{t('admin.gamePerSkin')}</span>
               <input
-                className="value-input"
+                className="input sm num"
                 inputMode="decimal"
                 value={game.teamPoints.perSkin ?? 0}
                 onChange={(e) =>
@@ -535,22 +616,24 @@ function GameEditor({
       )}
       {isDuel && (
         <>
-          <div className="segmented compact">
-            {FORMATS.map((format) => (
-              <button
-                key={format}
-                type="button"
-                className={`segment${(options.format ?? 'strokes-net') === format ? ' selected' : ''}`}
-                onClick={() => setOptions({ format })}
-              >
-                {t(`format.${format}`)}
-              </button>
-            ))}
+          <div className="field">
+            <div className="tabs compact" style={{ width: '100%' }}>
+              {FORMATS.map((format) => (
+                <button
+                  key={format}
+                  type="button"
+                  className={`tab${(options.format ?? 'strokes-net') === format ? ' selected' : ''}`}
+                  onClick={() => setOptions({ format })}
+                >
+                  {t(`format.${format}`)}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="field">
             <span className="field-label">{t('admin.gameWin')}</span>
             <input
-              className="value-input"
+              className="input sm num"
               inputMode="decimal"
               value={game.teamPoints.win ?? 0}
               onChange={(e) =>
@@ -564,7 +647,7 @@ function GameEditor({
           <div className="field">
             <span className="field-label">{t('admin.gameHalve')}</span>
             <input
-              className="value-input"
+              className="input sm num"
               inputMode="decimal"
               value={game.teamPoints.halve ?? 0}
               onChange={(e) =>
@@ -576,7 +659,7 @@ function GameEditor({
             />
           </div>
           {game.kind === 'team-match' && (
-            <p className="hint">
+            <p className="hint" style={{ paddingTop: 6 }}>
               {(game.sides ?? [])
                 .map((side) =>
                   side.players.map((id) => shortName(state.players, id)).join(' + '),

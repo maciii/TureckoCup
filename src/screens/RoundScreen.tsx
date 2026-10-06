@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react'
 import { useData } from '../data'
 import { evaluateRound, roundTeamPoints } from '../evaluations'
 import { t } from '../i18n'
-import { goBack, navigate } from '../nav'
-import { SCORE_CATEGORIES, ScoreMark, formatDate, roundTitle } from './common'
+import { navigate } from '../nav'
+import { Header, Pill, SCORE_CATEGORIES, ScoreMark, Section, formatDate } from './common'
 import GameResults from './GameResults'
 import Scorecard from './Scorecard'
 
@@ -20,21 +20,9 @@ export default function RoundScreen({ roundId }: { roundId: string }) {
   if (!round) {
     return (
       <div className="screen">
-        <header className="app-header">
-          <div className="screen-header-row">
-            <button
-              type="button"
-              className="icon-button"
-              onClick={goBack}
-              aria-label={t('common.back')}
-            >
-              ‹
-            </button>
-            <h1>{t('nav.round')}</h1>
-          </div>
-        </header>
+        <Header title={t('nav.round')} />
         <main className="content">
-          <p className="hint">
+          <p className="hint center px" style={{ paddingTop: 24 }}>
             {meta.status === 'loading' ? t('app.loading') : t('common.dash')}
           </p>
         </main>
@@ -43,54 +31,56 @@ export default function RoundScreen({ roundId }: { roundId: string }) {
   }
 
   const teamPoints = roundTeamPoints(results)
-  const skins =
-    results.find((r) => r.game.kind === 'team-skins') ??
-    results.find((r) => r.game.kind === 'individual-skins')
+  const teamSkins = results.find((r) => r.game.kind === 'team-skins')
+  const skins = results.find((r) => r.game.kind === 'individual-skins')
   const canEnter = round.status === 'live' || meta.role === 'admin'
 
   return (
     <div className="screen">
-      <header className="app-header">
-        <div className="screen-header-row">
-          <button
-            type="button"
-            className="icon-button"
-            onClick={goBack}
-            aria-label={t('common.back')}
-          >
-            ‹
-          </button>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h1>{roundTitle(round)}</h1>
-            <p className="subtitle">
-              {formatDate(round.date)} · {t(`status.${round.status}`)} ·{' '}
-              {t('round.teamPoints')} {teamPoints.A} : {teamPoints.B}
-            </p>
-          </div>
-        </div>
-      </header>
+      <Header
+        title={t('round.title', { number: round.number })}
+        subtitle={`${round.course.name} · ${formatDate(round.date)} · ${t(`status.${round.status}`)}`}
+      />
 
       <main className="content">
-        <div className="segmented">
+        <div className="tabs">
           <button
             type="button"
-            className={`segment${tab === 'results' ? ' selected' : ''}`}
+            className={`tab${tab === 'results' ? ' selected' : ''}`}
             onClick={() => setTab('results')}
           >
             {t('round.results')}
           </button>
           <button
             type="button"
-            className={`segment${tab === 'scorecard' ? ' selected' : ''}`}
+            className={`tab${tab === 'scorecard' ? ' selected' : ''}`}
             onClick={() => setTab('scorecard')}
           >
             {t('round.scorecard')}
           </button>
         </div>
 
+        <div className="score-hero" style={{ paddingTop: 16 }}>
+          <span className="score-side">
+            <Pill teamId="A" size="md">
+              {teamPoints.A}
+            </Pill>
+            <span className="score-name">{state.tournament?.teams.A.name}</span>
+          </span>
+          <span className="score-side">
+            <Pill teamId="B" size="md">
+              {teamPoints.B}
+            </Pill>
+            <span className="score-name">{state.tournament?.teams.B.name}</span>
+          </span>
+        </div>
+        <p className="hint center px">{t('round.teamPoints')}</p>
+
         {tab === 'results' &&
           (results.length === 0 ? (
-            <p className="hint">{t('round.noGames')}</p>
+            <p className="hint center px" style={{ paddingTop: 16 }}>
+              {t('round.noGames')}
+            </p>
           ) : (
             results.map((result) => (
               <GameResults
@@ -104,8 +94,17 @@ export default function RoundScreen({ roundId }: { roundId: string }) {
           ))}
 
         {tab === 'scorecard' && (
-          <>
-            <Scorecard round={round} players={state.players} skins={skins} />
+          <Section
+            title={t('round.scorecard')}
+            accent="fairway"
+            note={t('round.scorecardHint')}
+          >
+            <Scorecard
+              round={round}
+              players={state.players}
+              teamSkins={teamSkins}
+              skins={skins}
+            />
             <ul className="legend">
               {SCORE_CATEGORIES.map((category, index) => (
                 <li key={category}>
@@ -114,7 +113,7 @@ export default function RoundScreen({ roundId }: { roundId: string }) {
                 </li>
               ))}
             </ul>
-          </>
+          </Section>
         )}
       </main>
 
@@ -122,7 +121,7 @@ export default function RoundScreen({ roundId }: { roundId: string }) {
         <footer className="app-footer">
           <button
             type="button"
-            className="primary-button"
+            className="btn primary"
             onClick={() => navigate({ view: 'play', roundId: round.id, flight: null })}
           >
             {t('round.enterScores')}

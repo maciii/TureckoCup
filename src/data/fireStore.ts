@@ -1,6 +1,7 @@
 import type { DocumentData, DocumentReference, Firestore } from 'firebase/firestore'
 import type {
   Access,
+  EditRecord,
   Player,
   Tournament,
   TournamentRound,
@@ -356,6 +357,25 @@ export function createFireStore(tournamentId: string): Store {
     dismissError() {
       error = null
       notify()
+    },
+    async loadEdits(roundId, limit = 50) {
+      const { db } = await loadFirebase()
+      const module = await import('firebase/firestore')
+      const snapshot = await module.getDocs(
+        module.query(
+          module.collection(db, 'tournaments', tournamentId, 'rounds', roundId, 'edits'),
+          module.orderBy('at', 'desc'),
+          module.limit(limit),
+        ),
+      )
+      return snapshot.docs.map((entry) => {
+        const data = entry.data() as EditRecord & { at: { toDate?: () => Date } | string }
+        const at =
+          typeof data.at === 'object' && data.at && typeof data.at.toDate === 'function'
+            ? data.at.toDate().toISOString()
+            : data.clientAt
+        return { ...data, at }
+      })
     },
   }
 }

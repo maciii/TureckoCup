@@ -76,7 +76,24 @@ i offline cache. Vlastní doména až po turnaji.
 Studený start bez signálu (iOS zabije PWA kvůli foťáku) by jinak skončil
 prázdnou obrazovkou.
 
-## 9. Hash navigace místo pushState snímků
+## 9. Design systém ze Zavařovák Cupu, jen světlé schéma
+
+**Kontext.** Uživatel dodal aplikaci Zavařovák Cup (Ryder Cup formát, Next.js)
+jako vzor designu. Její systém: světlý tichý podklad, Inter na všechno,
+barva jako signál (živý stav, primární akce, tým), seznamy s tenkými děliči
+místo karet, skóre v barevných pilulkách, nadpisy sekcí s barevným proužkem.
+
+**Rozhodnutí.** Převzít tokeny a gramatiku Zavařováku (`src/styles.css`),
+týmy A/B jako žlutá a námořnická modrá, značky skóre podle golfové konvence
+(kolečko pod par červeně, zlatě eagle; čtverec nad par modře). Tmavé schéma
+z Golfgames zrušeno - Zavařovák ho záměrně nemá a za slunce se světlé čte líp.
+Interakce zápisu (par doprostřed, −/+, přidržení = smazat, velké cíle) zůstává
+z Golfgames.
+
+**Důsledek.** Inter se nese v bundlu (`@fontsource-variable/inter`, latin
+a latin-ext), aby fungoval offline. Scorekarta je horizontální po devítkách.
+
+## 10. Hash navigace místo pushState snímků
 
 **Proč.** Service worker `autoUpdate` může aplikaci znovu načíst uprostřed
 zápisu; hash drží obrazovku a odkaz na kolo jde poslat.
