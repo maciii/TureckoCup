@@ -12,6 +12,54 @@ const FIRESTORE = `http://127.0.0.1:8089`
 const AUTH = `http://127.0.0.1:9099`
 const ADMIN_EMAIL = 'mac.kubecka@gmail.com'
 
+/**
+ * Diagnostika pro CI: artefakty z běhu nejsou vždy po ruce, proto se při
+ * selhání vypíšou do logu poslední hlášky konzole všech telefonů a text
+ * obrazovky. Sbírají se varování, chyby a hlášky Firestoru.
+ */
+const consoleLines: string[] = []
+const pages: { name: string; page: Page }[] = []
+
+function watchConsole(page: Page, name: string): void {
+  pages.push({ name, page })
+  page.on('console', (message) => {
+    const text = message.text()
+    if (
+      message.type() === 'error' ||
+      message.type() === 'warning' ||
+      /firestore|webchannel|auth/i.test(text)
+    ) {
+      consoleLines.push(`[${name}] ${message.type()}: ${text.slice(0, 400)}`)
+    }
+  })
+  page.on('pageerror', (error) =>
+    consoleLines.push(`[${name}] pageerror: ${error.message}`),
+  )
+  page.on('requestfailed', (request) =>
+    consoleLines.push(
+      `[${name}] requestfailed: ${request.url().slice(0, 160)} ${request.failure()?.errorText}`,
+    ),
+  )
+}
+
+test.beforeEach(() => {
+  consoleLines.length = 0
+  pages.length = 0
+})
+
+test.afterEach(async ({}, testInfo) => {
+  if (testInfo.status === testInfo.expectedStatus) return
+  console.log(`--- konzole (${testInfo.project.name}) ---`)
+  for (const line of consoleLines.slice(-120)) console.log(line)
+  for (const { name, page } of pages) {
+    const text = await page
+      .locator('body')
+      .innerText({ timeout: 2000 })
+      .catch(() => '(nečitelné)')
+    console.log(`--- obrazovka ${name}: ${page.url()} ---\n${text.slice(0, 1200)}`)
+  }
+})
+
 async function clearEmulators(request: APIRequestContext): Promise<void> {
   await request.delete(
     `${FIRESTORE}/emulator/v1/projects/${PROJECT}/databases/(default)/documents`,
@@ -87,6 +135,7 @@ test('admin založí turnaj, anonymní hráč zapisuje, visitor vidí živě', a
 
   // --- Admin: přihlášení Googlem, založení turnaje -------------------------
   const admin = page
+  watchConsole(admin, 'admin')
   await googleSignIn(admin, ADMIN_EMAIL, 'Mac')
   await expect(admin.getByText('Administrátor')).toBeVisible()
   await admin.getByRole('button', { name: 'Inicializovat turnaj' }).click()
@@ -116,6 +165,7 @@ test('admin založí turnaj, anonymní hráč zapisuje, visitor vidí živě', a
 
   // --- Hráč bez Googlu: anonymní přihlášení --------------------------------
   const writer = await newPhone(browser, testInfo)
+  watchConsole(writer, 'hráč')
   await writer.goto('/#/admin')
   await writer.getByRole('button', { name: /Nemám Google účet/ }).click()
   const uidText = await writer.locator('.uid').textContent({ timeout: 20_000 })
@@ -149,6 +199,7 @@ test('admin založí turnaj, anonymní hráč zapisuje, visitor vidí živě', a
 
   // --- Visitor na třetím telefonu sleduje kolo -----------------------------
   const visitor = await newPhone(browser, testInfo)
+  watchConsole(visitor, 'visitor')
   await visitor.goto('/#/round/r1')
   await visitor.getByRole('button', { name: 'Scorekarta' }).click()
   await expect(visitor.locator('table.scorecard').first()).toBeVisible({
@@ -194,6 +245,7 @@ test('zápis bez signálu čeká ve frontě a po návratu signálu se odešle', 
 }) => {
   await clearEmulators(request)
   const admin = page
+  watchConsole(admin, 'admin')
   await googleSignIn(admin, ADMIN_EMAIL, 'Mac')
   await admin.getByRole('button', { name: 'Inicializovat turnaj' }).click()
   await expect
