@@ -3,6 +3,42 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.3.0] – 2026-10-06
+
+### Opraveno
+
+- **Anonymní zapisovatel dostane oprávnění:** uid se při přidání do oprávnění
+  už nepřevádí na malá písmena (rules ho pak nikdy nepoznaly). Přihlášený
+  anonymně vidí své uid ve tvaru, který jde označit a poslat.
+- **Pozice v kole se uloží:** editor posílal pole s dírou, které Firestore
+  odmítne. Ukládají se vždy čtyři pozice, hráč z jiné pozice se prohodí
+  a výběr nabízí jen hráče daného týmu.
+- Chyba při sestavení zápisu do Firestoru se ukáže jako hláška místo tichého
+  rozdílu mezi obrazovkou a serverem. Oba adaptery kontrolují data podle
+  pravidel Firestoru už před zápisem.
+- **Log úprav čte jen admin** (záznamy nesou e-maily), e-mail v záznamu nejde
+  podvrhnout. Log ukazuje datum i čas a hlásí chybu načtení.
+- Bilance duelů pozic v přehledu jmenuje hráče, kteří pozici v jednotlivých
+  kolech skutečně hráli, ne hráče z aktuálního kola.
+- Odmítnutý zápis kvůli oprávnění řekne, který účet (e-mail nebo uid) admin
+  musí přidat, a jmenuje hráče přezdívkou.
+- Skript zvyšování verze synchronizuje i `package-lock.json`.
+- Tlačítko zvednutí jamky je větší (38 px), odebrání hry chce potvrzení.
+
+### Přidáno
+
+- E2E testy na čtyřech telefonech: iPhone 13 a iPhone SE ve WebKitu, Pixel 7
+  a úzký Galaxy S9+ v Chromiu. CI pouští e2e i testy security rules a nasazuje
+  jen po jejich úspěchu.
+- E2E proti emulátorům Firebase: celý turnajový den přes produkční datovou
+  vrstvu a ostré rules (Google admin, anonymní hráč, živá synchronizace).
+- Hláška o nepovedeném přihlášení obsahuje kód chyby Firebase.
+- Test katalogu textů hlídá mrtvé klíče; texty datové vrstvy jsou v katalogu.
+
+### Pro administrátora
+
+- Po nasazení **znovu publikovat `firestore.rules`** v konzoli Firebase.
+
 ## [0.2.0] – 2026-10-06
 
 ### Změněno

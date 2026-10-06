@@ -27,7 +27,9 @@ z [Golfgames](https://github.com/maciii/golfgames), hřiště z
 npm install
 npm run dev        # http://localhost:5173/?demo=1
 npm run check      # typy + testy + formát (totéž co CI)
-npm run test:e2e   # Playwright, telefonní profil
+npm run test:e2e   # Playwright: iPhone (WebKit) a Android (Chromium)
+npm run test:e2e:firebase # e2e proti emulátorům Firebase
+npm run test:rules # security rules v emulátoru Firestoru
 ```
 
 Vyžaduje Node 22. Bez konfigurace Firebase běží aplikace v ukázkovém režimu

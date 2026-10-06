@@ -20,6 +20,11 @@ const config = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
+/** Emulátory jen ve vývojovém serveru - produkční build je nikdy nepoužije. */
+const emulatorHost = import.meta.env.DEV
+  ? import.meta.env.VITE_FIREBASE_EMULATOR
+  : undefined
+
 export function isFirebaseConfigured(): boolean {
   return missingConfigKeys().length === 0
 }
@@ -59,6 +64,11 @@ export function loadFirebase(): Promise<FirebaseBundle> {
 
     const app = getApps().length > 0 ? getApp() : initializeApp(config)
     const auth = authModule.getAuth(app)
+    if (emulatorHost) {
+      authModule.connectAuthEmulator(auth, `http://${emulatorHost}:9099`, {
+        disableWarnings: true,
+      })
+    }
     await authModule.setPersistence(auth, authModule.browserLocalPersistence)
 
     let db: Firestore
@@ -74,6 +84,22 @@ export function loadFirebase(): Promise<FirebaseBundle> {
         localCache: firestoreModule.memoryLocalCache(),
       })
       memoryOnly = true
+    }
+
+    if (emulatorHost) {
+      firestoreModule.connectFirestoreEmulator(db, emulatorHost, 8089)
+      // Testovací háček: Google účet přes emulátor bez popupu (popup potřebuje
+      // apis.google.com, které vývojový kontejner nedosáhne). Emulátor bere
+      // nepodepsaný token; v produkčním buildu tenhle kód vůbec není.
+      Object.assign(window, {
+        __tc26EmulatorGoogleSignIn: (email: string, name: string) =>
+          authModule.signInWithCredential(
+            auth,
+            authModule.GoogleAuthProvider.credential(
+              JSON.stringify({ sub: email, email, email_verified: true, name }),
+            ),
+          ),
+      })
     }
 
     return { app, auth, db, memoryOnly }

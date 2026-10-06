@@ -1,5 +1,5 @@
 /**
- * Zvedne patch verzi v package.json.
+ * Zvedne patch verzi v package.json a package-lock.json.
  *
  * Pouští se automaticky před každým buildem (npm skript `prebuild`), takže
  * každý build má vlastní číslo verze - to se pak zobrazuje v aplikaci a jde
@@ -13,11 +13,13 @@
  *   node scripts/bump-version.mjs minor    # 0.2.1 -> 0.3.0
  *   node scripts/bump-version.mjs major    # 0.3.0 -> 1.0.0
  */
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const pkgPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json')
+const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+const pkgPath = join(root, 'package.json')
+const lockPath = join(root, 'package-lock.json')
 
 if (process.env.CI) {
   console.log('CI: verze se nezvedá')
@@ -46,4 +48,13 @@ const next = `${major}.${minor}.${patch}`
 pkg.version = next
 // Trailing newline, ať se soubor nehádá s formátovači.
 writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`)
+
+// Lockfile nese verzi kořenového balíčku dvakrát; bez synchronizace by se
+// `npm ci` a `npm install` rozcházely v tom, co je aktuální verze.
+if (existsSync(lockPath)) {
+  const lock = JSON.parse(readFileSync(lockPath, 'utf8'))
+  lock.version = next
+  if (lock.packages?.['']) lock.packages[''].version = next
+  writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`)
+}
 console.log(`verze ${parts.join('.')} -> ${next}`)

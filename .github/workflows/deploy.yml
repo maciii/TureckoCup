@@ -77,20 +77,30 @@ jobs:
           path: dist
 
   # Telefony: iOS profily ve skutečném WebKitu (engine Safari), Android v Chromiu.
+  # Oficiální image Playwrightu má prohlížeče i systémové knihovny, instalace
+  # přes apt v běžném runneru trvala desítky minut.
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+    env:
+      HOME: /root
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
       - run: npm ci
-      - name: Prohlížeče pro Playwright
-        run: npx playwright install --with-deps webkit chromium
-      - name: E2E na iPhonu a Androidu
+      - name: E2E na iPhonu a Androidu (ukázkový režim)
         run: npx playwright test
+      - name: E2E proti emulátorům Firebase (produkční datová vrstva)
+        run: npm run test:e2e:firebase
       - name: Záznam selhání
         if: failure()
         uses: actions/upload-artifact@v4

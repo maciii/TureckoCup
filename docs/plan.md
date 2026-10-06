@@ -9,18 +9,19 @@ změnit konfigurací v aplikaci.
 
 **Kritický termín:** první kolo je **8. 10. 2026**.
 
-## Stav k 6. 10. 2026
+## Stav k 6. 10. 2026 (verze 0.3.0)
 
 | Fáze                                              | Stav                                                                                                   |
 | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | 0 Základ projektu                                 | hotovo                                                                                                 |
-| 1 MVP (model, evaluace, datová vrstva, obrazovky) | hotovo, `npm run check` a Playwright smoke zelené                                                      |
+| 1 MVP (model, evaluace, datová vrstva, obrazovky) | hotovo, `npm run check`, e2e na iOS a Androidu a rules zelené                                          |
 | 2 Pozice, agregace, hlavní hra                    | duely pozic, agregace přes kola, log úprav a anonymní přihlášení hotové; hlavní hra čeká na rozhodnutí |
 | Provoz                                            | **čeká na administrátora** – Firebase a GitHub podle `setup-firebase.md`                               |
 
 ### Co musí udělat administrátor (blokuje ostrý provoz)
 
-1. Projít [`setup-firebase.md`](setup-firebase.md): Firebase projekt,
+1. Projít [`setup-firebase.md`](setup-firebase.md) (Settings → Pages →
+   Source: **GitHub Actions**, jinak nasazení končí chybou 404): Firebase projekt,
    Google + Anonymous přihlášení, Firestore `eur3`, **vložit
    `firestore.rules`**, authorized domain `maciii.github.io`, čtyři secrets
    do GitHubu, Pages = GitHub Actions.
@@ -67,7 +68,9 @@ Podrobně v [`architecture.md`](architecture.md). Ve zkratce:
      o formátu a bodování; admin ji přidá v Admin → kolo → Přidat hru),
    - extra body (model a rules hotové, UI a vyhodnocení ne).
 2. **Po turnaji:** vlastní doména, export výsledků, archiv.
-3. **Testy rules v emulátoru** (`npm run test:rules`) – lokálně, mimo CI.
+3. **Kvalita:** revize kódu 0.2.0 opravená ve verzi 0.3.0; CI pouští e2e na
+   iPhonu (WebKit) i Androidu a testy rules v emulátoru, nasazení čeká na
+   obojí.
 
 ## 4. Rozhodnutí administrátora (předpoklady `[P]` v aplikaci)
 

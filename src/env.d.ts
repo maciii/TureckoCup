@@ -18,6 +18,11 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_AUTH_DOMAIN?: string
   readonly VITE_FIREBASE_PROJECT_ID?: string
   readonly VITE_FIREBASE_APP_ID?: string
+  /**
+   * Jen pro testy (`npm run test:e2e:firebase`): host emulátorů Auth (9099)
+   * a Firestore (8089). Platí jen ve vývojovém serveru, produkce ho ignoruje.
+   */
+  readonly VITE_FIREBASE_EMULATOR?: string
 }
 
 interface ImportMeta {

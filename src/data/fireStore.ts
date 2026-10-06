@@ -11,6 +11,7 @@ import { EMPTY_STATE } from '../model/types'
 import { t } from '../i18n'
 import { APP_VERSION } from '../version'
 import {
+  codeOf,
   describeSignInError,
   isAuthReady,
   preloadAuth,
@@ -305,16 +306,25 @@ export function createFireStore(tournamentId: string): Store {
           typeof err === 'object' && err && 'code' in err
             ? String((err as { code: unknown }).code)
             : ''
-        const reason =
-          code === 'permission-denied'
+        const denied = code === 'permission-denied'
+        const reason = denied
+          ? op.kind === 'setScore'
             ? t('play.notWriter', { account: signedIn.email || signedIn.uid })
-            : err instanceof Error
-              ? err.message
-              : String(err)
+            : t('error.adminOnly')
+          : err instanceof Error
+            ? err.message
+            : String(err)
+        if (op.kind !== 'setScore') {
+          fail(t('error.changeRejected', { reason }))
+          return
+        }
+        const player = state.players.find((p) => p.id === op.playerId)
         fail(
-          op.kind === 'setScore'
-            ? t('play.rejected', { hole: op.hole + 1, name: op.playerId, reason })
-            : t('error.changeRejected', { reason }),
+          t('play.rejected', {
+            hole: op.hole + 1,
+            name: player?.nick ?? player?.name ?? op.playerId,
+            reason,
+          }),
         )
       }
 
@@ -356,6 +366,8 @@ export function createFireStore(tournamentId: string): Store {
           fail(t('admin.signInError.notReady'))
           return
         }
+        // Kód chyby (např. auth/unauthorized-domain) je jediná stopa, podle
+        // které jde špatné nastavení Firebase dohledat - proto je v hlášce.
         fail(
           t(
             kind === 'network'
@@ -363,6 +375,7 @@ export function createFireStore(tournamentId: string): Store {
               : kind === 'popup'
                 ? 'admin.signInError.popup'
                 : 'admin.signInError.unknown',
+            { code: codeOf(err) || (err instanceof Error ? err.message : String(err)) },
           ),
         )
       }

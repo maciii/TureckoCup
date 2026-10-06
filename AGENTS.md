@@ -34,12 +34,17 @@ v [`docs/audit-golfgames.md`](docs/audit-golfgames.md).
 npm install
 npm run dev        # http://localhost:5173/?demo=1 - ukázkový režim bez Firebase
 npm run check      # typy + testy + formát; tohle musí projít před commitem
-npm run test:e2e   # Playwright, telefonní profil (PW_CHROMIUM=cesta k Chromiu, když chybí)
+npm run test:e2e   # Playwright: iPhone 13, iPhone SE, Pixel 7, Galaxy S9+
+                   # (bez WebKitu: PW_CHROMIUM=cesta k Chromiu, iOS profily pak v Chromiu)
+npm run test:e2e:firebase # Playwright proti emulátorům Auth + Firestore (Java)
+npm run test:rules # security rules v emulátoru Firestoru (Java)
 ```
 
 1. Změna kódu.
 2. **Testy k výpočtům jsou povinné** (`src/scoring`, `src/evaluations`,
-   `src/data/ops`). UI se komponentově netestuje, jen kouřově v Playwrightu.
+   `src/data/ops`). UI se komponentově netestuje, ale každá oprava chyby
+   v obrazovce dostane scénář v `e2e/` (CI ho pouští na iPhonu ve WebKitu
+   i na Androidu).
 3. `npm run check` musí projít.
 4. Zvedni verzi (`node scripts/bump-version.mjs`, `npm run bump:minor`) a
    zapiš věcnou změnu do `CHANGELOG.md`.
@@ -69,6 +74,8 @@ npm run test:e2e   # Playwright, telefonní profil (PW_CHROMIUM=cesta k Chromiu,
 10. **Texty jen v `src/i18n/cs.ts`**, barvy jen přes CSS proměnné (schéma je
     jen světlé, žádné `#hex` v komponentách), komentáře vysvětlují proč.
 11. **Firebase se importuje jen dynamicky a jen z `src/data/`.**
+12. **Emulátory a testovací háčky jen za `import.meta.env.DEV`** a
+    `VITE_FIREBASE_EMULATOR` - produkční build je nesmí obsahovat.
 
 ## Struktura ve zkratce
 
@@ -81,9 +88,11 @@ src/
   courses/      snímky čtyř turnajových hřišť z golfgames-courses
   screens/      Overview, Round, Play, Admin, AdminRound, Scorecard, GameResults, MenuSheet
   i18n/         cs.ts (jediný katalog), plural.ts
-  nav.ts        hash navigace, theme.tsx, pwa.ts, swipeBack.ts (převzato)
+  nav.ts        hash navigace, pwa.ts, swipeBack.ts (převzato)
 firestore.rules  pravidla zabezpečení (nasazují se ručně z konzole)
-e2e/             Playwright kouřový test v ukázkovém režimu
+e2e/             Playwright v ukázkovém režimu: smoke, play, admin, layout
+e2e-firebase/    Playwright proti emulátorům: produkční datová vrstva a rules
+rules/           testy firestore.rules v emulátoru
 ```
 
 ## Nejčastější zdroje chyb
@@ -91,6 +100,12 @@ e2e/             Playwright kouřový test v ukázkovém režimu
 - **Rules odmítnou zápis, který mění víc než jednu buňku** nebo který nenese
   `lastEdit` s `by == auth.uid` a `at == request.time`. Každá nová operace
   nad skóre musí jít přes `setScore` v `ops.ts`.
+- **Firestore odmítne `undefined` a díru v poli.** Seznamy s pevnými místy
+  (pozice 1-4) proto drží `''` pro prázdné místo (`assignPosition`). Oba
+  adaptery to hlídají přes `findInvalidWrite()` - když ukázkový režim hlásí
+  „neplatná hodnota v poli…“, produkce by zápis odmítla taky.
+- **Uid rozlišuje velikost písmen**, e-maily se porovnávají malými. Nikdy
+  nepřevádět uid na malá písmena.
 - **Prázdné mapy skóre musí existovat** (`scores.p1 = {}` pro všech 8),
   rules sahají na `resource.data.scores[p]`.
 - **Allowance se aplikuje ve hře, ne v kole.** Kolo drží index, odpaliště

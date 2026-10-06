@@ -72,8 +72,18 @@ i přihlášení).
    snímky hřišť a seznam oprávnění.
 5. V Admin → **Oprávnění** doplnit e-maily zapisovatelů (Google účty hráčů,
    kteří budou zapisovat skóre). V každém flightu musí být aspoň jeden.
+   Hráč bez Google účtu se v Admin přihlásí tlačítkem „Nemám Google účet“,
+   pošle adminovi zobrazené uid a admin ho vloží tlačítkem **+ uid** (přesně,
+   záleží na velikosti písmen).
 6. V Admin → **Kolo** zkontrolovat odpaliště, HCP indexy a hrací handicapy,
    rozdělení do flightů; kolo přepnout na **Živé** ráno před startem.
+
+### Aktualizace pravidel
+
+Při každé změně souboru [`firestore.rules`](../firestore.rules) v repozitáři
+je potřeba pravidla znovu vložit v konzoli (krok 3). Od verze 0.3.0 čte log
+úprav jen admin a rules nedovolí podvrhnout e-mail v záznamu - **po nasazení
+0.3.0 pravidla znovu publikovat.**
 
 ## 7. Zkouška nanečisto (doporučeno 7. 10.)
 
@@ -90,6 +100,6 @@ i přihlášení).
 | ------------------------------------- | ----------------------------------------------------------- |
 | „Turnaj není připojený“               | chybí secrets v GitHubu (krok 5) nebo build běžel bez nich  |
 | Přihlášení se otevře a hned zavře     | blokované vyskakovací okno; zkusit v nainstalované PWA      |
-| „Zápis odmítnut“                      | e-mail není v oprávněních, nebo kolo je uzavřené            |
+| „Zápis odmítnut“                      | e-mail nebo uid není v oprávněních, nebo kolo je uzavřené   |
 | Visitor nic nevidí, „Chybí oprávnění“ | nenasazená pravidla (krok 3)                                |
 | Data se neukládají, „Chybí oprávnění“ | e-mail není ověřený u Googlu, nebo chybí v `private/access` |

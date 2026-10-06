@@ -98,10 +98,35 @@ a latin-ext), aby fungoval offline. Scorekarta je horizontální po devítkách.
 **Proč.** Service worker `autoUpdate` může aplikaci znovu načíst uprostřed
 zápisu; hash drží obrazovku a odkaz na kolo jde poslat.
 
+## 11. Log úprav čte jen admin
+
+**Proč.** Záznam nese e-mail zapisovatele (aby admin věděl, kdo co opravil).
+E-maily jinak leží jen v `private/access`; veřejně čitelný log by je
+prozradil komukoli. Visitor log nepotřebuje, výsledky se počítají ze skóre.
+
+## 12. E2E na skutečném WebKitu v CI
+
+**Proč.** Na hřišti se zapisuje z iPhonů. Safari se od Chromia liší
+v dotyku, vyskakovacích oknech i layoutu, proto iOS profily běží v CI ve
+WebKitu. Vývojový kontejner WebKit nemá, tam běží stejné profily v Chromiu.
+Nasazení čeká na e2e i testy rules.
+
+## 13. Kontrola dat před zápisem v obou adapterech
+
+**Proč.** Editor pozic posílal pole s dírou; localStorage ho přijal,
+Firestore by ho odmítl až na hřišti. `findInvalidWrite()` teď stejné chyby
+zachytí v ukázkovém režimu a e2e testech dřív, než se dostanou do produkce.
+
+## 14. E2E proti emulátorům Firebase
+
+**Proč.** Chyba s pozicemi se projevila jen ve Firestore adapteru, ukázkový
+režim ji nezachytil. Test `e2e-firebase` pouští produkční datovou vrstvu
+proti emulátorům s ostrými rules. Projekt `demo-tc26` emulátory nikdy
+nepustí na skutečný Firebase. Napojení na emulátory i háček pro přihlášení
+existují jen ve vývojovém serveru.
+
 ## Otevřené otázky
 
 - Hlavní hra kola a její bodování (do rozhodnutí je týmové skóre jen Team
   Skins, označené jako předběžné).
 - Extra body: model i rules je nesou, UI ani hry je nevyhodnocují.
-- Log úprav (`edits`) se zapisuje, v UI se zatím nečte.
-- Testy rules v emulátoru běží jen lokálně.

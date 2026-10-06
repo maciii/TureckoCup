@@ -28,7 +28,7 @@ tournaments/{tid}                       Tournament: název, týmy, playerIds
 tournaments/{tid}/private/access        Access: adminEmails, writerEmails, writerUids (čte jen admin)
 tournaments/{tid}/players/{pid}         Player: jméno, tým, pozice, HCP index
 tournaments/{tid}/rounds/{rid}          TournamentRound (níž)
-tournaments/{tid}/rounds/{rid}/edits/*  EditRecord: kdo, kdy, kterou buňku, odkud kam
+tournaments/{tid}/rounds/{rid}/edits/*  EditRecord: kdo, kdy, kterou buňku, odkud kam (čte jen admin)
 ```
 
 ```ts
@@ -66,6 +66,12 @@ Změny jsou operace `Op` v `src/data/ops.ts`; `applyOp()` je aplikuje na
 místní stav a `opToWrites()` je přeloží na zápisy do Firestore. Obě jsou čisté
 a test `ops.test.ts` hlídá, že dávají totéž - ukázkový režim tak nelže.
 
+Před každou změnou oba adaptery projdou zápisy funkcí `findInvalidWrite()`:
+Firestore odmítne `undefined` (i jako díru v poli) a pole v poli, ale
+localStorage by je přijal. Kontrola tak chybu ukáže už v ukázkovém režimu
+a v e2e testech, ne až na hřišti. Ukázkový režim také odmítne admin operaci
+zapisovateli, stejně jako rules.
+
 | Adapter           | Kdy                                  | Jak                                                                  |
 | ----------------- | ------------------------------------ | -------------------------------------------------------------------- |
 | `localStore.ts`   | `import.meta.env.DEV` nebo `?demo=1` | localStorage + `storage` event (2 záložky = 2 flighty), falešná role |
@@ -84,13 +90,17 @@ service workerem - bez něj by aplikace bez signálu nenaběhla.
 
 | Role        | Jak se pozná                                                          | Smí                                                          |
 | ----------- | --------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Visitor     | nepřihlášen                                                           | číst vše veřejné                                             |
+| Visitor     | nepřihlášen                                                           | číst turnaj, hráče a kola (ne oprávnění ani log úprav)       |
 | Zapisovatel | přihlášen; e-mail ve `writerEmails` nebo uid ve `writerUids`          | měnit jednu buňku skóre/bonusů v kole, které není `finished` |
 | Admin       | e-mail v `adminEmails` nebo bootstrap `mac.kubecka@gmail.com` v rules | vše                                                          |
 
 Klient roli ověřuje jen zčásti: admin se pozná tím, že smí číst
 `private/access`; ostatní přihlášení jsou kandidáti na zapisovatele a ověří je
-až první zápis (odmítnutí se ukáže jako chyba). Detaily pravidel jsou
+až první zápis (odmítnutí se ukáže jako hláška s e-mailem nebo uid účtu, které
+admin přidá do oprávnění). Uid anonymních účtů rozlišuje velikost písmen a
+ukládá se beze změny, e-maily malými písmeny. Log úprav nese e-mail
+zapisovatele, proto ho čte jen admin a rules nedovolí e-mail podvrhnout.
+Detaily pravidel jsou
 v [`../firestore.rules`](../firestore.rules).
 
 ## Evaluace
@@ -115,7 +125,9 @@ zapisovaná jamka se drží v localStorage per kolo a flight.
 
 `vite.config.ts`: PWA manifest, `BASE_PATH=/TureckoCup/` na GitHub Pages,
 Firebase ve vlastním chunku (předcachovaném). Workflow `deploy.yml` na každém
-pushi kontroluje typy, testy a formát; z `main` nasazuje. Konfigurace Firebase
+pushi kontroluje typy, testy a formát, pouští e2e testy na telefonech
+(iOS ve WebKitu, Android v Chromiu) a testy security rules v emulátoru;
+z `main` nasazuje, jen když prošlo všechno. Konfigurace Firebase
 se bere ze Secrets (viz [`setup-firebase.md`](setup-firebase.md)).
 
 ## Testy
@@ -123,6 +135,16 @@ se bere ze Secrets (viz [`setup-firebase.md`](setup-firebase.md)).
 - `src/scoring/*.test.ts` - WHS (převzaté z Golfgames), skins, jamkovka
 - `src/evaluations/evaluations.test.ts` - hry nad reálným kolem 1 (Aspendos)
 - `src/data/ops.test.ts` - shoda `applyOp` a field-path zápisů
-- `src/i18n/i18n.test.ts`, `src/theme.test.ts` - úplnost katalogu, shoda boot skriptu
-- `e2e/smoke.spec.ts` - Playwright v ukázkovém režimu, telefon 390×844
-- `rules/` - testy `firestore.rules` v emulátoru (`npm run test:rules`), mimo CI
+- `src/model/round.test.ts` - pozice bez děr, kontrola dat pro Firestore
+- `src/i18n/i18n.test.ts` - úplnost katalogu, žádné mrtvé klíče
+- `e2e/` - Playwright v ukázkovém režimu na čtyřech telefonech: iPhone 13
+  a iPhone SE (WebKit), Pixel 7 a úzký Galaxy S9+ 320 px (Chromium). Hlavní
+  cesta turnaje, ovládání zápisu, administrace (pozice, oprávnění, log úprav,
+  hry), layout bez vodorovného přetečení a bez chyb v konzoli
+- `e2e-firebase/` - Playwright proti emulátorům Auth a Firestore s ostrými
+  rules (`npm run test:e2e:firebase`): admin se přihlásí Googlem a založí
+  turnaj, uloží pozice, hráč se přihlásí anonymně, bez oprávnění dostane
+  hlášku s uid, po přidání uid zapisuje a visitor na třetím telefonu vidí
+  skóre živě. V CI jde přihlášení skutečným popupem emulátoru, lokálně
+  (bez přístupu na apis.google.com) přes testovací háček ve vývojovém buildu
+- `rules/` - testy `firestore.rules` v emulátoru (`npm run test:rules`), i v CI

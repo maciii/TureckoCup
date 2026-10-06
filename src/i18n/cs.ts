@@ -161,7 +161,7 @@ export const cs = {
   'admin.signInError.network': 'Bez připojení – přihlášení potřebuje signál.',
   'admin.signInError.popup':
     'Prohlížeč zablokoval okno. Zkus to v nainstalované aplikaci.',
-  'admin.signInError.unknown': 'Přihlášení se nepovedlo.',
+  'admin.signInError.unknown': 'Přihlášení se nepovedlo ({code}).',
   'admin.signInError.notReady': 'Přihlášení se ještě připravuje, zkus to za chvíli.',
   'admin.signInError.anonymous': 'Anonymní přihlášení se nepovedlo: {reason}',
   'admin.initialize': 'Inicializovat turnaj',
