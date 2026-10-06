@@ -11,12 +11,12 @@ změnit konfigurací v aplikaci.
 
 ## Stav k 6. 10. 2026
 
-| Fáze                                              | Stav                                                                     |
-| ------------------------------------------------- | ------------------------------------------------------------------------ |
-| 0 Základ projektu                                 | hotovo                                                                   |
-| 1 MVP (model, evaluace, datová vrstva, obrazovky) | hotovo, `npm run check` a Playwright smoke zelené                        |
-| 2 Pozice, agregace, hlavní hra                    | duely pozic a agregace přes kola hotové; hlavní hra čeká na rozhodnutí   |
-| Provoz                                            | **čeká na administrátora** – Firebase a GitHub podle `setup-firebase.md` |
+| Fáze                                              | Stav                                                                                                   |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| 0 Základ projektu                                 | hotovo                                                                                                 |
+| 1 MVP (model, evaluace, datová vrstva, obrazovky) | hotovo, `npm run check` a Playwright smoke zelené                                                      |
+| 2 Pozice, agregace, hlavní hra                    | duely pozic, agregace přes kola, log úprav a anonymní přihlášení hotové; hlavní hra čeká na rozhodnutí |
+| Provoz                                            | **čeká na administrátora** – Firebase a GitHub podle `setup-firebase.md`                               |
 
 ### Co musí udělat administrátor (blokuje ostrý provoz)
 
@@ -55,7 +55,8 @@ Podrobně v [`architecture.md`](architecture.md). Ve zkratce:
   e2e, Firestore pro produkci); `applyOp` a `opToWrites` jsou čisté a test
   hlídá jejich shodu.
 - **Obrazovky:** Přehled, Kolo (výsledky + scorekarta), Zápis, Admin,
-  Admin → kolo. Design a CSS tokeny Golfgames.
+  Admin → kolo. Vzhled podle Zavařovák Cupu (světlé schéma, Inter, pilulky
+  skóre, seznamy s děliči), ovládání zápisu z Golfgames.
 - **Offline:** Firestore trvalá cache, Firebase chunk předcachovaný, zápisy
   se neawaitují, stav z `hasPendingWrites`, UI stav přežije reload.
 
@@ -64,9 +65,7 @@ Podrobně v [`architecture.md`](architecture.md). Ve zkratce:
 1. **Během turnaje, podle potřeby:**
    - hlavní hra kola (`team-match` je implementovaná, chybí rozhodnutí
      o formátu a bodování; admin ji přidá v Admin → kolo → Přidat hru),
-   - log úprav v UI (zapisuje se už teď),
-   - extra body (model a rules hotové, UI a vyhodnocení ne),
-   - anonymní přihlášení v UI pro hráče bez Googlu (rules a adapter hotové).
+   - extra body (model a rules hotové, UI a vyhodnocení ne).
 2. **Po turnaji:** vlastní doména, export výsledků, archiv.
 3. **Testy rules v emulátoru** (`npm run test:rules`) – lokálně, mimo CI.
 
