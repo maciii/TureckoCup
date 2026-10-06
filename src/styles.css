@@ -45,6 +45,7 @@
   --team-b-ink: #ffffff;
   --team-b-text: #1c4f79;
   --team-b-soft: #e4edf5;
+  --on-dark: #ffffff;
 
   --tap: 44px;
   --app-max-width: 448px;
@@ -238,6 +239,27 @@ a {
   text-align: center;
   gap: 2px;
   padding: 18px var(--pad) 14px;
+}
+
+.flag-mark .flag-green {
+  fill: var(--on-dark);
+  opacity: 0.35;
+}
+
+.flag-mark .flag-pole {
+  fill: var(--on-dark);
+}
+
+.flag-mark .flag-cloth {
+  fill: var(--team-a);
+}
+
+.uid {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  word-break: break-all;
+  user-select: all;
+  -webkit-user-select: all;
 }
 
 .hero-mark {

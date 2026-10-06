@@ -19,6 +19,7 @@ import {
   deleteField,
   doc,
   getDoc,
+  getDocs,
   serverTimestamp,
   setDoc,
   updateDoc,
@@ -249,4 +250,49 @@ test('log úprav nejde měnit ani mazat', async () => {
     }),
   )
   await assertFails(updateDoc(ref, { to: 5 }))
+})
+
+test('log úprav čte jen admin, protože nese e-maily', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(
+      doc(ctx.firestore(), 'tournaments', TID, 'rounds', 'r1', 'edits', 'e1'),
+      {
+        playerId: 'p1',
+        hole: '0',
+        to: 4,
+        by: 'w1',
+        byEmail: WRITER,
+      },
+    )
+  })
+  const edits = (db) => collection(db, 'tournaments', TID, 'rounds', 'r1', 'edits')
+  await assertFails(getDocs(edits(env.unauthenticatedContext().firestore())))
+  await assertFails(getDocs(edits(user('w1', WRITER))))
+  await assertSucceeds(getDocs(edits(user('a1', ADMIN))))
+})
+
+test('zapisovatel nepodvrhne cizí e-mail v logu úprav', async () => {
+  const db = user('w1', WRITER)
+  const entry = (byEmail) => ({
+    playerId: 'p1',
+    hole: '0',
+    from: null,
+    to: 4,
+    by: 'w1',
+    byEmail,
+    at: serverTimestamp(),
+  })
+  const edits = collection(db, 'tournaments', TID, 'rounds', 'r1', 'edits')
+  await assertFails(setDoc(doc(edits), entry(ADMIN)))
+  await assertSucceeds(setDoc(doc(edits), entry(WRITER)))
+})
+
+test('uid ve writerUids rozlišuje velikost písmen', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await updateDoc(doc(ctx.firestore(), 'tournaments', TID, 'private', 'access'), {
+      writerUids: ['Xk3PqZ9aB'],
+    })
+  })
+  await assertSucceeds(scoreUpdate(user('Xk3PqZ9aB', null), 'p1', '0', 4, 'Xk3PqZ9aB'))
+  await assertFails(scoreUpdate(user('xk3pqz9ab', null), 'p1', '1', 4, 'xk3pqz9ab'))
 })

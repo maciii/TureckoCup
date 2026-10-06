@@ -1,6 +1,7 @@
 import type { FirebaseApp } from 'firebase/app'
 import type { Auth } from 'firebase/auth'
 import type { Firestore } from 'firebase/firestore'
+import { t } from '../i18n'
 
 /**
  * Líné načtení Firebase (převzato z Golfgames). SDK se importuje dynamicky,
@@ -45,7 +46,7 @@ let pending: Promise<FirebaseBundle> | null = null
 
 export function loadFirebase(): Promise<FirebaseBundle> {
   if (!isFirebaseConfigured()) {
-    return Promise.reject(new Error('Firebase není v tomhle buildu nastavená.'))
+    return Promise.reject(new Error(t('error.notConfigured')))
   }
 
   pending ??= (async () => {

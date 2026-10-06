@@ -3,15 +3,16 @@ rules_version = '2';
 // Pravidla zabezpečení Firestore pro Turecko Cup 26.
 //
 // Tři role:
-//   Visitor      čte všechno veřejné bez přihlášení (turnaj, hráči, kola, log úprav)
+//   Visitor      čte všechno veřejné bez přihlášení (turnaj, hráči, kola)
 //   Zapisovatel  přihlášený Googlem s e-mailem v private/access.writerEmails
 //                (nebo anonymní účet s uid ve writerUids); smí měnit jen jednu
 //                buňku skóre/bonusů na jeden zápis v kole, které není uzavřené
 //   Admin        e-mail v private/access.adminEmails nebo bootstrap e-mail níž;
 //                smí vše
 //
-// Soukromé údaje (e-maily) leží v tournaments/{tid}/private/access, který čte
-// jen admin; get() v pravidlech čtecí omezení obchází, takže whitelist funguje.
+// Soukromé údaje (e-maily) leží v tournaments/{tid}/private/access a v logu
+// úprav (byEmail); obojí čte jen admin. get() v pravidlech čtecí omezení
+// obchází, takže whitelist funguje.
 //
 // Nasazení: Firebase Console -> Firestore Database -> Rules -> vložit a publikovat.
 service cloud.firestore {
@@ -99,12 +100,15 @@ service cloud.firestore {
         allow create, delete: if isAdmin(tid);
         allow update: if isAdmin(tid) || (isWriter(tid) && validScoreEdit());
 
-        // Log úprav skóre: jen přidávání, nikdy změna ani mazání.
+        // Log úprav skóre: jen přidávání, nikdy změna ani mazání. Nese e-mail
+        // zapisovatele, proto ho čte jen admin. E-mail nejde podvrhnout.
         match /edits/{eid} {
-          allow read: if true;
+          allow read: if isAdmin(tid);
           allow create: if isWriter(tid)
             && request.resource.data.by == request.auth.uid
-            && request.resource.data.at == request.time;
+            && request.resource.data.at == request.time
+            && (!('byEmail' in request.resource.data)
+              || request.resource.data.byEmail == email());
           allow update, delete: if false;
         }
       }

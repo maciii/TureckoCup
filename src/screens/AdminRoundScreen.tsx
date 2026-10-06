@@ -12,10 +12,26 @@ import type {
   TournamentRound,
 } from '../model/types'
 import { TEAM_IDS } from '../model/types'
-import { courseHandicapOf, hasHandicap, playerName, shortName } from '../model/round'
+import {
+  assignPosition,
+  courseHandicapOf,
+  hasHandicap,
+  playerName,
+  shortName,
+  teamOf,
+} from '../model/round'
 import { GAME_KINDS } from '../evaluations'
 import { navigate } from '../nav'
-import { Header, Section, Switch, TeamBadge, formatDate, gameTitle } from './common'
+import {
+  Header,
+  Section,
+  Switch,
+  TeamBadge,
+  formatDate,
+  formatDateTime,
+  gameTitle,
+  teamName,
+} from './common'
 
 const STATUSES: RoundStatus[] = ['planned', 'live', 'finished']
 const FORMATS: DuelFormat[] = ['strokes-gross', 'strokes-net', 'stableford', 'match-play']
@@ -246,18 +262,35 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
                     className="input sm"
                     style={{ width: 160 }}
                     value={round.positions[teamId]?.[slot] ?? ''}
+                    aria-label={`${teamName(teamId, state.tournament?.teams)} ${t('overview.positionShort')} ${slot + 1}`}
                     onChange={(e) => {
-                      const list = [...(round.positions[teamId] ?? [])]
-                      list[slot] = e.target.value
-                      patch({ positions: { ...round.positions, [teamId]: list } })
+                      // Vždy celé čtyři pozice obou týmů: díra v poli by
+                      // Firestore zápis odmítl.
+                      patch({
+                        positions: {
+                          A: assignPosition(round.positions.A, -1, ''),
+                          B: assignPosition(round.positions.B, -1, ''),
+                          [teamId]: assignPosition(
+                            round.positions[teamId],
+                            slot,
+                            e.target.value,
+                          ),
+                        },
+                      })
                     }}
                   >
                     <option value="">{t('common.dash')}</option>
-                    {round.playerIds.map((id) => (
-                      <option key={id} value={id}>
-                        {playerName(state.players, id)}
-                      </option>
-                    ))}
+                    {round.playerIds
+                      .filter(
+                        (id) =>
+                          teamOf(state.players, id) === teamId ||
+                          round.positions[teamId]?.[slot] === id,
+                      )
+                      .map((id) => (
+                        <option key={id} value={id}>
+                          {playerName(state.players, id)}
+                        </option>
+                      ))}
                   </select>
                 </div>
               )),
@@ -327,11 +360,19 @@ function EditsLog({ roundId }: { roundId: string }) {
   const { state, store } = useData()
   const [edits, setEdits] = useState<EditRecord[] | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function load() {
     setLoading(true)
+    setError(null)
     try {
       setEdits(await store.loadEdits(roundId))
+    } catch (err) {
+      setError(
+        t('admin.editsError', {
+          reason: err instanceof Error ? err.message : String(err),
+        }),
+      )
     } finally {
       setLoading(false)
     }
@@ -356,6 +397,11 @@ function EditsLog({ roundId }: { roundId: string }) {
       }
     >
       <div className="px">
+        {error && (
+          <p className="notice error" role="alert">
+            {error}
+          </p>
+        )}
         {edits !== null && edits.length === 0 && (
           <p className="hint">{t('admin.editsEmpty')}</p>
         )}
@@ -364,12 +410,7 @@ function EditsLog({ roundId }: { roundId: string }) {
             <tbody>
               {edits.map((edit, index) => (
                 <tr key={`${edit.at}-${index}`}>
-                  <td className="hint">
-                    {new Date(String(edit.at)).toLocaleTimeString('cs-CZ', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </td>
+                  <td className="hint">{formatDateTime(edit.at) ?? t('common.dash')}</td>
                   <td>
                     {shortName(state.players, edit.playerId)} ·{' '}
                     {t('common.hole', { number: Number(edit.hole) + 1 })}

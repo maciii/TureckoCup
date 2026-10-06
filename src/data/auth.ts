@@ -1,4 +1,5 @@
 import type { Auth } from 'firebase/auth'
+import { t } from '../i18n'
 import { loadFirebase } from './firebase'
 import type { Account } from './store'
 
@@ -75,7 +76,7 @@ function toAccount(user: {
 }): Account {
   return {
     uid: user.uid,
-    name: user.displayName ?? user.email ?? 'Hráč',
+    name: user.displayName ?? user.email ?? t('error.unnamedAccount'),
     email: (user.email ?? '').toLowerCase(),
     anonymous: user.isAnonymous,
   }

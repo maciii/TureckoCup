@@ -49,7 +49,8 @@ export function ScoreMark({
       : score === PICKED_UP
         ? 'picked'
         : scoreCategory(score, par)
-  const text = score === undefined ? '–' : score === PICKED_UP ? '×' : String(score)
+  const text =
+    score === undefined ? t('common.dash') : score === PICKED_UP ? '×' : String(score)
   return <span className={`mark ${category}${large ? ' large' : ''}`}>{text}</span>
 }
 
@@ -216,12 +217,35 @@ export function formatDate(iso: string): string {
   return date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' })
 }
 
+/**
+ * Datum a čas záznamu (log úprav): den, měsíc, hodiny a minuty. Opravy z rána
+ * po kole se tak dají odlišit od zápisu během hry. Neplatná hodnota = `null`.
+ */
+export function formatDateTime(value: unknown): string | null {
+  if (typeof value !== 'string' && typeof value !== 'number') return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleString('cs-CZ', {
+    day: 'numeric',
+    month: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export function FlagMark({ size = 28 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden="true">
-      <ellipse cx="32" cy="46" rx="18" ry="7" fill="#ffffff" opacity="0.35" />
-      <rect x="30" y="14" width="3" height="32" rx="1.5" fill="#ffffff" />
-      <path d="M33 14 L52 21 L33 28 Z" fill="#ffd23f" />
+    <svg
+      className="flag-mark"
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      aria-hidden="true"
+    >
+      <ellipse className="flag-green" cx="32" cy="46" rx="18" ry="7" />
+      <rect className="flag-pole" x="30" y="14" width="3" height="32" rx="1.5" />
+      <path className="flag-cloth" d="M33 14 L52 21 L33 28 Z" />
     </svg>
   )
 }

@@ -173,4 +173,21 @@ describe('agregace turnaje', () => {
     expect(mac.stableford).toBeGreaterThan(0)
     expect(summary.teamPoints.A + summary.teamPoints.B).toBeGreaterThan(0)
   })
+
+  it('bilance pozic jmenuje hráče z každého kola, ne z aktuálního', () => {
+    const rounds = seedRounds()
+    rounds[0]!.status = 'finished'
+    rounds[1]!.status = 'finished'
+    // Ve druhém kole si tým A prohodí pozice 2 a 3.
+    const [a1, a2, a3, a4] = rounds[1]!.positions.A
+    rounds[1]!.positions.A = [a1!, a3!, a2!, a4!]
+    for (const round of rounds.slice(0, 2)) {
+      for (const id of round.playerIds) enter(round, id, Array<number>(18).fill(4))
+    }
+    const summary = summarizeTournament(rounds, SEED_PLAYERS)
+    const position2 = summary.positions[1]!
+    expect(position2.rounds).toBe(2)
+    expect(position2.players.A).toEqual([a2, a3])
+    expect(position2.players.B).toEqual([rounds[0]!.positions.B[1]])
+  })
 })

@@ -260,3 +260,27 @@ export function flightCurrentHole(round: TournamentRound, flight: Flight): numbe
   }
   return order[order.length - 1] ?? 0
 }
+
+/**
+ * Nový seznam pozic týmu po výběru hráče na pozici `slot` (0-3).
+ *
+ * Výsledek má vždy čtyři prvky, prázdná pozice je `''`: Firestore neumí díru
+ * v poli (`undefined`), a index v poli je číslo pozice, takže prvky nejde
+ * vynechat. Když hráč už stojí na jiné pozici, pozice se prohodí - jeden hráč
+ * nesmí hrát dva duely.
+ */
+export function assignPosition(
+  current: readonly (PlayerId | null | undefined)[] | undefined,
+  slot: number,
+  playerId: PlayerId,
+): PlayerId[] {
+  const list = Array.from({ length: 4 }, (_, index) => current?.[index] ?? '')
+  if (slot < 0 || slot > 3) return list
+  const previous = list[slot] ?? ''
+  if (playerId) {
+    const elsewhere = list.findIndex((id, index) => id === playerId && index !== slot)
+    if (elsewhere >= 0) list[elsewhere] = previous
+  }
+  list[slot] = playerId
+  return list
+}

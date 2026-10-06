@@ -78,9 +78,13 @@ export default function AdminScreen() {
               <>
                 <p className="account-name">{meta.account.name}</p>
                 <p className="hint">
-                  {meta.account.anonymous
-                    ? `uid: ${meta.account.uid}`
-                    : meta.account.email}{' '}
+                  {meta.account.anonymous ? (
+                    <span className="uid">
+                      {t('admin.yourUid', { uid: meta.account.uid })}
+                    </span>
+                  ) : (
+                    meta.account.email
+                  )}{' '}
                   · {t(`admin.role.${meta.role}`)}
                 </p>
                 <button
@@ -336,7 +340,10 @@ function AccessEditor() {
   }
 
   function add(key: AccessKey) {
-    const value = draft.trim().toLowerCase()
+    // E-maily porovnávají rules malými písmeny, uid Firebase ale rozlišuje
+    // velikost písmen - převod by anonymnímu zapisovateli oprávnění nikdy nedal.
+    const trimmed = draft.trim()
+    const value = key === 'writerUids' ? trimmed : trimmed.toLowerCase()
     if (!value || access![key].includes(value)) return
     update(key, [...access![key], value])
     setDraft('')
@@ -353,8 +360,11 @@ function AccessEditor() {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder={t('admin.addEmail')}
+          aria-label={t('admin.addEmail')}
           inputMode="email"
           autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           style={{ marginTop: 8 }}
         />
         <div className="footer-row">
@@ -369,7 +379,7 @@ function AccessEditor() {
             + {t('admin.adminEmails')}
           </button>
           <button type="button" className="btn sm" onClick={() => add('writerUids')}>
-            + uid
+            {t('admin.addUid')}
           </button>
         </div>
       </div>

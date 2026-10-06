@@ -150,7 +150,7 @@ export default function Scorecard({
                     />
                   </td>
                 ))}
-                <td className="sum">{sum(id, from!, to!) ?? '–'}</td>
+                <td className="sum">{sum(id, from!, to!) ?? t('common.dash')}</td>
               </tr>
             )),
           )}
@@ -193,10 +193,12 @@ export default function Scorecard({
                     {played > 0 ? t('common.holes', { count: played }) : ''}
                   </td>
                   <td className="sum" style={{ textAlign: 'right' }}>
-                    {played > 0 ? `${gross} (${formatToPar(toPar)})` : '–'}
+                    {played > 0 ? `${gross} (${formatToPar(toPar)})` : t('common.dash')}
                   </td>
                   <td className="sum" style={{ textAlign: 'right' }}>
-                    {played === count && hasHandicap(round, id) ? gross - hcp : '–'}
+                    {played === count && hasHandicap(round, id)
+                      ? gross - hcp
+                      : t('common.dash')}
                   </td>
                 </tr>
               )

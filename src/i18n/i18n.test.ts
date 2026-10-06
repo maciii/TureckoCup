@@ -1,3 +1,5 @@
+import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { cs } from './cs'
 import { dynamicKey, t } from './index'
@@ -46,4 +48,36 @@ describe('katalog textů', () => {
   it('neznámý klíč vrátí klíč, ne prázdno', () => {
     expect(t(dynamicKey('games', 'neznama', 'name'))).toBe('games.neznama.name')
   })
+
+  it('každý klíč katalogu se v kódu používá (žádné mrtvé texty)', () => {
+    // Klíče skládané za běhu z id se hledají podle předpony.
+    const dynamicPrefixes = [
+      'games.',
+      'team.',
+      'status.',
+      'score.',
+      'format.',
+      'tee.',
+      'admin.role.',
+      'admin.signInError.',
+    ]
+    const source = sourceFiles('src')
+      .filter((file) => !file.endsWith('cs.ts') && !file.endsWith('.test.ts'))
+      .map((file) => readFileSync(file, 'utf8'))
+      .join('\n')
+    const unused = Object.keys(cs).filter(
+      (key) =>
+        !source.includes(`'${key}'`) &&
+        !dynamicPrefixes.some((prefix) => key.startsWith(prefix)),
+    )
+    expect(unused).toEqual([])
+  })
 })
+
+function sourceFiles(dir: string): string[] {
+  return readdirSync(dir).flatMap((name) => {
+    const path = join(dir, name)
+    if (statSync(path).isDirectory()) return sourceFiles(path)
+    return /\.tsx?$/.test(name) ? [path] : []
+  })
+}

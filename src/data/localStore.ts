@@ -1,7 +1,8 @@
 import type { EditRecord, TournamentState } from '../model/types'
 import { EMPTY_STATE } from '../model/types'
+import { t } from '../i18n'
 import type { Op } from './ops'
-import { applyOp } from './ops'
+import { applyOp, findInvalidWrite, opToWrites, requiresAdmin } from './ops'
 import type { Listener, Role, Store, StoreMeta } from './store'
 import { STORAGE_PREFIX } from './store'
 import { SEED_ACCESS, SEED_PLAYERS, SEED_TOURNAMENT, seedRounds } from './seed'
@@ -84,7 +85,7 @@ export function createLocalStore(options: { seed?: boolean } = {}): Store {
         ? null
         : {
             uid: `demo-${role}`,
-            name: role === 'admin' ? 'Demo admin' : 'Demo zapisovatel',
+            name: t(role === 'admin' ? 'admin.demoAdminName' : 'admin.demoWriterName'),
             email: role === 'admin' ? 'mac.kubecka@gmail.com' : 'demo@example.com',
             anonymous: false,
           }
@@ -120,7 +121,26 @@ export function createLocalStore(options: { seed?: boolean } = {}): Store {
     },
     dispatch(op: Op) {
       if (role === 'visitor') {
-        error = 'Bez přihlášení nejde zapisovat.'
+        error = t('error.signInFirst')
+        notify()
+        return
+      }
+      // Stejné kontroly jako Firestore adapter a rules, aby ukázkový režim
+      // (a e2e testy nad ním) neprošly tam, kde by produkce zápis odmítla.
+      if (requiresAdmin(op) && role !== 'admin') {
+        error = t('error.adminOnly')
+        notify()
+        return
+      }
+      const invalid = findInvalidWrite(
+        opToWrites(
+          op,
+          { uid: `demo-${role}`, clientAt: new Date().toISOString(), appVersion: 'demo' },
+          state,
+        ),
+      )
+      if (invalid) {
+        error = t('error.invalidData', { field: invalid })
         notify()
         return
       }

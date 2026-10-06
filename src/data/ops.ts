@@ -194,3 +194,41 @@ export function opToWrites(op: Op, meta: OpMeta, state: TournamentState): Write[
 export function requiresAdmin(op: Op): boolean {
   return op.kind !== 'setScore'
 }
+
+/**
+ * Najde hodnotu, kterou Firestore odmítne: `undefined` (i jako díra v poli)
+ * a pole v poli. Vrací cestu k první takové hodnotě, nebo `null`.
+ *
+ * Kontrola běží v obou adapterech před optimistickou změnou: Firestore by
+ * zápis odmítl až při sestavení dávky a ukázkový režim (localStorage) by ho
+ * přijal - chyba by se pak poprvé ukázala až na hřišti.
+ */
+export function findInvalidValue(value: unknown, path = ''): string | null {
+  if (value === undefined) return path || '(kořen)'
+  if (Array.isArray(value)) {
+    for (let index = 0; index < value.length; index += 1) {
+      const at = `${path}[${index}]`
+      if (!(index in value) || value[index] === undefined) return at
+      if (Array.isArray(value[index])) return at
+      const nested = findInvalidValue(value[index], at)
+      if (nested) return nested
+    }
+    return null
+  }
+  if (value !== null && typeof value === 'object') {
+    for (const [key, nested] of Object.entries(value)) {
+      const found = findInvalidValue(nested, path ? `${path}.${key}` : key)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+/** První neplatná hodnota ve všech zápisech operace. */
+export function findInvalidWrite(writes: Write[]): string | null {
+  for (const write of writes) {
+    const found = findInvalidValue(write.data)
+    if (found) return [...write.path, found].join('/')
+  }
+  return null
+}

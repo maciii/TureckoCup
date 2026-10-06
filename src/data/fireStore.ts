@@ -8,6 +8,7 @@ import type {
   TournamentState,
 } from '../model/types'
 import { EMPTY_STATE } from '../model/types'
+import { t } from '../i18n'
 import { APP_VERSION } from '../version'
 import {
   describeSignInError,
@@ -20,7 +21,14 @@ import {
 } from './auth'
 import { loadFirebase } from './firebase'
 import type { Op, Write } from './ops'
-import { DELETE_FIELD, SERVER_TIME, applyOp, opToWrites, requiresAdmin } from './ops'
+import {
+  DELETE_FIELD,
+  SERVER_TIME,
+  applyOp,
+  findInvalidWrite,
+  opToWrites,
+  requiresAdmin,
+} from './ops'
 import { BOOTSTRAP_ADMIN_EMAIL } from './seed'
 import type { Account, Listener, Role, Store, StoreMeta, SyncStatus } from './store'
 
@@ -153,7 +161,7 @@ export function createFireStore(tournamentId: string): Store {
         status = snapshot.metadata.fromCache && !navigator.onLine ? 'offline' : 'synced'
         notify()
       },
-      (err) => fail(`Turnaj se nepodařilo načíst: ${err.message}`),
+      (err) => fail(t('error.loadTournament', { reason: err.message })),
     )
 
     module.onSnapshot(
@@ -168,7 +176,7 @@ export function createFireStore(tournamentId: string): Store {
         }
         notify()
       },
-      (err) => fail(`Hráče se nepodařilo načíst: ${err.message}`),
+      (err) => fail(t('error.loadPlayers', { reason: err.message })),
     )
 
     module.onSnapshot(
@@ -187,7 +195,7 @@ export function createFireStore(tournamentId: string): Store {
         }
         notify()
       },
-      (err) => fail(`Kola se nepodařilo načíst: ${err.message}`),
+      (err) => fail(t('error.loadRounds', { reason: err.message })),
     )
 
     window.addEventListener('online', () => {
@@ -265,11 +273,11 @@ export function createFireStore(tournamentId: string): Store {
     },
     dispatch(op: Op) {
       if (!account) {
-        fail('Pro zápis se nejdřív přihlas.')
+        fail(t('error.signInFirst'))
         return
       }
       if (requiresAdmin(op) && role !== 'admin') {
-        fail('Tuhle změnu smí udělat jen administrátor.')
+        fail(t('error.adminOnly'))
         return
       }
       const writes = opToWrites(
@@ -282,40 +290,53 @@ export function createFireStore(tournamentId: string): Store {
         },
         state,
       )
+      const invalid = findInvalidWrite(writes)
+      if (invalid) {
+        fail(t('error.invalidData', { field: invalid }))
+        return
+      }
       // Optimistická odezva: snímek z cache dorazí vzápětí a stav přepíše.
       state = applyOp(state, op)
       notify()
 
-      void started.then(async () => {
-        const { db } = await loadFirebase()
-        const module = await import('firebase/firestore')
-        const batch = module.writeBatch(db)
-        for (const write of writes) {
-          const ref = docRef(module, db, write)
-          const data = materialize(module, write.data)
-          if (write.mode === 'update') batch.update(ref, data)
-          else if (write.mode === 'setMerge') batch.set(ref, data, { merge: true })
-          else batch.set(ref, data)
-        }
-        // Záměrně bez await v UI: offline by promise nikdy nedoběhl.
-        batch.commit().catch((err: unknown) => {
-          const code =
-            typeof err === 'object' && err && 'code' in err
-              ? String((err as { code: unknown }).code)
-              : ''
-          const reason =
-            code === 'permission-denied'
-              ? 'chybí oprávnění'
-              : err instanceof Error
-                ? err.message
-                : String(err)
-          const what =
-            op.kind === 'setScore'
-              ? `Zápis jamky ${op.hole + 1} (${op.playerId})`
-              : 'Změna'
-          fail(`${what} byl odmítnut: ${reason}`)
+      const signedIn = account
+      const reject = (err: unknown) => {
+        const code =
+          typeof err === 'object' && err && 'code' in err
+            ? String((err as { code: unknown }).code)
+            : ''
+        const reason =
+          code === 'permission-denied'
+            ? t('play.notWriter', { account: signedIn.email || signedIn.uid })
+            : err instanceof Error
+              ? err.message
+              : String(err)
+        fail(
+          op.kind === 'setScore'
+            ? t('play.rejected', { hole: op.hole + 1, name: op.playerId, reason })
+            : t('error.changeRejected', { reason }),
+        )
+      }
+
+      void started
+        .then(async () => {
+          const { db } = await loadFirebase()
+          const module = await import('firebase/firestore')
+          // Sestavení dávky může vyhodit synchronně (neplatná hodnota v datech);
+          // i to musí skončit v `meta.error`, jinak by optimistický stav tiše
+          // zůstal jiný než server.
+          const batch = module.writeBatch(db)
+          for (const write of writes) {
+            const ref = docRef(module, db, write)
+            const data = materialize(module, write.data)
+            if (write.mode === 'update') batch.update(ref, data)
+            else if (write.mode === 'setMerge') batch.set(ref, data, { merge: true })
+            else batch.set(ref, data)
+          }
+          // Záměrně bez await v UI: offline by promise nikdy nedoběhl.
+          batch.commit().catch(reject)
         })
-      })
+        .catch(reject)
     },
     prepareSignIn() {
       void preloadAuth()
@@ -332,15 +353,17 @@ export function createFireStore(tournamentId: string): Store {
         const kind = describeSignInError(err)
         if (kind === 'cancelled') return
         if (kind === 'notReady') {
-          fail('Přihlášení se ještě připravuje, zkus to za chvíli.')
+          fail(t('admin.signInError.notReady'))
           return
         }
         fail(
-          kind === 'network'
-            ? 'Bez připojení – přihlášení potřebuje signál.'
-            : kind === 'popup'
-              ? 'Prohlížeč zablokoval okno. Zkus to v nainstalované aplikaci.'
-              : 'Přihlášení se nepovedlo.',
+          t(
+            kind === 'network'
+              ? 'admin.signInError.network'
+              : kind === 'popup'
+                ? 'admin.signInError.popup'
+                : 'admin.signInError.unknown',
+          ),
         )
       }
     },
@@ -348,7 +371,11 @@ export function createFireStore(tournamentId: string): Store {
       try {
         await signInAnonymous()
       } catch (err) {
-        fail(err instanceof Error ? err.message : 'Anonymní přihlášení se nepovedlo.')
+        fail(
+          t('admin.signInError.anonymous', {
+            reason: err instanceof Error ? err.message : String(err),
+          }),
+        )
       }
     },
     async signOut() {

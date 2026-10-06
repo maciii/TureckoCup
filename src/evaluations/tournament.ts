@@ -30,6 +30,11 @@ export interface PositionBalance {
   wins: Record<TeamId, number>
   halves: number
   rounds: number
+  /**
+   * Kdo pozici za tým hrál, v pořadí kol. Pozice jsou snímek každého kola,
+   * takže jména z aktuálního kola by u přehozených pozic lhala.
+   */
+  players: Record<TeamId, PlayerId[]>
 }
 
 export interface TournamentSummary {
@@ -108,14 +113,21 @@ export function summarizeTournament(
     wins: { A: 0, B: 0 },
     halves: 0,
     rounds: 0,
+    players: { A: [], B: [] },
   }))
   for (const entry of evaluated) {
     for (const result of entry.results) {
       if (result.game.kind !== 'position-duel') continue
       for (const duel of result.duels ?? []) {
-        if (!duel.finished || duel.position === undefined) continue
+        if (duel.position === undefined) continue
         const balance = positions[duel.position - 1]
         if (!balance) continue
+        for (const side of duel.sides) {
+          if (!side.teamId) continue
+          const seen = balance.players[side.teamId]
+          for (const id of side.players) if (!seen.includes(id)) seen.push(id)
+        }
+        if (!duel.finished) continue
         balance.rounds += 1
         if (duel.leader === null) balance.halves += 1
         else {

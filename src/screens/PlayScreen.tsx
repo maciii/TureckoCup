@@ -243,7 +243,8 @@ export default function PlayScreen({ roundId, flight }: Props) {
         </div>
         <div className="hole-info">
           {t('common.par').toUpperCase()} {par}
-          <span className="sep">·</span>SI {si}
+          <span className="sep">·</span>
+          {t('play.strokeIndex', { si: si ?? t('common.dash') })}
           <span className="sep">·</span>
           {t('play.holeOf', { index: orderIndex + 1, count })}
         </div>
@@ -297,7 +298,9 @@ export default function PlayScreen({ roundId, flight }: Props) {
                       <span className="player-mark warn">?</span>
                     )}
                     {points !== undefined && (
-                      <span className="player-mark gain">{points} b</span>
+                      <span className="player-mark gain">
+                        {t('play.pointsShort', { count: points })}
+                      </span>
                     )}
                   </span>
                   <span className="player-total">

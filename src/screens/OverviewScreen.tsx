@@ -44,7 +44,10 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
   const barA = total > 0 ? (summary.teamPoints.A / total) * 100 : 0
   const barB = total > 0 ? (summary.teamPoints.B / total) * 100 : 0
   const dates = state.rounds.length
-    ? `${formatDate(state.rounds[0]!.date)} – ${formatDate(state.rounds[state.rounds.length - 1]!.date)}`
+    ? t('overview.dateRange', {
+        from: formatDate(state.rounds[0]!.date),
+        to: formatDate(state.rounds[state.rounds.length - 1]!.date),
+      })
     : ''
 
   return (
@@ -93,7 +96,7 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
           <h1>{state.tournament?.name ?? t('app.name')}</h1>
           <p>
             {state.tournament
-              ? `Belek · ${dates}`
+              ? t('overview.venue', { dates })
               : meta.status === 'loading'
                 ? t('app.loading')
                 : t('app.noTournament')}
@@ -245,19 +248,21 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
                     <span className="nm">
                       <TeamBadge teamId="A" />
                       <span>
-                        {playerLabel(
-                          state.players,
-                          current?.positions.A[balance.position - 1] ?? '',
-                        )}
+                        {balance.players.A.map((id) =>
+                          playerLabel(state.players, id),
+                        ).join(' / ') || t('common.dash')}
                       </span>
                     </span>
                   </span>
                   <span className="duel-center">
                     <span className="v">
-                      {balance.wins.A}
                       {balance.halves > 0
-                        ? ` : ${balance.wins.B} (${balance.halves}×½)`
-                        : ` : ${balance.wins.B}`}
+                        ? t('overview.balanceHalves', {
+                            a: balance.wins.A,
+                            b: balance.wins.B,
+                            halves: balance.halves,
+                          })
+                        : t('overview.balance', { a: balance.wins.A, b: balance.wins.B })}
                     </span>
                     <div className="m">
                       {t('overview.positionShort')} {balance.position}
@@ -266,10 +271,9 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
                   <span className="duel-side right">
                     <span className="nm">
                       <span>
-                        {playerLabel(
-                          state.players,
-                          current?.positions.B[balance.position - 1] ?? '',
-                        )}
+                        {balance.players.B.map((id) =>
+                          playerLabel(state.players, id),
+                        ).join(' / ') || t('common.dash')}
                       </span>
                       <TeamBadge teamId="B" />
                     </span>
