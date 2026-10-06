@@ -11,9 +11,10 @@ permissions:
   pages: write
   id-token: write
 
+# Starší běh stejné větve se zruší; nasazení samo má vlastní frontu níž.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -75,11 +76,55 @@ jobs:
         with:
           path: dist
 
+  # Telefony: iOS profily ve skutečném WebKitu (engine Safari), Android v Chromiu.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Prohlížeče pro Playwright
+        run: npx playwright install --with-deps webkit chromium
+      - name: E2E na iPhonu a Androidu
+        run: npx playwright test
+      - name: Záznam selhání
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results
+          retention-days: 7
+
+  # Security rules v emulátoru Firestoru (potřebuje Javu, runner ji má).
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - name: Testy security rules
+        run: npm run test:rules
+
   deploy:
-    needs: build
+    needs: [build, e2e, rules]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

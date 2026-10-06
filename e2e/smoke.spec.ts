@@ -1,58 +1,41 @@
 import { expect, test } from '@playwright/test'
-import type { Page } from '@playwright/test'
+import { collectErrors, open, resetDemo, setIdentity, startRound } from './helpers'
 
 /**
- * Kouřový test v místním (ukázkovém) režimu na telefonu:
+ * Kouřový test hlavní cesty turnaje:
  *  - visitor vidí přehled a kolo bez přihlášení,
  *  - admin spustí kolo, zapisovatel zapíše flight bez rolování,
  *  - druhá stránka (druhý flight) a visitor vidí změnu.
  */
 
-async function open(page: Page, hash = '#/') {
-  await page.goto(`/?demo=1${hash}`)
-  await page.waitForSelector('.screen')
-}
-
-async function setIdentity(page: Page, role: 'admin' | 'writer' | 'visitor') {
-  await page.evaluate(
-    (value) => localStorage.setItem('tc26.demoIdentity.v1', value),
-    role,
-  )
-  await page.reload()
-  await page.waitForSelector('.screen')
-}
-
 test.beforeEach(async ({ page }) => {
-  await open(page)
-  await page.evaluate(() => localStorage.clear())
+  await resetDemo(page)
 })
 
 test('přehled ukazuje turnaj a kola bez přihlášení', async ({ page }) => {
+  const errors = collectErrors(page)
   await open(page)
   await expect(page.locator('.score-hero').first()).toBeVisible()
+  await expect(page.locator('.hero p')).toContainText('Belek')
   await expect(page.locator('.list .row')).toHaveCount(5)
   await page.locator('.list .row').first().click()
   await expect(page.locator('h1')).toContainText('Kolo 1')
   await page.getByRole('button', { name: 'Scorekarta' }).click()
   await expect(page.locator('table.scorecard').first()).toBeVisible()
-  // Žádné vodorovné přetečení stránky.
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-  )
-  expect(overflow).toBe(false)
+  expect(errors()).toEqual([])
 })
 
 test('admin spustí kolo, zapisovatel zapíše a visitor vidí výsledek', async ({
   page,
   context,
 }) => {
-  await setIdentity(page, 'admin')
-  await open(page, '#/admin/round/r1')
-  await page.getByRole('button', { name: 'Živě' }).click()
+  const errors = collectErrors(page)
+  await startRound(page)
+  await setIdentity(page, 'writer')
 
-  // Zápis skóre pro flight 1.
   await open(page, '#/play/r1/0')
-  await expect(page.locator('.player-row')).toHaveCount(4)
+  const rows = page.locator('.player-row')
+  await expect(rows).toHaveCount(4)
 
   // Čtyři hráči se vejdou na displej bez rolování obsahu.
   const fits = await page.evaluate(() => {
@@ -61,8 +44,7 @@ test('admin spustí kolo, zapisovatel zapíše a visitor vidí výsledek', async
   })
   expect(fits).toBe(true)
 
-  const rows = page.locator('.player-row')
-  // Klepnutí vloží par, plus přidá ránu, zvednutí přes ×.
+  // Klepnutí vloží par, plus přidá ránu.
   await rows.nth(0).locator('.score-value').click()
   await rows.nth(1).locator('.step-button').last().click()
   await rows.nth(2).locator('.score-value').click()
@@ -80,6 +62,7 @@ test('admin spustí kolo, zapisovatel zapíše a visitor vidí výsledek', async
   await open(second)
   await expect(second.locator('.row.live').first()).toBeVisible()
   await expect(second.locator('.pill.team-a').first()).toBeVisible()
+  expect(errors()).toEqual([])
 })
 
 test('visitor nemůže zapisovat', async ({ page }) => {

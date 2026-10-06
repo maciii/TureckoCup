@@ -200,6 +200,7 @@ export const cs = {
   'admin.gameHalve': 'Bodů za remízu',
   'admin.addGame': 'Přidat hru',
   'admin.removeGame': 'Odebrat hru',
+  'admin.removeGameConfirm': 'Odebrat hru {name}? Zapsané skóre zůstane.',
   'admin.access': 'Oprávnění',
   'admin.accessHint':
     'E-maily Google účtů, které smí zapisovat skóre. Administrátoři smí vše.',

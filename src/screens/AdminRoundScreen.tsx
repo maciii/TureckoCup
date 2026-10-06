@@ -86,6 +86,7 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
           key={option.id}
           type="button"
           className={`tab${selected === option.id ? ' selected' : ''}`}
+          aria-pressed={selected === option.id}
           onClick={() => onSelect(option.id)}
         >
           {option.label}
@@ -321,6 +322,7 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
                   patch({ games: round.games.map((g, i) => (i === index ? next : g)) })
                 }
                 onRemove={() =>
+                  confirm(t('admin.removeGameConfirm', { name: gameTitle(game) })) &&
                   patch({ games: round.games.filter((_, i) => i !== index) })
                 }
               />
@@ -406,7 +408,7 @@ function EditsLog({ roundId }: { roundId: string }) {
           <p className="hint">{t('admin.editsEmpty')}</p>
         )}
         {edits !== null && edits.length > 0 && (
-          <table className="table-plain">
+          <table className="table-plain edits-log">
             <tbody>
               {edits.map((edit, index) => (
                 <tr key={`${edit.at}-${index}`}>
@@ -567,10 +569,14 @@ function GameEditor({
   const isSkins = game.kind === 'individual-skins' || game.kind === 'team-skins'
 
   return (
-    <div style={{ borderTop: '1px solid var(--line)', paddingTop: 10 }}>
+    <div
+      className="game-card"
+      style={{ borderTop: '1px solid var(--line)', paddingTop: 10 }}
+    >
       <div className="field" style={{ borderTop: 'none', paddingTop: 0 }}>
         <select
           className="input sm"
+          aria-label={t('admin.games')}
           value={game.kind}
           style={{ flex: 1 }}
           onChange={(e) => onChange({ ...game, kind: e.target.value as GameKind })}
@@ -619,6 +625,7 @@ function GameEditor({
                 key={scope}
                 type="button"
                 className={`tab${(options.scope ?? 'flight') === scope ? ' selected' : ''}`}
+                aria-pressed={(options.scope ?? 'flight') === scope}
                 onClick={() => setOptions({ scope })}
               >
                 {t(scope === 'flight' ? 'admin.gameScopeFlight' : 'admin.gameScopeAll')}
@@ -664,6 +671,7 @@ function GameEditor({
                   key={format}
                   type="button"
                   className={`tab${(options.format ?? 'strokes-net') === format ? ' selected' : ''}`}
+                  aria-pressed={(options.format ?? 'strokes-net') === format}
                   onClick={() => setOptions({ format })}
                 >
                   {t(`format.${format}`)}

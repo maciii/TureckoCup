@@ -132,6 +132,7 @@ export default function MenuSheet({ onClose, playRoute, current }: Props) {
                     key={role}
                     type="button"
                     className={`tab${meta.role === role ? ' selected' : ''}`}
+                    aria-pressed={meta.role === role}
                     onClick={() => store.setDemoIdentity?.(role)}
                   >
                     {t(

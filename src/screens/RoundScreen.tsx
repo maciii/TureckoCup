@@ -47,6 +47,7 @@ export default function RoundScreen({ roundId }: { roundId: string }) {
           <button
             type="button"
             className={`tab${tab === 'results' ? ' selected' : ''}`}
+            aria-pressed={tab === 'results'}
             onClick={() => setTab('results')}
           >
             {t('round.results')}
@@ -54,6 +55,7 @@ export default function RoundScreen({ roundId }: { roundId: string }) {
           <button
             type="button"
             className={`tab${tab === 'scorecard' ? ' selected' : ''}`}
+            aria-pressed={tab === 'scorecard'}
             onClick={() => setTab('scorecard')}
           >
             {t('round.scorecard')}
