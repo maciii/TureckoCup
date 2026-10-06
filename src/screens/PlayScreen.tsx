@@ -13,6 +13,7 @@ import {
   holeCount,
   holeOrder,
   holesCompleted,
+  holesPlayed,
   parAt,
   parForPlayedHoles,
   scoreAt,
@@ -279,7 +280,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
                     )}
                   </span>
                   <span className="player-total">
-                    {played === 0
+                    {played === 0 && holesPlayed(round, playerId) === 0
                       ? t('play.noScore')
                       : t('play.total', {
                           strokes: grossTotal(round, playerId),
