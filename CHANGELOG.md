@@ -3,6 +3,16 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.9.0] – 2026-10-07
+
+### Přidáno
+
+- **Hrací handicap v Pravidlech turnaje**: „Podle hřiště (WHS)“ (výchozí),
+  nebo **„Pevný po celý turnaj“** - hrací HCP je zaokrouhlený HCP index,
+  stejný počet ran v každém kole bez ohledu na hřiště a odpaliště. Změna se
+  hned promítne do všech nedohraných kol; ruční přepis u kola má přednost.
+  Nastavení kola ukazuje, který režim platí.
+
 ## [0.8.2] – 2026-10-07
 
 ### Změněno

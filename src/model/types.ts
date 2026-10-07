@@ -44,7 +44,15 @@ export interface Tournament {
    * four-ball na brutto/netto rány); chybí = netto dvojbogey.
    */
   pickup?: PickupRule
+  /**
+   * Hrací HCP: `course` = WHS podle hřiště a odpaliště (výchozí), `fixed` =
+   * zaokrouhlený HCP index stejný ve všech kolech. Kolo si nese snímek
+   * (`TournamentRound.handicapMode`), admin ho do kol promítá z adminu.
+   */
+  handicapMode?: HandicapMode
 }
+
+export type HandicapMode = 'course' | 'fixed'
 
 /**
  * Kolik ran se počítá za zvednutou jamku ve hře na rány:
@@ -206,6 +214,8 @@ export interface TournamentRound {
   playerTees: Record<PlayerId, string>
   /** Snímek HCP indexů pro tohle kolo - pozdější změna u hráče kolo nepřepočítá. */
   playerIndex: Record<PlayerId, number | null>
+  /** Snímek způsobu výpočtu hracího HCP; chybí = podle hřiště (WHS). */
+  handicapMode?: HandicapMode
   /** Ruční přepis hracího handicapu administrátorem (celé rány). */
   courseHandicapOverride: Record<PlayerId, number>
   flights: Flight[]

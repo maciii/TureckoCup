@@ -166,12 +166,15 @@ export function playerTee(
  *
  * Ruční přepis administrátora má přednost; bez indexu se počítá nula a UI
  * na to upozorní - kolo se kvůli chybějícímu indexu nesmí zablokovat.
+ * V pevném režimu (`handicapMode: 'fixed'`) je hrací HCP zaokrouhlený index
+ * bez ohledu na hřiště a odpaliště - stejný počet ran v každém kole.
  */
 export function courseHandicapOf(round: TournamentRound, playerId: PlayerId): number {
   const override = round.courseHandicapOverride[playerId]
   if (typeof override === 'number') return override
   const index = round.playerIndex[playerId]
   if (index === null || index === undefined) return 0
+  if (round.handicapMode === 'fixed') return Math.round(index)
   return playerCourseHandicap(
     index,
     playerTee(round, playerId),

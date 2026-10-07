@@ -3,6 +3,7 @@ import type {
   CourseSnapshot,
   Flight,
   GameConfig,
+  HandicapMode,
   Player,
   PlayerId,
   TeamId,
@@ -226,10 +227,12 @@ export function emptyScoreMaps(playerIds: PlayerId[]) {
 export function seedRoundConfig(
   entry: ScheduleEntry,
   players: Player[],
+  handicapMode: HandicapMode = 'course',
 ): Omit<TournamentRound, 'scores' | 'bonuses'> {
   const course = COURSES[entry.courseId]
   if (!course) throw new Error(`Neznámé hřiště ${entry.courseId}`)
   return {
+    ...(handicapMode === 'fixed' ? { handicapMode } : {}),
     id: `r${entry.number}`,
     number: entry.number,
     date: entry.date,
@@ -256,9 +259,11 @@ export function seedRoundConfig(
 export function rosterSnapshot(
   round: TournamentRound,
   players: Player[],
-): Pick<TournamentRound, 'playerIndex' | 'positions' | 'flights'> {
+  handicapMode: HandicapMode = 'course',
+): Pick<TournamentRound, 'playerIndex' | 'positions' | 'flights' | 'handicapMode'> {
   const fresh = flightsOf(players)
   return {
+    handicapMode,
     playerIndex: Object.fromEntries(players.map((p) => [p.id, p.handicapIndex])),
     positions: positionsOf(players),
     flights: fresh.map((flight, index) => {
@@ -268,10 +273,16 @@ export function rosterSnapshot(
   }
 }
 
-/** Liší se snímek kola od aktuální soupisky (HCP, pozice, flighty)? */
-export function rosterOutdated(round: TournamentRound, players: Player[]): boolean {
-  const fresh = rosterSnapshot(round, players)
-  const index = players.some((p) => (round.playerIndex[p.id] ?? null) !== p.handicapIndex)
+/** Liší se snímek kola od aktuální soupisky (HCP, pozice, flighty, režim HCP)? */
+export function rosterOutdated(
+  round: TournamentRound,
+  players: Player[],
+  handicapMode: HandicapMode = 'course',
+): boolean {
+  const fresh = rosterSnapshot(round, players, handicapMode)
+  const mode = (round.handicapMode ?? 'course') !== handicapMode
+  const index =
+    mode || players.some((p) => (round.playerIndex[p.id] ?? null) !== p.handicapIndex)
   const positions = JSON.stringify(fresh.positions) !== JSON.stringify(round.positions)
   const flights =
     JSON.stringify(fresh.flights.map((f) => f.players)) !==

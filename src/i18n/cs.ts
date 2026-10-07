@@ -286,6 +286,16 @@ export const cs = {
     'Longest jen na pětiparových, Nearest na tříparových jamkách; birdie a eagle se počítají z ran.',
   'admin.gameConfirmByPar': 'Bonus platí jen při paru a lepším',
   'admin.rules': 'Pravidla turnaje',
+  'admin.rulesHint': 'Platí pro všechna kola. Dohraná kola si nechají, s čím se hrála.',
+  'admin.handicapMode': 'Hrací handicap',
+  'handicapMode.course': 'Podle hřiště (WHS)',
+  'handicapMode.course.hint':
+    'Hrací HCP se v každém kole spočítá z indexu a normy odpaliště (CR, SR, par) - na každém hřišti jiný.',
+  'handicapMode.fixed': 'Pevný po celý turnaj',
+  'handicapMode.fixed.hint':
+    'Hrací HCP = zaokrouhlený HCP index, stejný počet ran v každém kole bez ohledu na hřiště. Ruční přepis u kola má přednost.',
+  'admin.courseHandicapFixedHint':
+    'Pevný hrací HCP po celý turnaj (Pravidla turnaje): zaokrouhlený index. Přepis platí jen pro tohle kolo.',
   'admin.pickup': 'Zvednutá jamka ve hře na rány',
   'admin.pickupHint':
     'Kolik ran se počítá za nedohranou jamku v duelech a four-ballu na rány. Stableford dává nulu, ve Skins jamka propadá.',

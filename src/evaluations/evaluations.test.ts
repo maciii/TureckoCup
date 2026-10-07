@@ -327,3 +327,22 @@ describe('extra body', () => {
     expect(result.rows.find((r) => r.id === 'p1')!.secondary).toBe(1)
   })
 })
+
+describe('pevný hrací HCP po celý turnaj', () => {
+  it('v pevném režimu je hrací HCP zaokrouhlený index bez ohledu na odpaliště', () => {
+    const round = round1()
+    round.handicapMode = 'fixed'
+    expect(courseHandicapOf(round, 'p1')).toBe(13) // 12,7
+    expect(courseHandicapOf(round, 'p6')).toBe(9) // 9,4
+    round.defaultTeeId = 'yellow'
+    expect(courseHandicapOf(round, 'p1')).toBe(13)
+    // Ruční přepis má přednost, bez indexu nula.
+    round.courseHandicapOverride.p1 = 11
+    expect(courseHandicapOf(round, 'p1')).toBe(11)
+    expect(courseHandicapOf(round, 'p4')).toBe(0)
+    // Podle hřiště ze žlutých: 12,7 × 118/113 + (68,1 − 72) = 9,4 -> 9.
+    delete round.courseHandicapOverride.p1
+    round.handicapMode = 'course'
+    expect(courseHandicapOf(round, 'p1')).toBe(9)
+  })
+})

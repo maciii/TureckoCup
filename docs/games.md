@@ -9,8 +9,10 @@ Společné pro všechny hry:
 - Zapisuje se **brutto skóre** (počet ran). **Zvednutá jamka** je explicitní
   hodnota `0` (v UI tlačítko `×`); chybějící zápis znamená „ještě nezapsáno“.
 - **Netto** = brutto minus rány podle hracího handicapu a stroke indexu.
-  Hrací HCP = WHS z indexu a normy odpaliště hráče (`CR`, `SR`, par),
-  případně ruční přepis administrátora; hra ho může krátit (`allowance`).
+  Hrací HCP = WHS z indexu a normy odpaliště hráče (`CR`, `SR`, par), nebo
+  v pevném režimu turnaje (`handicapMode: 'fixed'`, Pravidla turnaje)
+  zaokrouhlený index stejný ve všech kolech; ruční přepis administrátora
+  má vždy přednost; hra ho může krátit (`allowance`).
   Hráč bez indexu hraje s nulou a UI to ukazuje otazníkem.
 - **Jamka je rozhodnutá**, až když zapsali všichni, kterých se hra týká.
 - Pořadí jamek je pořadí hraní flightu (start z jedničky nebo z desítky).

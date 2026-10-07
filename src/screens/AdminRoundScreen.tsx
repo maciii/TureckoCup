@@ -184,7 +184,11 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
 
         <Section
           title={t('admin.courseHandicap')}
-          note={t('admin.courseHandicapHint')}
+          note={
+            round.handicapMode === 'fixed'
+              ? t('admin.courseHandicapFixedHint')
+              : t('admin.courseHandicapHint')
+          }
           accent="gold"
         >
           <div className="px">

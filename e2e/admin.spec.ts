@@ -150,3 +150,28 @@ test('změna HCP v soupisce se na jedno klepnutí promítne do plánovaných kol
   ).toHaveValue('18.8')
   expect(errors()).toEqual([])
 })
+
+test('pevný hrací HCP po celý turnaj se promítne do kol', async ({ page }) => {
+  const errors = collectErrors(page)
+  await open(page, '#/admin/round/r1')
+  // Mac 12,7 ze žlutých na Aspendosu: 9 ran podle WHS.
+  const macHcp = page.locator('.table-plain tbody tr').first().locator('td').nth(3)
+  await expect(macHcp).toHaveText('9')
+
+  await open(page, '#/admin')
+  await page.getByRole('button', { name: 'Pevný po celý turnaj' }).click()
+  await expect(
+    page.getByRole('button', { name: 'Pevný po celý turnaj' }),
+  ).toHaveAttribute('aria-pressed', 'true')
+  await open(page, '#/admin/round/r1')
+  await expect(macHcp).toHaveText('13')
+  await expect(page.getByText('Pevný hrací HCP po celý turnaj')).toBeVisible()
+  await open(page, '#/admin/round/r5')
+  await expect(macHcp).toHaveText('13')
+
+  await open(page, '#/admin')
+  await page.getByRole('button', { name: 'Podle hřiště (WHS)' }).click()
+  await open(page, '#/admin/round/r1')
+  await expect(macHcp).toHaveText('9')
+  expect(errors()).toEqual([])
+})

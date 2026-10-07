@@ -55,6 +55,7 @@ describe('katalog textů', () => {
       'games.',
       'bonus.',
       'pickup.',
+      'handicapMode.',
       'team.',
       'status.',
       'score.',

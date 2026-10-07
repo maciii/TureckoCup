@@ -10,7 +10,7 @@ import {
 } from '../data/seed'
 import { t } from '../i18n'
 import { POSITIONS, TEAM_IDS } from '../model/types'
-import type { PickupRule, Player, TeamId } from '../model/types'
+import type { HandicapMode, PickupRule, Player, TeamId } from '../model/types'
 import {
   PICKUP_PRESETS,
   pickupFormula,
@@ -216,8 +216,9 @@ export default function AdminScreen() {
  */
 function RosterSync() {
   const { state, store } = useData()
+  const mode = state.tournament?.handicapMode ?? 'course'
   const outdated = state.rounds.filter(
-    (round) => round.status === 'planned' && rosterOutdated(round, state.players),
+    (round) => round.status === 'planned' && rosterOutdated(round, state.players, mode),
   )
   if (outdated.length === 0) return null
   return (
@@ -233,7 +234,7 @@ function RosterSync() {
             store.dispatch({
               kind: 'updateRound',
               roundId: round.id,
-              patch: rosterSnapshot(round, state.players),
+              patch: rosterSnapshot(round, state.players, mode),
             })
           }
         }}
@@ -254,11 +255,46 @@ function RulesEditor() {
     store.dispatch({ kind: 'updateTournament', patch: { pickup: next } })
   }
   const number = (value: string) => Math.max(0, Number(value.replace(',', '.')) || 0)
+  const mode = state.tournament?.handicapMode ?? 'course'
+  /**
+   * Režim je centrální, ale kolo si nese snímek: změna se hned promítne do
+   * všech kol, která nejsou dohraná - dohraná si nechají, s čím se hrála.
+   */
+  function setMode(next: HandicapMode) {
+    store.dispatch({ kind: 'updateTournament', patch: { handicapMode: next } })
+    for (const round of state.rounds) {
+      if (round.status === 'finished' || (round.handicapMode ?? 'course') === next)
+        continue
+      store.dispatch({
+        kind: 'updateRound',
+        roundId: round.id,
+        patch: { handicapMode: next },
+      })
+    }
+  }
   return (
-    <Section title={t('admin.rules')} note={t('admin.pickupHint')} accent="gold">
+    <Section title={t('admin.rules')} note={t('admin.rulesHint')} accent="gold">
       <div className="px">
         <div className="field" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+          <span className="field-label">{t('admin.handicapMode')}</span>
+          <div className="tabs compact" style={{ width: '100%' }}>
+            {(['course', 'fixed'] as const).map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={`tab${mode === id ? ' selected' : ''}`}
+                aria-pressed={mode === id}
+                onClick={() => setMode(id)}
+              >
+                {t(`handicapMode.${id}`)}
+              </button>
+            ))}
+          </div>
+          <span className="hint">{t(`handicapMode.${mode}.hint`)}</span>
+        </div>
+        <div className="field" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
           <span className="field-label">{t('admin.pickup')}</span>
+          <span className="hint">{t('admin.pickupHint')}</span>
           <div className="tabs compact" style={{ width: '100%' }}>
             {[...PICKUP_PRESETS.map((p) => p.id), 'custom' as const].map((id) => (
               <button

@@ -287,7 +287,15 @@ describe('snímek soupisky do kola', () => {
     expect(patch.flights[0]!.startHole).toBe(9)
     expect(patch.flights[0]!.teeTime).toBe('15:50')
     expect(patch.flights[1]!.teeTime).toBe('16:00')
-    expect(Object.keys(patch)).toEqual(['playerIndex', 'positions', 'flights'])
+    expect(Object.keys(patch)).toEqual([
+      'handicapMode',
+      'playerIndex',
+      'positions',
+      'flights',
+    ])
+    // Režim hracího HCP je taky součást snímku.
+    expect(rosterOutdated(round, state.players, 'fixed')).toBe(true)
+    expect(rosterSnapshot(round, state.players, 'fixed').handicapMode).toBe('fixed')
     const synced = applyOp(state, { kind: 'updateRound', roundId: 'r1', patch })
     expect(
       rosterOutdated({ ...synced.rounds[0]!, flights: patch.flights }, players),
