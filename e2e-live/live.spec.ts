@@ -27,8 +27,8 @@ test('aplikace je připojená a visitor vidí turnaj', async ({ page }) => {
   if (!founded) {
     await expect(page.getByText('Turnaj ještě není založený.')).toBeVisible()
   } else {
-    await expect(page.locator('.list .row')).toHaveCount(5)
-    await page.locator('.list .row').first().click()
+    await expect(page.locator('.list > button.row')).toHaveCount(5)
+    await page.locator('.list > button.row').first().click()
     await expect(page).toHaveURL(/#\/round\/r1$/)
     await expect(page.getByRole('heading', { level: 1, name: /Kolo 1/ })).toBeVisible()
     await page.getByRole('button', { name: 'Scorekarta' }).click()
@@ -111,7 +111,7 @@ test('ukázkový režim běží i na produkci', async ({ page }) => {
   await page.goto('/?demo=1#/')
   await page.waitForSelector('.screen')
   await expect(page.locator('.score-hero').first()).toBeVisible()
-  await expect(page.locator('.list .row')).toHaveCount(5)
+  await expect(page.locator('.list > button.row')).toHaveCount(5)
   expect(errors()).toEqual([])
 })
 

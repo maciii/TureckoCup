@@ -17,8 +17,8 @@ test('přehled ukazuje turnaj a kola bez přihlášení', async ({ page }) => {
   await open(page)
   await expect(page.locator('.score-hero').first()).toBeVisible()
   await expect(page.locator('.hero p')).toContainText('Belek')
-  await expect(page.locator('.list .row')).toHaveCount(5)
-  await page.locator('.list .row').first().click()
+  await expect(page.locator('.list > button.row')).toHaveCount(5)
+  await page.locator('.list > button.row').first().click()
   // Přehled má dva nadpisy h1; čeká se na nadpis detailu kola.
   await expect(page).toHaveURL(/#\/round\/r1$/)
   await expect(page.getByRole('heading', { level: 1, name: /Kolo 1/ })).toBeVisible()
