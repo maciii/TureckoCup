@@ -4,7 +4,7 @@ import { t } from '../i18n'
 import { navigate } from '../nav'
 import type { Route } from '../nav'
 import { APP_VERSION } from '../version'
-import { FlagMark } from './common'
+import { FlagMark, accountName } from './common'
 
 interface Props {
   onClose: () => void
@@ -76,7 +76,9 @@ export default function MenuSheet({ onClose, playRoute, current }: Props) {
           <div>
             <div className="nm">{state.tournament?.name ?? t('app.name')}</div>
             <div className="sub">
-              {meta.account ? meta.account.name : t('admin.role.visitor')}
+              {meta.account
+                ? accountName(state.players, meta.account)
+                : t('admin.role.visitor')}
             </div>
           </div>
         </div>

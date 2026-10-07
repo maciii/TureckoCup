@@ -11,6 +11,7 @@ const PROJECT = 'demo-tc26'
 const FIRESTORE = `http://127.0.0.1:8089`
 const AUTH = `http://127.0.0.1:9099`
 const ADMIN_EMAIL = 'mac.kubecka@gmail.com'
+const PLAYER_EMAIL = 'pavlos@example.com'
 
 /**
  * Diagnostika pro CI: artefakty z běhu nejsou vždy po ruce, proto se při
@@ -99,7 +100,16 @@ async function newPhone(browser: Browser, testInfo: TestInfo): Promise<Page> {
  * telefonu). Popup ale načítá apis.google.com, které vývojový kontejner
  * nedosáhne - tam (bez `CI`) přihlásí účet testovací háček z `firebase.ts`.
  */
-async function googleSignIn(page: Page, email: string, name: string): Promise<void> {
+/**
+ * `expectName` = jméno, které má aplikace po přihlášení ukázat (jméno hráče
+ * ze soupisky); `null` u účtu, který aplikace odhlásí.
+ */
+async function googleSignIn(
+  page: Page,
+  email: string,
+  name: string,
+  expectName: string | null = name,
+): Promise<void> {
   await page.goto('/#/admin')
   const button = page.getByRole('button', { name: 'Přihlásit se Googlem' })
   await expect(button).toBeEnabled({ timeout: 20_000 })
@@ -113,7 +123,11 @@ async function googleSignIn(page: Page, email: string, name: string): Promise<vo
         ).__tc26EmulatorGoogleSignIn(e!, n!),
       [email, name],
     )
-    await expect(page.locator('.account-name')).toHaveText(name, { timeout: 20_000 })
+    if (expectName !== null) {
+      await expect(page.locator('.account-name')).toHaveText(expectName, {
+        timeout: 20_000,
+      })
+    }
     return
   }
   const [popup] = await Promise.all([page.waitForEvent('popup'), button.click()])
@@ -122,10 +136,14 @@ async function googleSignIn(page: Page, email: string, name: string): Promise<vo
   await popup.locator('#email-input').fill(email)
   await popup.locator('#display-name-input').fill(name)
   await popup.locator('#sign-in').click()
-  await expect(page.locator('.account-name')).toHaveText(name, { timeout: 20_000 })
+  if (expectName !== null) {
+    await expect(page.locator('.account-name')).toHaveText(expectName, {
+      timeout: 20_000,
+    })
+  }
 }
 
-test('admin založí turnaj, anonymní hráč zapisuje, visitor vidí živě', async ({
+test('admin založí turnaj a zadá e-maily, hráč zapisuje, cizí účet neprojde', async ({
   page,
   browser,
   request,
@@ -136,7 +154,7 @@ test('admin založí turnaj, anonymní hráč zapisuje, visitor vidí živě', a
   const admin = page
   watchConsole(admin, 'admin')
   await googleSignIn(admin, ADMIN_EMAIL, 'Mac')
-  await expect(admin.getByText('Administrátor')).toBeVisible()
+  await expect(admin.locator('.account-name + .hint')).toContainText('Administrátor')
   await admin.getByRole('button', { name: 'Inicializovat turnaj' }).click()
   await expect(admin.getByRole('button', { name: 'Inicializovat turnaj' })).toHaveCount(
     0,
@@ -144,6 +162,19 @@ test('admin založí turnaj, anonymní hráč zapisuje, visitor vidí živě', a
       timeout: 20_000,
     },
   )
+  // Po založení turnaje se admin pozná i jako hráč Mac (p1 má jeho e-mail).
+  await expect(admin.locator('.account-name')).toHaveText('Mac')
+
+  // Admin přiřadí Pavlovi (p2, flight 1) jeho Google e-mail.
+  const pavlosEmail = admin.getByLabel('Google e-mail: Pavel Tomán')
+  await pavlosEmail.fill('Pavlos@Example.com')
+  await pavlosEmail.blur()
+  await expect
+    .poll(async () => {
+      const doc = await readDoc(request, 'tournaments/tc26/private/access')
+      return doc?.fields.playerEmails?.mapValue.fields?.p2?.stringValue ?? null
+    })
+    .toBe(PLAYER_EMAIL)
 
   // Kolo 1: spustit a změnit pozice - skutečně uložené ve Firestoru.
   await admin.goto('/#/admin/round/r1')
@@ -162,39 +193,27 @@ test('admin založí turnaj, anonymní hráč zapisuje, visitor vidí živě', a
     })
     .toEqual(['p1', 'p3', 'p5', ''])
 
-  // --- Hráč bez Googlu: anonymní přihlášení --------------------------------
+  // --- Cizí Google účet: aplikace ho odhlásí ----------------------------
+  const stranger = await newPhone(browser, testInfo)
+  watchConsole(stranger, 'cizí')
+  await googleSignIn(stranger, 'cizi@example.com', 'Cizí', null)
+  await expect(stranger.locator('.notice.error')).toContainText('není mezi hráči', {
+    timeout: 20_000,
+  })
+  await expect(
+    stranger.getByRole('button', { name: 'Přihlásit se Googlem' }),
+  ).toBeVisible({
+    timeout: 20_000,
+  })
+
+  // --- Hráč: přihlášení Googlem, pozná se podle e-mailu --------------------
   const writer = await newPhone(browser, testInfo)
   watchConsole(writer, 'hráč')
-  await writer.goto('/#/admin')
-  await writer.getByRole('button', { name: /Nemám Google účet/ }).click()
-  const uidText = await writer.locator('.uid').textContent({ timeout: 20_000 })
-  const uid = (uidText ?? '').replace(/^.*:\s*/, '').trim()
-  expect(uid.length).toBeGreaterThan(10)
-
-  // Bez oprávnění rules zápis odmítnou a hláška řekne, které uid přidat.
+  await googleSignIn(writer, PLAYER_EMAIL, 'Pavel Google', 'Pavel Tomán')
+  await expect(writer.locator('.account-name + .hint')).toContainText('Hráč')
   await writer.goto('/#/play/r1/0')
   const writerRows = writer.locator('.player-row')
   await expect(writerRows).toHaveCount(4, { timeout: 20_000 })
-  await writerRows.nth(0).locator('.score-value').click()
-  const rejection = writer.locator('.notice.error')
-  await expect(rejection).toContainText('nemá oprávnění', { timeout: 20_000 })
-  await expect(rejection).toContainText(uid)
-  await rejection.click()
-
-  // --- Admin přidá uid přesně tak, jak je (velikost písmen) ----------------
-  await admin.goto('/#/admin')
-  await admin.getByLabel('Přidat e-mail nebo uid').fill(uid)
-  await admin.getByRole('button', { name: '+ uid' }).click()
-  await expect(admin.locator('.chip', { hasText: uid })).toBeVisible()
-  await expect
-    .poll(async () => {
-      const doc = await readDoc(request, 'tournaments/tc26/private/access')
-      if (!doc) return []
-      return (doc.fields.writerUids.arrayValue.values ?? []).map(
-        (v: { stringValue: string }) => v.stringValue,
-      )
-    })
-    .toContain(uid)
 
   // --- Visitor na třetím telefonu sleduje kolo -----------------------------
   const visitor = await newPhone(browser, testInfo)
@@ -230,6 +249,8 @@ test('admin založí turnaj, anonymní hráč zapisuje, visitor vidí živě', a
     timeout: 20_000,
   })
   await expect(admin.locator('table.edits-log')).toContainText('→ 4')
+  // Log ukazuje jméno hráče, který zapisoval, ne jen e-mail.
+  await expect(admin.locator('table.edits-log')).toContainText('Pavlos')
 })
 
 async function readFirstFlightPlayer(request: APIRequestContext): Promise<string> {

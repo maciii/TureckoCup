@@ -1,6 +1,5 @@
 import type { DocumentData, DocumentReference, Firestore } from 'firebase/firestore'
 import type {
-  Access,
   EditRecord,
   Player,
   Tournament,
@@ -8,6 +7,7 @@ import type {
   TournamentState,
 } from '../model/types'
 import { EMPTY_STATE } from '../model/types'
+import { decodeAccess, resolveIdentity } from '../model/access'
 import { t } from '../i18n'
 import { APP_VERSION } from '../version'
 import {
@@ -15,7 +15,6 @@ import {
   describeSignInError,
   isAuthReady,
   preloadAuth,
-  signInAnonymous,
   signInWithGoogle,
   signOutAccount,
   watchAccount,
@@ -220,8 +219,10 @@ export function createFireStore(tournamentId: string): Store {
   })
 
   /**
-   * Role: admin se pozná tím, že smí číst `private/access`; ostatní přihlášení
-   * jsou kandidáti na zapisovatele - ověří je až první zápis.
+   * Role podle e-mailu přihlášeného účtu v `private/access`: admin, hráč
+   * (zapisovatel), nebo nikdo. Hráči a admin dokument smějí číst (rules), takže
+   * se rovnou pozná i jméno hráče. Cizí účet se odhlásí - přihlásit se smějí
+   * jen hráči a admin. Do ověření je účet jen visitor (nic nezapíše).
    */
   function updateRole(db: Firestore, module: FirestoreModule): void {
     accessUnsub?.()
@@ -232,24 +233,46 @@ export function createFireStore(tournamentId: string): Store {
       notify()
       return
     }
-    role = 'writer'
+    const signedIn = account
+    const bootstrap = signedIn.email === BOOTSTRAP_ADMIN_EMAIL
+    role = bootstrap ? 'admin' : 'visitor'
     notify()
     const accessRef = module.doc(db, 'tournaments', tournamentId, 'private', 'access')
-    const bootstrap = account.email === BOOTSTRAP_ADMIN_EMAIL
+    const current = () => account?.uid === signedIn.uid
     accessUnsub = module.onSnapshot(
       accessRef,
       (snapshot) => {
-        const data = snapshot.exists() ? (snapshot.data() as Access) : null
+        if (!current()) return
+        const data = snapshot.exists() ? decodeAccess(snapshot.data()) : null
+        const identity = resolveIdentity(data, signedIn.email, BOOTSTRAP_ADMIN_EMAIL)
+        if (identity.role === 'outsider') {
+          rejectAccount(signedIn)
+          return
+        }
         state = { ...state, access: data }
-        role = 'admin'
+        role = identity.role
+        account = { ...signedIn, playerId: identity.playerId }
         notify()
       },
-      () => {
-        // Čtení odmítnuto = není admin. Bootstrap admin ještě nemusí mít dokument.
-        role = bootstrap ? 'admin' : 'writer'
-        notify()
+      (err) => {
+        if (!current()) return
+        // Bootstrap admin smí číst vždy; turnaj jen ještě nemusí existovat.
+        if (bootstrap) {
+          role = 'admin'
+          notify()
+          return
+        }
+        if (codeOf(err) === 'permission-denied') rejectAccount(signedIn)
+        else fail(t('error.loadAccess', { reason: err.message }))
       },
     )
+  }
+
+  /** Účet, který není hráčem ani adminem: hláška a odhlášení. */
+  function rejectAccount(signedIn: Account): void {
+    role = 'visitor'
+    fail(t('error.notMember', { email: signedIn.email || signedIn.name }))
+    void signOutAccount()
   }
 
   function docRef(
@@ -378,17 +401,6 @@ export function createFireStore(tournamentId: string): Store {
                 : 'admin.signInError.unknown',
             { code: codeOf(err) || (err instanceof Error ? err.message : String(err)) },
           ),
-        )
-      }
-    },
-    async signInAnonymously() {
-      try {
-        await signInAnonymous()
-      } catch (err) {
-        fail(
-          t('admin.signInError.anonymous', {
-            reason: err instanceof Error ? err.message : String(err),
-          }),
         )
       }
     },

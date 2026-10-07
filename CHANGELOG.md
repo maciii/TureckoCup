@@ -3,6 +3,27 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.5.0] – 2026-10-07
+
+### Změněno
+
+- **Každý hráč má v soupisce svůj Google e-mail** (Admin → Hráči). Po
+  přihlášení aplikace ukazuje jméno hráče, log úprav ukazuje, který hráč co
+  zapsal.
+- **Přihlásit se smějí jen hráči a admin.** Cizí Google účet aplikace hned
+  odhlásí s hláškou; pravidla mu nedovolí zapisovat ani číst e-maily.
+  Anonymní přihlášení a seznam zapisovatelů (e-maily, uid) jsou zrušené.
+- Oprávnění v administraci už spravují jen administrátory.
+- Workflow nasazuje pravidla Firestoru sám, vždy před aplikací.
+
+### Pro administrátora
+
+- Servisnímu účtu `github-deploy` přidat role **Firebase Rules Admin**
+  a **Service Usage Consumer** (návod, krok 5.3). Bez nich se nová verze
+  nenasadí.
+- Po nasazení doplnit e-maily všech hráčů v Admin → Hráči. Dřívější seznam
+  zapisovatelů se nepřevádí.
+
 ## [0.4.1] – 2026-10-07
 
 ### Přidáno

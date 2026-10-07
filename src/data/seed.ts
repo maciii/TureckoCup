@@ -110,8 +110,8 @@ export const SEED_TOURNAMENT: Tournament = {
 
 export const SEED_ACCESS: Access = {
   adminEmails: [BOOTSTRAP_ADMIN_EMAIL],
-  writerEmails: [BOOTSTRAP_ADMIN_EMAIL, 'bezdekf@gmail.com'],
-  writerUids: [],
+  // Ostatní e-maily doplní admin v Admin → Hráči.
+  playerEmails: { p1: BOOTSTRAP_ADMIN_EMAIL, p6: 'bezdekf@gmail.com' },
 }
 
 const COURSES: Record<string, CourseSnapshot> = {

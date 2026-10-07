@@ -74,8 +74,8 @@ beforeEach(async () => {
     await setDoc(doc(db, 'tournaments', TID), { name: 'Turecko Cup 26' })
     await setDoc(doc(db, 'tournaments', TID, 'private', 'access'), {
       adminEmails: [ADMIN],
-      writerEmails: [WRITER],
-      writerUids: ['anon-1'],
+      // Hráč p2 se přihlašuje e-mailem WRITER; admin je zároveň hráč p1.
+      playerEmails: { p1: ADMIN, p2: WRITER },
     })
     await setDoc(doc(db, 'tournaments', TID, 'rounds', 'r1'), roundDoc())
     await setDoc(doc(db, 'tournaments', TID, 'rounds', 'r2'), {
@@ -198,9 +198,53 @@ test('neověřený e-mail nestačí', async () => {
   await assertFails(scoreUpdate(db, 'p1', '0', 4, 'w2'))
 })
 
-test('anonymní účet ve writerUids smí zapisovat', async () => {
+test('anonymní účet nesmí zapisovat ani číst oprávnění', async () => {
   const db = user('anon-1', null)
-  await assertSucceeds(scoreUpdate(db, 'p1', '0', 4, 'anon-1'))
+  await assertFails(scoreUpdate(db, 'p1', '0', 4, 'anon-1'))
+  await assertFails(getDoc(doc(db, 'tournaments', TID, 'private', 'access')))
+})
+
+test('hráč čte oprávnění (pozná se podle e-mailu), cizí účet ne', async () => {
+  const ref = (db) => doc(db, 'tournaments', TID, 'private', 'access')
+  await assertSucceeds(getDoc(ref(user('w1', WRITER))))
+  await assertFails(getDoc(ref(user('s1', STRANGER))))
+  await assertFails(getDoc(ref(env.unauthenticatedContext().firestore())))
+})
+
+test('hráč nesmí měnit oprávnění', async () => {
+  const db = user('w1', WRITER)
+  await assertFails(
+    setDoc(doc(db, 'tournaments', TID, 'private', 'access'), {
+      adminEmails: [WRITER],
+      playerEmails: { p2: WRITER },
+    }),
+  )
+})
+
+test('e-mail hráče se porovnává bez ohledu na velikost písmen', async () => {
+  const db = user('w3', 'Fery@Example.com')
+  await assertSucceeds(scoreUpdate(db, 'p2', '0', 4, 'w3'))
+})
+
+test('hráč s e-mailem odebraným ze soupisky už nezapíše', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await updateDoc(doc(ctx.firestore(), 'tournaments', TID, 'private', 'access'), {
+      playerEmails: { p1: ADMIN },
+    })
+  })
+  await assertFails(scoreUpdate(user('w1', WRITER), 'p1', '0', 4, 'w1'))
+})
+
+test('starý tvar oprávnění (writerEmails) už nikoho nepustí', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'tournaments', TID, 'private', 'access'), {
+      adminEmails: [ADMIN],
+      writerEmails: [WRITER],
+      writerUids: ['anon-1'],
+    })
+  })
+  await assertFails(scoreUpdate(user('w1', WRITER), 'p1', '0', 4, 'w1'))
+  await assertSucceeds(scoreUpdate(user('a1', ADMIN), 'p1', '0', 4, 'a1'))
 })
 
 test('admin mění konfiguraci, oprávnění i skóre hromadně', async () => {
@@ -216,8 +260,7 @@ test('admin mění konfiguraci, oprávnění i skóre hromadně', async () => {
   await assertSucceeds(
     setDoc(doc(db, 'tournaments', TID, 'private', 'access'), {
       adminEmails: [ADMIN],
-      writerEmails: [],
-      writerUids: [],
+      playerEmails: {},
     }),
   )
   await assertSucceeds(getDoc(doc(db, 'tournaments', TID, 'private', 'access')))
@@ -230,8 +273,7 @@ test('bootstrap admin založí turnaj, i když oprávnění ještě neexistují'
   await assertSucceeds(
     setDoc(doc(db, 'tournaments', TID, 'private', 'access'), {
       adminEmails: [ADMIN],
-      writerEmails: [],
-      writerUids: [],
+      playerEmails: {},
     }),
   )
 })
@@ -285,14 +327,4 @@ test('zapisovatel nepodvrhne cizí e-mail v logu úprav', async () => {
   const edits = collection(db, 'tournaments', TID, 'rounds', 'r1', 'edits')
   await assertFails(setDoc(doc(edits), entry(ADMIN)))
   await assertSucceeds(setDoc(doc(edits), entry(WRITER)))
-})
-
-test('uid ve writerUids rozlišuje velikost písmen', async () => {
-  await env.withSecurityRulesDisabled(async (ctx) => {
-    await updateDoc(doc(ctx.firestore(), 'tournaments', TID, 'private', 'access'), {
-      writerUids: ['Xk3PqZ9aB'],
-    })
-  })
-  await assertSucceeds(scoreUpdate(user('Xk3PqZ9aB', null), 'p1', '0', 4, 'Xk3PqZ9aB'))
-  await assertFails(scoreUpdate(user('xk3pqz9ab', null), 'p1', '1', 4, 'xk3pqz9ab'))
 })

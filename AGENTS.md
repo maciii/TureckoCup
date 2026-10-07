@@ -94,7 +94,7 @@ src/
   screens/      Overview, Round, Play, Admin, AdminRound, Scorecard, GameResults, MenuSheet
   i18n/         cs.ts (jediný katalog), plural.ts
   nav.ts        hash navigace, pwa.ts, swipeBack.ts (převzato)
-firestore.rules  pravidla zabezpečení (nasazují se ručně z konzole)
+firestore.rules  pravidla zabezpečení (nasazuje je workflow před aplikací)
 firebase.json    Hosting (hlavičky cache), emulátory
 e2e/             Playwright v ukázkovém režimu: smoke, play, admin, layout
 e2e-firebase/    Playwright proti emulátorům: produkční datová vrstva a rules
@@ -111,8 +111,13 @@ rules/           testy firestore.rules v emulátoru
   (pozice 1-4) proto drží `''` pro prázdné místo (`assignPosition`). Oba
   adaptery to hlídají přes `findInvalidWrite()` - když ukázkový režim hlásí
   „neplatná hodnota v poli…“, produkce by zápis odmítla taky.
-- **Uid rozlišuje velikost písmen**, e-maily se porovnávají malými. Nikdy
-  nepřevádět uid na malá písmena.
+- **Přihlásit se smí jen hráč nebo admin.** Hráč = Google e-mail
+  v `private/access.playerEmails` (malými písmeny, jeden e-mail jednomu
+  hráči, `setPlayerEmail` v `src/model/access.ts`). Klient podle něj pozná
+  jméno hráče a cizí účet odhlásí; rules ho stejně nepustí. Anonymní
+  přihlášení v aplikaci není.
+- **Pravidla a aplikace se nasazují spolu** (workflow, pravidla první).
+  Změna, která v klientovi spoléhá na nová pravidla, bez nich nefunguje.
 - **Prázdné mapy skóre musí existovat** (`scores.p1 = {}` pro všech 8),
   rules sahají na `resource.data.scores[p]`.
 - **Allowance se aplikuje ve hře, ne v kole.** Kolo drží index, odpaliště

@@ -5,7 +5,16 @@ import type { Op } from './ops'
 import { applyOp, checkOp, opProblemMessage, opToWrites } from './ops'
 import type { Listener, Role, Store, StoreMeta } from './store'
 import { STORAGE_PREFIX } from './store'
-import { SEED_ACCESS, SEED_PLAYERS, SEED_TOURNAMENT, seedRounds } from './seed'
+import {
+  BOOTSTRAP_ADMIN_EMAIL,
+  SEED_ACCESS,
+  SEED_PLAYERS,
+  SEED_TOURNAMENT,
+  seedRounds,
+} from './seed'
+import { decodeAccess, playerIdByEmail } from '../model/access'
+
+const DEMO_WRITER_EMAIL = 'bezdekf@gmail.com'
 
 /**
  * Místní úložiště - ukázkový režim a e2e testy.
@@ -39,11 +48,24 @@ function readState(): TournamentState {
       tournament: state.tournament ?? null,
       players: Array.isArray(state.players) ? state.players : [],
       rounds: Array.isArray(state.rounds) ? state.rounds : [],
-      access: state.access ?? null,
+      access: readAccess(state.access),
     }
   } catch {
     return EMPTY_STATE
   }
+}
+
+/**
+ * Oprávnění z dřívější verze ukázkového režimu (writerEmails, bez e-mailů
+ * hráčů) se převedou na nový tvar a doplní e-maily ze seedu, aby ukázkové
+ * identity dál odpovídaly hráčům.
+ */
+function readAccess(value: unknown): TournamentState['access'] {
+  if (!value) return null
+  const access = decodeAccess(value)
+  return Object.keys(access.playerEmails).length > 0
+    ? access
+    : { ...access, playerEmails: { ...SEED_ACCESS.playerEmails } }
 }
 
 function writeState(state: TournamentState): void {
@@ -80,14 +102,16 @@ export function createLocalStore(options: { seed?: boolean } = {}): Store {
   let error: string | null = null
 
   function meta(): StoreMeta {
+    // Ukázkové identity odpovídají seedu: admin je Mac (p1), hráč je Fery (p6).
+    const email = role === 'admin' ? BOOTSTRAP_ADMIN_EMAIL : DEMO_WRITER_EMAIL
     const account =
       role === 'visitor'
         ? null
         : {
             uid: `demo-${role}`,
             name: t(role === 'admin' ? 'admin.demoAdminName' : 'admin.demoWriterName'),
-            email: role === 'admin' ? 'mac.kubecka@gmail.com' : 'demo@example.com',
-            anonymous: false,
+            email,
+            playerId: playerIdByEmail(state.access, email),
           }
     return {
       mode: 'local',
@@ -165,11 +189,6 @@ export function createLocalStore(options: { seed?: boolean } = {}): Store {
     prepareSignIn() {},
     async signIn() {
       role = 'admin'
-      persistIdentity()
-      notify()
-    },
-    async signInAnonymously() {
-      role = 'writer'
       persistIdentity()
       notify()
     },

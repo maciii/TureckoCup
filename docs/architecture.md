@@ -25,7 +25,7 @@ Tvar odpovídá dokumentům ve Firestore 1:1 (`src/model/types.ts`):
 
 ```
 tournaments/{tid}                       Tournament: název, týmy, playerIds
-tournaments/{tid}/private/access        Access: adminEmails, writerEmails, writerUids (čte jen admin)
+tournaments/{tid}/private/access        Access: adminEmails, playerEmails {p1: e-mail} (čtou hráči a admin)
 tournaments/{tid}/players/{pid}         Player: jméno, tým, pozice, HCP index
 tournaments/{tid}/rounds/{rid}          TournamentRound (níž)
 tournaments/{tid}/rounds/{rid}/edits/*  EditRecord: kdo, kdy, kterou buňku, odkud kam (čte jen admin)
@@ -89,18 +89,19 @@ service workerem - bez něj by aplikace bez signálu nenaběhla.
 
 ### Role
 
-| Role        | Jak se pozná                                                          | Smí                                                          |
-| ----------- | --------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Visitor     | nepřihlášen                                                           | číst turnaj, hráče a kola (ne oprávnění ani log úprav)       |
-| Zapisovatel | přihlášen; e-mail ve `writerEmails` nebo uid ve `writerUids`          | měnit jednu buňku skóre/bonusů v kole, které není `finished` |
-| Admin       | e-mail v `adminEmails` nebo bootstrap `mac.kubecka@gmail.com` v rules | vše                                                          |
+| Role    | Jak se pozná                                                          | Smí                                                          |
+| ------- | --------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Visitor | nepřihlášen                                                           | číst turnaj, hráče a kola (ne oprávnění ani log úprav)       |
+| Hráč    | přihlášen Googlem; e-mail v `playerEmails` u jeho jména               | měnit jednu buňku skóre/bonusů v kole, které není `finished` |
+| Admin   | e-mail v `adminEmails` nebo bootstrap `mac.kubecka@gmail.com` v rules | vše                                                          |
 
-Klient roli ověřuje jen zčásti: admin se pozná tím, že smí číst
-`private/access`; ostatní přihlášení jsou kandidáti na zapisovatele a ověří je
-až první zápis (odmítnutí se ukáže jako hláška s e-mailem nebo uid účtu, které
-admin přidá do oprávnění). Uid anonymních účtů rozlišuje velikost písmen a
-ukládá se beze změny, e-maily malými písmeny. Log úprav nese e-mail
-zapisovatele, proto ho čte jen admin a rules nedovolí e-mail podvrhnout.
+Po přihlášení klient přečte `private/access` (smí jen hráč nebo admin) a
+funkcí `resolveIdentity()` pozná roli i hráče: obrazovky ukazují jméno ze
+soupisky místo Google účtu. Cizí účet (rules čtení odmítnou) aplikace
+odhlásí s hláškou; přihlásit se tedy smějí jen hráči a admin. Anonymní
+přihlášení není. E-maily jsou malými písmeny a každý patří jednomu hráči.
+Log úprav nese e-mail zapisovatele, proto ho čte jen admin, rules nedovolí
+e-mail podvrhnout a admin v něm vidí jméno hráče.
 Detaily pravidel jsou
 v [`../firestore.rules`](../firestore.rules).
 
@@ -131,8 +132,9 @@ s hashem v `assets/` s roční cache. Workflow `deploy.yml` na každém
 pushi kontroluje typy, testy a formát, pouští e2e testy na telefonech
 (iOS ve WebKitu, Android v Chromiu) a testy security rules v emulátoru;
 z `main` nasazuje na Firebase Hosting (akce `action-hosting-deploy`, servisní
-účet jen s rolí pro Hosting), jen když prošlo všechno. Pravidla databáze
-workflow nenasazuje. Konfigurace Firebase
+účet s rolemi pro Hosting a pravidla), jen když prošlo všechno. Nejdřív
+nasadí `firestore.rules`, pak aplikaci - když pravidla selžou, zůstane
+předchozí verze aplikace. Konfigurace Firebase
 se bere ze Secrets (viz [`setup-firebase.md`](setup-firebase.md)).
 
 ## Testy
@@ -148,8 +150,9 @@ se bere ze Secrets (viz [`setup-firebase.md`](setup-firebase.md)).
   hry), layout bez vodorovného přetečení a bez chyb v konzoli
 - `e2e-firebase/` - Playwright proti emulátorům Auth a Firestore s ostrými
   rules (`npm run test:e2e:firebase`): admin se přihlásí Googlem a založí
-  turnaj, uloží pozice, hráč se přihlásí anonymně, bez oprávnění dostane
-  hlášku s uid, po přidání uid zapisuje a visitor na třetím telefonu vidí
+  turnaj, uloží pozice, přiřadí hráči e-mail, cizí Google účet aplikace
+  odhlásí, hráč se pozná jménem a zapisuje, admin vidí jeho jméno v logu
+  úprav a visitor na třetím telefonu vidí
   skóre živě. Druhý scénář vypne signál: zápis se ukáže hned s odznakem
   „neodesláno“, jde zapisovat dál a po návratu signálu se odešle. iOS profil
   (WebKit) jede přes long polling Firestoru, viz rozhodnutí 14. V CI jde

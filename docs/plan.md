@@ -11,22 +11,22 @@ změnit konfigurací v aplikaci.
 
 ## Stav k 6. 10. 2026 (verze 0.3.0)
 
-| Fáze                                              | Stav                                                                                                   |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| 0 Základ projektu                                 | hotovo                                                                                                 |
-| 1 MVP (model, evaluace, datová vrstva, obrazovky) | hotovo, `npm run check`, e2e na iOS a Androidu a rules zelené                                          |
-| 2 Pozice, agregace, hlavní hra                    | duely pozic, agregace přes kola, log úprav a anonymní přihlášení hotové; hlavní hra čeká na rozhodnutí |
-| Provoz                                            | **čeká na administrátora** – Firebase a GitHub podle `setup-firebase.md`                               |
+| Fáze                                              | Stav                                                                                                              |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 0 Základ projektu                                 | hotovo                                                                                                            |
+| 1 MVP (model, evaluace, datová vrstva, obrazovky) | hotovo, `npm run check`, e2e na iOS a Androidu a rules zelené                                                     |
+| 2 Pozice, agregace, hlavní hra                    | duely pozic, agregace přes kola, log úprav a přihlášení podle e-mailů hráčů hotové; hlavní hra čeká na rozhodnutí |
+| Provoz                                            | **čeká na administrátora** – Firebase a GitHub podle `setup-firebase.md`                                          |
 
 ### Co musí udělat administrátor (blokuje ostrý provoz)
 
 1. Projít [`setup-firebase.md`](setup-firebase.md): Firebase projekt,
-   Google + Anonymous přihlášení, Firestore `eur3`, **vložit
+   Google přihlášení, Firestore `eur3`, **vložit
    `firestore.rules`**, Hosting, servisní účet pro nasazení a pět secrets
    do GitHubu.
 2. Otevřít `https://turecko-cup.web.app` v nainstalované PWA,
    přihlásit se jako `mac.kubecka@gmail.com`, **Inicializovat turnaj**.
-3. Doplnit oprávnění zapisovatelů (e-maily), HCP indexy čtyř hráčů, týmy,
+3. Doplnit Google e-maily hráčů (Admin → Hráči), HCP indexy čtyř hráčů, týmy,
    pozice, odpaliště a flighty; rozhodnout formát hlavní hry (kap. 4).
 4. Zkouška nanečisto 7. 10. (dva telefony, letadlový režim, zabití aplikace).
 
@@ -47,8 +47,9 @@ Podrobně v [`architecture.md`](architecture.md). Ve zkratce:
 - **Firestore je zdroj pravdy**, jeden dokument na kolo, skóre jako mapa
   `hráč → jamka → rány`, zvednutí = `0`. Jeden zápis = jedna buňka
   (field-path update + `lastEdit` + záznam v `edits`).
-- **Role:** visitor (čte vše), zapisovatel (whitelist e-mailů v
-  `private/access`), admin (whitelist + bootstrap e-mail v rules).
+- **Role:** visitor (čte vše), hráč (Google e-mail u jména v
+  `private/access.playerEmails`), admin (whitelist + bootstrap e-mail v rules).
+  Nikdo jiný se nepřihlásí.
 - **Hry jsou konfigurace** kola (`GameConfig`), vyhodnocují se nezávisle
   nad raw daty, jdou měnit i po dohrání. Evaluace vrací data.
 - **Datová vrstva** `Store` se dvěma adaptery (localStorage pro ukázku a
@@ -85,7 +86,7 @@ Podrobně v [`architecture.md`](architecture.md). Ve zkratce:
 | Flighty          | A1 A2 B1 B2 / A3 A4 B3 B4 `[P]`, start z jedničky            | Admin → kolo → Flighty      |
 | Lykia Links CR   | 74,7 (slope tabulka) `[P]`                                   | ruční přepis hracího HCP    |
 | Chybějící HCP    | Soldík, Jarin, Radek, Honza hrají s nulou a otazníkem        | Admin → Hráči               |
-| Zapisovatelé     | `mac.kubecka@gmail.com`, `bezdekf@gmail.com`                 | Admin → Oprávnění           |
+| E-maily hráčů    | Mac `mac.kubecka@gmail.com`, Fery `bezdekf@gmail.com`        | Admin → Hráči               |
 
 ## 5. Rizika a opatření
 

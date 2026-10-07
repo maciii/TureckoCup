@@ -15,11 +15,12 @@ z [Golfgames](https://github.com/maciii/golfgames), hřiště z
 ## Jak to funguje
 
 - **Visitor** vidí přehled turnaje, kola, scorekarty a výsledky bez přihlášení.
-- **Zapisovatel** (Google účet na seznamu oprávnění) zapisuje skóre svého
-  flightu: klepnutí vloží par, `−`/`+` upraví rány, `×` zvedne jamku,
-  přidržení zápis smaže.
-- **Administrátor** založí turnaj, spravuje hráče, HCP, týmy, pozice,
-  odpaliště, flighty a hry kola, opravuje skóre a spravuje oprávnění.
+- **Hráč** se přihlásí Google účtem, jehož e-mail má admin u jeho jména
+  v soupisce; aplikace ho pak ukazuje jménem. Zapisuje skóre flightu:
+  klepnutí vloží par, `−`/`+` upraví rány, `×` zvedne jamku, přidržení zápis
+  smaže. Jiný Google účet aplikace odhlásí.
+- **Administrátor** založí turnaj, spravuje hráče a jejich e-maily, HCP,
+  týmy, pozice, odpaliště, flighty a hry kola, opravuje skóre.
 
 ## Vývoj
 

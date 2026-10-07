@@ -48,14 +48,19 @@ rules kontrolují i vnořenou úroveň mapy.
 **Proč.** Dva flighty píšou do jednoho dokumentu a nesmí si přepsat skóre.
 Zároveň hráč nemůže jedním zápisem smazat skóre všem.
 
-## 5. Role přes whitelist e-mailů, bez vazby účet → hráč
+## 5. Přihlášení jen pro hráče a admina, e-mail u každého hráče
 
-**Rozhodnutí.** `private/access` drží e-maily adminů a zapisovatelů (plus uid
-anonymních účtů). Zapisovatel smí zapsat kteréhokoli hráče. Bootstrap admin je
-napevno v rules kvůli prvnímu založení.
+**Rozhodnutí (verze 0.5.0).** `private/access.playerEmails` přiřazuje každému
+hráči jeho Google e-mail. Přihlásit se a zapisovat smí jen hráč s e-mailem
+v soupisce nebo admin; cizí účet aplikace odhlásí a rules ho nepustí.
+Anonymní přihlášení (uid) bylo zrušeno. Hráč smí zapsat kteréhokoli hráče
+(markér flightu zapisuje za všechny). Bootstrap admin je napevno v rules
+kvůli prvnímu založení.
 
-**Proč.** Čtyři hráči nemají Google účet; zapisuje za ně markér flightu.
-Vazba účet → hráč by byla složitost bez užitku.
+**Proč.** Admin chce hned poznat, kdo je přihlášený a kdo co zapsal. Hráči
+dokument s e-maily číst smějí (8 kamarádů se zná), visitor ne. Firebase
+nemůže přihlášení cizím účtem zakázat bez placených funkcí, proto ho klient
+po přihlášení odhlásí.
 
 ## 6. Snímky v kole: index, odpaliště, pozice
 

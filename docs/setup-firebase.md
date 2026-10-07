@@ -20,8 +20,7 @@ po turnaji, změna adresy by všem zrušila instalaci PWA i přihlášení.
 
 1. Build → **Authentication** → Get started.
 2. Sign-in method → **Google** → Enable → vyplnit support e-mail → Save.
-3. Sign-in method → **Anonymous** → Enable (záloha pro hráče bez Google účtu).
-4. Settings → **Authorized domains**: domény `turecko-cup.web.app`
+3. Settings → **Authorized domains**: domény `turecko-cup.web.app`
    a `turecko-cup.firebaseapp.com` tam Firebase přidá sám, nic se
    nedoplňuje.
 
@@ -54,15 +53,19 @@ po turnaji, změna adresy by všem zrušila instalaci PWA i přihlášení.
 
 ## 5. Přístup GitHubu k Firebase Hosting (servisní účet)
 
-GitHub nasazuje pod servisním účtem, který smí jen nahrávat Hosting.
+GitHub nasazuje pod servisním účtem, který smí jen nahrávat Hosting
+a pravidla databáze (data samotná ne).
 
 1. Build → **Hosting** → Get started → průvodce proklikat (CLI kroky
    přeskočit). Tím vznikne web `turecko-cup.web.app`.
 2. https://console.cloud.google.com/iam-admin/serviceaccounts → nahoře
    vybrat projekt Firebase → **Create service account** → název
    `github-deploy` → Create and continue.
-3. Role přidat dvě: **Firebase Hosting Admin** a **API Keys Viewer** →
-   Continue → Done.
+3. Role přidat čtyři: **Firebase Hosting Admin**, **API Keys Viewer**,
+   **Firebase Rules Admin** a **Service Usage Consumer** → Continue → Done.
+   Účtu, který už existuje, se role přidají na
+   https://console.cloud.google.com/iam-admin/iam → tužka u
+   `github-deploy@…` → Add another role.
 4. Klepnout na nový účet → záložka **Keys** → Add key → Create new key →
    **JSON** → stáhne se soubor. Je to heslo k nasazení: nikam ho
    neposílat, po vložení do GitHubu z počítače smazat.
@@ -98,21 +101,21 @@ GitHub nasazuje pod servisním účtem, který smí jen nahrávat Hosting.
    (bootstrap administrátor je napevno v pravidlech).
 4. Klepnout **Inicializovat turnaj** – založí turnaj, 8 hráčů, 5 kol se
    snímky hřišť a seznam oprávnění.
-5. V Admin → **Oprávnění** doplnit e-maily zapisovatelů (Google účty hráčů,
-   kteří budou zapisovat skóre). V každém flightu musí být aspoň jeden.
-   Hráč bez Google účtu se v Admin přihlásí tlačítkem „Nemám Google účet“,
-   pošle adminovi zobrazené uid a admin ho vloží tlačítkem **+ uid** (přesně,
-   záleží na velikosti písmen).
+5. V Admin → **Hráči** doplnit každému hráči jeho **Google e-mail** (pole
+   pod jménem, prázdné pole je červené). Přihlásit se smí jen tyhle e-maily
+   a admin; po přihlášení aplikace ukáže jméno hráče. Jiný Google účet
+   aplikace odhlásí s hláškou, že není mezi hráči. Hráč bez Google účtu
+   zapisovat nemůže - za flight zapisuje kdokoli z hráčů flightu.
+   Další administrátory lze přidat v Admin → **Oprávnění**.
 6. V Admin → **Kolo** zkontrolovat odpaliště, HCP indexy a hrací handicapy,
    rozdělení do flightů; kolo přepnout na **Živé** ráno před startem.
 
 ### Aktualizace pravidel
 
-Při každé změně souboru [`firestore.rules`](../firestore.rules) v repozitáři
-je potřeba pravidla znovu vložit v konzoli (krok 3). Workflow nasazuje jen
-Hosting, pravidla databáze ne - záměrně, servisní účet k databázi nesmí. Od verze 0.3.0 čte log
-úprav jen admin a rules nedovolí podvrhnout e-mail v záznamu - **po nasazení
-0.3.0 pravidla znovu publikovat.**
+Pravidla ze souboru [`firestore.rules`](../firestore.rules) nasazuje od verze
+0.5.0 workflow sám, vždy před aplikací. Servisní účet k tomu potřebuje role
+z kroku 5.3. Když chybí, nasazení skončí hláškou „Nasazení pravidel
+selhalo“ a na webu zůstane předchozí verze aplikace.
 
 ### Přihlášení na iPhonu (když popup nefunguje)
 
@@ -143,6 +146,7 @@ doménu aplikace. Udělat **oba kroky**, jinak Google přihlášení odmítne:
 | Nasazení: „Chybí secret …“                | doplnit secret z kroku 6                                    |
 | Nasazení: 403, „does not have permission“ | servisnímu účtu chybí role z kroku 5.3                      |
 | Přihlášení se otevře a hned zavře         | blokované vyskakovací okno; zkusit v nainstalované PWA      |
-| „Zápis odmítnut“                          | e-mail nebo uid není v oprávněních, nebo kolo je uzavřené   |
+| „Zápis odmítnut“                          | e-mail hráče není v soupisce, nebo je kolo uzavřené         |
+| „Účet … není mezi hráči turnaje“          | e-mail chybí u jména hráče v Admin → Hráči, nebo je překlep |
 | Visitor nic nevidí, „Chybí oprávnění“     | nenasazená pravidla (krok 3)                                |
-| Data se neukládají, „Chybí oprávnění“     | e-mail není ověřený u Googlu, nebo chybí v `private/access` |
+| Data se neukládají, „Chybí oprávnění“     | e-mail není ověřený u Googlu, nebo chybí u hráče v soupisce |

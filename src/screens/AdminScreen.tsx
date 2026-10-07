@@ -7,7 +7,9 @@ import type { Player, TeamId } from '../model/types'
 import { formatHandicapIndex, parseHandicapIndex } from '../scoring/whs'
 import { navigate } from '../nav'
 import { APP_VERSION } from '../version'
-import { Header, Section, StatusChip, TeamBadge, formatDate } from './common'
+import { Header, Section, StatusChip, TeamBadge, accountName, formatDate } from './common'
+import { isValidEmail, normalizeEmail, setPlayerEmail } from '../model/access'
+import { playerName } from '../model/round'
 
 /** Admin a účet: přihlášení, inicializace, hráči, kola, oprávnění, záloha. */
 export default function AdminScreen() {
@@ -76,16 +78,12 @@ export default function AdminScreen() {
           <div className="px stack">
             {meta.account ? (
               <>
-                <p className="account-name">{meta.account.name}</p>
+                <p className="account-name">{accountName(state.players, meta.account)}</p>
                 <p className="hint">
-                  {meta.account.anonymous ? (
-                    <span className="uid">
-                      {t('admin.yourUid', { uid: meta.account.uid })}
-                    </span>
-                  ) : (
-                    meta.account.email
-                  )}{' '}
-                  · {t(`admin.role.${meta.role}`)}
+                  {t('admin.signedInAs', {
+                    email: meta.account.email,
+                    role: t(`admin.role.${meta.role}`),
+                  })}
                 </p>
                 <button
                   type="button"
@@ -105,14 +103,7 @@ export default function AdminScreen() {
                 >
                   {meta.authReady ? t('admin.signIn') : t('admin.signingIn')}
                 </button>
-                <button
-                  type="button"
-                  className="btn ghost sm"
-                  onClick={() => void store.signInAnonymously()}
-                >
-                  {t('admin.signInAnonymous')}
-                </button>
-                <p className="hint">{t('admin.signInAnonymousHint')}</p>
+                <p className="hint">{t('admin.signInHint')}</p>
               </>
             )}
             <p className="hint">{t('common.version', { version: APP_VERSION })}</p>
@@ -227,13 +218,38 @@ function TeamEditor({ teamId }: { teamId: TeamId }) {
 }
 
 function PlayerEditor({ player }: { player: Player }) {
-  const { store } = useData()
+  const { state, store } = useData()
   const [name, setName] = useState(player.name)
   const [hcp, setHcp] = useState(formatHandicapIndex(player.handicapIndex))
+  const savedEmail = state.access?.playerEmails[player.id] ?? ''
+  const [email, setEmail] = useState(savedEmail)
+  const [emailError, setEmailError] = useState<string | null>(null)
   useEffect(() => {
     setName(player.name)
     setHcp(formatHandicapIndex(player.handicapIndex))
   }, [player])
+  useEffect(() => setEmail(savedEmail), [savedEmail])
+
+  function saveEmail() {
+    if (!state.access || normalizeEmail(email) === savedEmail) {
+      setEmailError(null)
+      return
+    }
+    const result = setPlayerEmail(state.access, player.id, email)
+    if (!result.ok) {
+      setEmailError(
+        result.reason === 'invalid'
+          ? t('admin.playerEmailInvalid', { email: email.trim() })
+          : t('admin.playerEmailTaken', {
+              email: normalizeEmail(email),
+              name: playerName(state.players, result.playerId),
+            }),
+      )
+      return
+    }
+    setEmailError(null)
+    store.dispatch({ kind: 'updateAccess', access: result.access })
+  }
 
   function patch(update: Partial<Player>) {
     store.dispatch({ kind: 'updatePlayer', playerId: player.id, patch: update })
@@ -294,6 +310,28 @@ function PlayerEditor({ player }: { player: Player }) {
           </option>
         ))}
       </select>
+      <input
+        className="input sm"
+        type="email"
+        inputMode="email"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+        placeholder={t('admin.playerEmail')}
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        onBlur={saveEmail}
+        aria-label={`${t('admin.playerEmail')}: ${player.name}`}
+        style={{
+          flex: '1 1 100%',
+          borderColor: emailError || !savedEmail ? 'var(--red)' : undefined,
+        }}
+      />
+      {emailError && (
+        <p className="hint" role="alert" style={{ color: 'var(--red)', width: '100%' }}>
+          {emailError}
+        </p>
+      )}
     </div>
   )
 }
@@ -304,57 +342,43 @@ function AccessEditor() {
   const [draft, setDraft] = useState('')
   if (!access) return null
 
-  type AccessKey = 'adminEmails' | 'writerEmails' | 'writerUids'
-  function update(key: AccessKey, values: string[]) {
-    store.dispatch({ kind: 'updateAccess', access: { ...access!, [key]: values } })
+  function update(adminEmails: string[]) {
+    store.dispatch({ kind: 'updateAccess', access: { ...access!, adminEmails } })
   }
 
-  function list(key: AccessKey, label: string) {
-    const values = access![key]
-    return (
-      <div className="stack" style={{ paddingTop: 10 }}>
-        <span className="menu-label" style={{ padding: 0 }}>
-          {label}
-        </span>
-        <div className="chip-row">
-          {values.length === 0 && <span className="hint">{t('common.dash')}</span>}
-          {values.map((value) => (
-            <button
-              key={value}
-              type="button"
-              className="chip"
-              onClick={() =>
-                confirm(`${t('admin.removeEmail')}: ${value}?`) &&
-                update(
-                  key,
-                  values.filter((v) => v !== value),
-                )
-              }
-            >
-              {value} ×
-            </button>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  function add(key: AccessKey) {
-    // E-maily porovnávají rules malými písmeny, uid Firebase ale rozlišuje
-    // velikost písmen - převod by anonymnímu zapisovateli oprávnění nikdy nedal.
-    const trimmed = draft.trim()
-    const value = key === 'writerUids' ? trimmed : trimmed.toLowerCase()
-    if (!value || access![key].includes(value)) return
-    update(key, [...access![key], value])
+  function add() {
+    const value = normalizeEmail(draft)
+    if (!isValidEmail(value) || access!.adminEmails.includes(value)) return
+    update([...access!.adminEmails, value])
     setDraft('')
   }
 
   return (
     <Section title={t('admin.access')} note={t('admin.accessHint')} accent="red">
       <div className="px stack">
-        {list('writerEmails', t('admin.writerEmails'))}
-        {list('adminEmails', t('admin.adminEmails'))}
-        {list('writerUids', t('admin.writerUids'))}
+        <div className="stack" style={{ paddingTop: 10 }}>
+          <span className="menu-label" style={{ padding: 0 }}>
+            {t('admin.adminEmails')}
+          </span>
+          <div className="chip-row">
+            {access.adminEmails.length === 0 && (
+              <span className="hint">{t('common.dash')}</span>
+            )}
+            {access.adminEmails.map((value) => (
+              <button
+                key={value}
+                type="button"
+                className="chip"
+                onClick={() =>
+                  confirm(`${t('admin.removeEmail')}: ${value}?`) &&
+                  update(access.adminEmails.filter((v) => v !== value))
+                }
+              >
+                {value} ×
+              </button>
+            ))}
+          </div>
+        </div>
         <input
           className="input"
           value={draft}
@@ -368,18 +392,8 @@ function AccessEditor() {
           style={{ marginTop: 8 }}
         />
         <div className="footer-row">
-          <button
-            type="button"
-            className="btn green-soft sm"
-            onClick={() => add('writerEmails')}
-          >
-            + {t('admin.writerEmails')}
-          </button>
-          <button type="button" className="btn sm" onClick={() => add('adminEmails')}>
-            + {t('admin.adminEmails')}
-          </button>
-          <button type="button" className="btn sm" onClick={() => add('writerUids')}>
-            {t('admin.addUid')}
+          <button type="button" className="btn sm" onClick={add}>
+            {t('admin.addAdmin')}
           </button>
         </div>
       </div>

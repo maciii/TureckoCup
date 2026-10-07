@@ -15,9 +15,11 @@ export type SyncStatus = 'loading' | 'synced' | 'offline' | 'error'
 
 export interface Account {
   uid: string
+  /** Jméno z Google účtu; obrazovky ukazují raději jméno hráče (`playerId`). */
   name: string
   email: string
-  anonymous: boolean
+  /** Hráč soupisky přiřazený k e-mailu, `null` u admina, který nehraje. */
+  playerId: string | null
 }
 
 export type Role = 'admin' | 'writer' | 'visitor'
@@ -30,7 +32,7 @@ export interface StoreMeta {
   /** Poslední chyba (odmítnutý zápis, výpadek) - zůstává, dokud ji UI nezavře. */
   error: string | null
   account: Account | null
-  /** Role podle toho, co se podařilo ověřit; zapisovatel se ověří až prvním zápisem. */
+  /** Role podle e-mailu v `private/access`; `writer` = hráč. */
   role: Role
   /** Je SDK připravené otevřít přihlašovací okno? */
   authReady: boolean
@@ -44,7 +46,6 @@ export interface Store {
   dispatch(op: Op): void
   prepareSignIn(): void
   signIn(): Promise<void>
-  signInAnonymously(): Promise<void>
   signOut(): Promise<void>
   dismissError(): void
   /** Ukázkový režim: přepnutí identity (admin / zapisovatel / visitor). */

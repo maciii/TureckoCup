@@ -221,6 +221,20 @@ export function formatDate(iso: string): string {
  * Datum a čas záznamu (log úprav): den, měsíc, hodiny a minuty. Opravy z rána
  * po kole se tak dají odlišit od zápisu během hry. Neplatná hodnota = `null`.
  */
+/**
+ * Kdo je přihlášený: jméno hráče ze soupisky, když e-mail patří hráči,
+ * jinak jméno Google účtu (admin, který nehraje).
+ */
+export function accountName(
+  players: Player[],
+  account: { name: string; email: string; playerId: string | null },
+): string {
+  const player = account.playerId
+    ? players.find((p) => p.id === account.playerId)
+    : undefined
+  return player?.name ?? account.name ?? account.email
+}
+
 export function formatDateTime(value: unknown): string | null {
   if (typeof value !== 'string' && typeof value !== 'number') return null
   const date = new Date(value)

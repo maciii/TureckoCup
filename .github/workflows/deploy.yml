@@ -152,6 +152,26 @@ jobs:
           [ -n "$SERVICE_ACCOUNT" ] || { echo "::error::Chybí secret FIREBASE_SERVICE_ACCOUNT (docs/setup-firebase.md, krok 5)."; missing=1; }
           [ -n "$PROJECT_ID" ] || { echo "::error::Chybí secret VITE_FIREBASE_PROJECT_ID (docs/setup-firebase.md, krok 4)."; missing=1; }
           exit $missing
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Pravidla jdou před aplikací: nová aplikace počítá s novými pravidly
+      # (hráč čte private/access). Když nasazení pravidel selže, aplikace se
+      # nenasadí a běží dál předchozí verze, která ke starým pravidlům sedí.
+      - name: Nasadit pravidla Firestoru
+        env:
+          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID || vars.VITE_FIREBASE_PROJECT_ID }}
+        run: |
+          key="$RUNNER_TEMP/service-account.json"
+          printf '%s' "$SERVICE_ACCOUNT" > "$key"
+          export GOOGLE_APPLICATION_CREDENTIALS="$key"
+          if ! npx --yes firebase-tools@15.32.1 deploy --only firestore:rules --project "$PROJECT_ID" --non-interactive; then
+            echo "::error::Nasazení pravidel selhalo. Servisnímu účtu github-deploy přidej role Firebase Rules Admin a Service Usage Consumer (docs/setup-firebase.md, krok 5)."
+            rm -f "$key"
+            exit 1
+          fi
+          rm -f "$key"
       - name: Nasadit na Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:

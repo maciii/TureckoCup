@@ -41,12 +41,14 @@ export interface Tournament {
   createdAt?: string
 }
 
-/** Soukromý dokument `private/access` - čte ho jen admin. */
+/**
+ * Soukromý dokument `private/access` - čtou ho hráči a admin, píše admin.
+ * Přihlásit se smí jen hráč s e-mailem v `playerEmails` nebo admin.
+ */
 export interface Access {
   adminEmails: string[]
-  writerEmails: string[]
-  /** Anonymní účty bez e-mailu (záloha pro hráče bez Googlu). */
-  writerUids: string[]
+  /** Google e-mail každého hráče (malými písmeny); podle něj se pozná, kdo zapisuje. */
+  playerEmails: Record<PlayerId, string>
 }
 
 export interface CourseTee {

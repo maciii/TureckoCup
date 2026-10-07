@@ -41,22 +41,42 @@ test('pozice se uloží i po obnovení a hráč se při výběru prohodí', asyn
   expect(errors()).toEqual([])
 })
 
-test('uid zapisovatele zachová velikost písmen, e-mail se převede na malá', async ({
+test('e-mail hráče se uloží malými písmeny a nejde dát dvěma hráčům', async ({
   page,
 }) => {
   await open(page, '#/admin')
-  const input = page.getByLabel('Přidat e-mail nebo uid')
-  await input.fill('  Xk3PqZ9aBcD  ')
-  await page.getByRole('button', { name: '+ uid' }).click()
-  await expect(page.locator('.chip', { hasText: 'Xk3PqZ9aBcD' })).toBeVisible()
+  const pavlos = page.getByLabel('Google e-mail: Pavel Tomán')
+  await pavlos.fill('  Pavel.Toman@Gmail.com ')
+  await pavlos.blur()
+  await expect(page.locator('[role="alert"]')).toHaveCount(0)
 
-  await input.fill('Novy.Hrac@Gmail.com')
-  await page.getByRole('button', { name: '+ Zapisovatelé' }).click()
-  await expect(page.locator('.chip', { hasText: 'novy.hrac@gmail.com' })).toBeVisible()
+  // Stejný e-mail u jiného hráče aplikace odmítne a řekne komu patří.
+  const ota = page.getByLabel('Google e-mail: Ota')
+  await ota.fill('pavel.toman@gmail.com')
+  await ota.blur()
+  await expect(page.getByRole('alert')).toContainText('Pavel Tomán')
+
+  await ota.fill('ota')
+  await ota.blur()
+  await expect(page.getByRole('alert')).toContainText('Neplatný e-mail')
 
   await page.reload()
   await page.waitForSelector('.screen')
-  await expect(page.locator('.chip', { hasText: 'Xk3PqZ9aBcD' })).toBeVisible()
+  await expect(page.getByLabel('Google e-mail: Pavel Tomán')).toHaveValue(
+    'pavel.toman@gmail.com',
+  )
+  await expect(page.getByLabel('Google e-mail: Ota')).toHaveValue('')
+})
+
+test('přihlášený hráč se ukáže svým jménem ze soupisky', async ({ page }) => {
+  // Ukázková identita hráče má e-mail Feryho (p6), admin je Mac (p1).
+  await setIdentity(page, 'writer')
+  await open(page, '#/admin')
+  await expect(page.locator('.account-name')).toHaveText('Fery')
+  await expect(page.locator('.account-name + .hint')).toContainText('Hráč')
+  await open(page, '#/')
+  await page.getByRole('button', { name: 'Menu' }).click()
+  await expect(page.locator('.menu-drawer')).toContainText('Fery')
 })
 
 test('log úprav ukazuje datum, čas a změnu', async ({ page }) => {

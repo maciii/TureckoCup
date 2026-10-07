@@ -73,13 +73,13 @@ function toAccount(user: {
   uid: string
   displayName: string | null
   email: string | null
-  isAnonymous: boolean
 }): Account {
   return {
     uid: user.uid,
     name: user.displayName ?? user.email ?? t('error.unnamedAccount'),
     email: (user.email ?? '').toLowerCase(),
-    anonymous: user.isAnonymous,
+    // Hráče k účtu přiřadí datová vrstva podle private/access.
+    playerId: null,
   }
 }
 
@@ -103,13 +103,6 @@ export function signInWithGoogle(): Promise<Account | null> {
       return null
     },
   )
-}
-
-export async function signInAnonymous(): Promise<Account> {
-  const { auth } = await loadFirebase()
-  const module = await import('firebase/auth')
-  const credential = await module.signInAnonymously(auth)
-  return toAccount(credential.user)
 }
 
 export async function signOutAccount(): Promise<void> {

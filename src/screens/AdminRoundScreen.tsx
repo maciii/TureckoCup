@@ -22,6 +22,7 @@ import {
   teamOf,
 } from '../model/round'
 import { GAME_KINDS } from '../evaluations'
+import { playerIdByEmail } from '../model/access'
 import { navigate } from '../nav'
 import {
   Header,
@@ -70,11 +71,7 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
     }
   }
 
-  const noWriters =
-    (state.access?.writerEmails.length ?? 0) +
-      (state.access?.adminEmails.length ?? 0) +
-      (state.access?.writerUids.length ?? 0) ===
-    0
+  const noWriters = Object.keys(state.access?.playerEmails ?? {}).length === 0
 
   const tabs = (
     options: { id: string; label: string }[],
@@ -381,6 +378,12 @@ function EditsLog({ roundId }: { roundId: string }) {
     }
   }
 
+  // Kdo zápis udělal: jméno hráče podle e-mailu, jinak e-mail nebo uid.
+  const editorName = (edit: EditRecord) => {
+    const playerId = edit.byEmail ? playerIdByEmail(state.access, edit.byEmail) : null
+    return playerId ? shortName(state.players, playerId) : (edit.byEmail ?? edit.by)
+  }
+
   const value = (v: number | null) =>
     v === null ? t('common.dash') : v === 0 ? t('common.pickedUp') : String(v)
 
@@ -421,7 +424,7 @@ function EditsLog({ roundId }: { roundId: string }) {
                   <td className="num">
                     {value(edit.from)} → {value(edit.to)}
                   </td>
-                  <td className="hint">{edit.byEmail ?? edit.by}</td>
+                  <td className="hint">{editorName(edit)}</td>
                 </tr>
               ))}
             </tbody>
