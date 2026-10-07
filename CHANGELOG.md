@@ -3,6 +3,14 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.8.2] – 2026-10-07
+
+### Změněno
+
+- Výchozí odpaliště všech kol jsou **žlutá** (Lykia Links žlutá nemá, tam
+  zlatá, 5 791 m). Platí pro nově založený turnaj a „Obnovit konfiguraci
+  kola ze seedu“; u už založených kol odpaliště přepne admin u kola.
+
 ## [0.8.1] – 2026-10-07
 
 ### Přidáno

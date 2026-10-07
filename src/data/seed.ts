@@ -139,14 +139,15 @@ const SCHEDULE: ScheduleEntry[] = [
     number: 1,
     date: '2026-10-08',
     courseId: 'aspendos',
-    tee: 'white',
+    tee: 'yellow',
     departure: '14:45',
     teeTimes: ['15:50', '16:00'],
   },
-  { number: 2, date: '2026-10-09', courseId: 'lykia-links', tee: 'white' },
-  { number: 3, date: '2026-10-10', courseId: 'belek-carya', tee: 'white' },
-  { number: 4, date: '2026-10-12', courseId: 'kaya-palazzo-golf-course', tee: 'white' },
-  { number: 5, date: '2026-10-13', courseId: 'kaya-palazzo-golf-course', tee: 'white' },
+  // Lykia Links žlutá odpaliště nemá; třetí nejdelší jsou zlatá (5 791 m).
+  { number: 2, date: '2026-10-09', courseId: 'lykia-links', tee: 'gold' },
+  { number: 3, date: '2026-10-10', courseId: 'belek-carya', tee: 'yellow' },
+  { number: 4, date: '2026-10-12', courseId: 'kaya-palazzo-golf-course', tee: 'yellow' },
+  { number: 5, date: '2026-10-13', courseId: 'kaya-palazzo-golf-course', tee: 'yellow' },
 ]
 
 /** Výchozí hry kola: Stableford, Skins ve flightu, Team Skins a duely pozic. */

@@ -77,7 +77,7 @@ Podrobně v [`architecture.md`](architecture.md). Ve zkratce:
 
 | Téma             | Výchozí stav v aplikaci                                      | Kde změnit                  |
 | ---------------- | ------------------------------------------------------------ | --------------------------- |
-| Odpaliště        | bílá pro všechny `[P]`                                       | Admin → kolo → Odpaliště    |
+| Odpaliště        | žlutá pro všechny (Lykia Links zlatá, žlutá nemá)            | Admin → kolo → Odpaliště    |
 | Hlavní hra kola  | není; týmové skóre tvoří jen Team Skins (označeno předběžné) | Admin → kolo → Hry          |
 | Team Skins       | lepší netto míč týmu, přenos banku, 1 bod za skin `[P]`      | Admin → kolo → Hry          |
 | Individual Skins | ve flightu `[P]`, přenos banku                               | Admin → kolo → Hry          |

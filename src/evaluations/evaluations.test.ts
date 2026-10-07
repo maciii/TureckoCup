@@ -13,6 +13,8 @@ import { summarizeTournament } from './tournament'
 function round1(): TournamentRound {
   const round = seedRounds()[0]!
   round.status = 'live'
+  // Testy počítají s bílými odpališti (CR 70,5 / SR 130); turnaj hraje ze žlutých.
+  round.defaultTeeId = 'white'
   return round
 }
 
