@@ -53,6 +53,8 @@ describe('katalog textů', () => {
     // Klíče skládané za běhu z id se hledají podle předpony.
     const dynamicPrefixes = [
       'games.',
+      'bonus.',
+      'pickup.',
       'team.',
       'status.',
       'score.',

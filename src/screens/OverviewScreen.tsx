@@ -22,6 +22,7 @@ import GameResults from './GameResults'
 import type { TournamentRound } from '../model/types'
 import { shortName } from '../model/round'
 import { hasSchedule, isValidTime, localToday, upcomingRound } from '../model/schedule'
+import { pickupRuleOf } from '../model/pickup'
 import MenuSheet from './MenuSheet'
 
 /**
@@ -32,9 +33,10 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
   const { state, meta } = useData()
   const [menuOpen, setMenuOpen] = useState(false)
   const { isStandalone, isMobile } = usePwaInstall()
+  const pickup = pickupRuleOf(state.tournament?.pickup)
   const summary = useMemo(
-    () => summarizeTournament(state.rounds, state.players),
-    [state.rounds, state.players],
+    () => summarizeTournament(state.rounds, state.players, pickup),
+    [state.rounds, state.players, pickup.timesPar, pickup.plus, pickup.addStrokes],
   )
   const live = state.rounds.find((r) => r.status === 'live')
   const current =

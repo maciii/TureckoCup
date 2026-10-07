@@ -3,6 +3,33 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.8.0] – 2026-10-07
+
+### Přidáno
+
+- **Pravidla turnaje** (Admin): centrální nastavení, kolik ran se počítá za
+  zvednutou jamku ve hře na rány (duely pozic a four-ball na brutto/netto
+  rány). Presety netto dvojbogey (výchozí), 2× par, 2× par + 2, nebo vlastní
+  násobek paru + rány navíc (+ rány z handicapu).
+- **Four-ball** je v nastavení kola pod svým jménem (dřív „Týmový zápas“)
+  a má editor dvojic: pro každý zápas čtyři výběry hráčů, tlačítko „Dvojice
+  z flightů“ vrátí A1+A2 vs B1+B2 a A3+A4 vs B3+B4.
+- **Extra body** (podle Golfgames): nová hra „Extra body“ s hodnotou každého
+  bonusu - Longest (par 5), Nearest (par 3), birdie a eagle (automaticky
+  z ran), sandie, water, barkie, arnie - a volbou „platí jen při paru
+  a lepším“. Zapisovatel bonusy zaškrtne tlačítkem u jména hráče v zápisu,
+  značky jsou u jména i ve scorekartě, výsledky mají vlastní tabulku
+  s rozpisem a mohou se počítat do týmového skóre. Longest a Nearest drží
+  na jamce jediný hráč.
+- Testovací verze: Extra body v 1. kole a do týmu ve 4. kole, zvednutá
+  jamka = 2× par.
+
+### Změněno
+
+- Zápis bonusu je ve Firestoru stejná „jedna buňka“ jako skóre
+  (`bonuses.hráč.jamka` + `lastEdit`), pravidla ho pouštějí zapisovatelům
+  a test rules to hlídá.
+
 ## [0.7.0] – 2026-10-07
 
 ### Přidáno

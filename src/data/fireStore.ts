@@ -26,6 +26,7 @@ import {
   SERVER_TIME,
   applyOp,
   checkOp,
+  isCellOp,
   opProblemMessage,
   opToWrites,
 } from './ops'
@@ -352,20 +353,19 @@ export function createFireStore(tournamentId: string): Store {
         // uzavřené (fronta offline zápisů po návratu signálu). Hláška
         // o chybějícím oprávnění by pak poslala admina hledat jinou chybu.
         const denied = codeOf(err) === 'permission-denied'
-        const round =
-          op.kind === 'setScore'
-            ? state.rounds.find((r) => r.id === op.roundId)
-            : undefined
+        const round = isCellOp(op)
+          ? state.rounds.find((r) => r.id === op.roundId)
+          : undefined
         const reason = !denied
           ? err instanceof Error
             ? err.message
             : String(err)
-          : op.kind !== 'setScore'
+          : !isCellOp(op)
             ? t('error.adminOnly')
             : round?.status === 'finished'
               ? t('play.roundFinished')
               : t('play.notWriter', { account: signedIn.email || signedIn.uid })
-        if (op.kind !== 'setScore') {
+        if (!isCellOp(op)) {
           fail(t('error.changeRejected', { reason }))
           return
         }

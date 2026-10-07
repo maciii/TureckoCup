@@ -223,3 +223,31 @@ describe('checkOp - stejná pravidla pro ukázkový režim i Firestore', () => {
     expect(opProblemMessage(problem!)).toContain('rounds/r1/note')
   })
 })
+
+describe('extra body', () => {
+  it('zápis bonusu je jedna buňka s lastEdit, prázdný seznam klíč smaže', () => {
+    let state = initial()
+    const op: Op = {
+      kind: 'setBonuses',
+      roundId: 'r1',
+      playerId: 'p1',
+      hole: 4,
+      value: ['longest'],
+    }
+    state = applyOp(state, op)
+    expect(state.rounds[0]!.bonuses.p1).toEqual({ '4': ['longest'] })
+    const writes = opToWrites(op, meta, state)
+    expect(writes).toHaveLength(1)
+    expect(writes[0]!.data).toEqual({
+      'bonuses.p1.4': ['longest'],
+      lastEdit: { playerId: 'p1', hole: '4', by: 'u1', at: expect.anything() },
+    })
+    expect(findInvalidWrite(writes)).toBeNull()
+    expect(checkOp(op, 'writer', writes)).toBeNull()
+
+    const clear: Op = { ...op, value: [] }
+    state = applyOp(state, clear)
+    expect(state.rounds[0]!.bonuses.p1).toEqual({})
+    expect(opToWrites(clear, meta, state)[0]!.data['bonuses.p1.4']).toBe(DELETE_FIELD)
+  })
+})

@@ -1,10 +1,13 @@
 import type {
   GameConfig,
   GameKind,
+  PickupRule,
   Player,
   TeamId,
   TournamentRound,
 } from '../model/types'
+import { DEFAULT_PICKUP } from '../model/pickup'
+import { bonusGame } from './bonuses'
 import { positionDuel, teamMatch } from './duels'
 import { individualSkins, teamSkins } from './skins'
 import { individualStableford } from './stableford'
@@ -19,6 +22,7 @@ const EVALUATIONS: Record<GameKind, Evaluate> = {
   'team-skins': teamSkins,
   'position-duel': positionDuel,
   'team-match': teamMatch,
+  bonuses: bonusGame,
 }
 
 export const GAME_KINDS: GameKind[] = [
@@ -27,22 +31,25 @@ export const GAME_KINDS: GameKind[] = [
   'team-skins',
   'position-duel',
   'team-match',
+  'bonuses',
 ]
 
 export function evaluateGame(
   round: TournamentRound,
   players: Player[],
   game: GameConfig,
+  pickup: PickupRule = DEFAULT_PICKUP,
 ): EvaluationResult {
   const evaluate = EVALUATIONS[game.kind]
-  return evaluate({ round, players }, game)
+  return evaluate({ round, players, pickup }, game)
 }
 
 export function evaluateRound(
   round: TournamentRound,
   players: Player[],
+  pickup: PickupRule = DEFAULT_PICKUP,
 ): EvaluationResult[] {
-  return round.games.map((game) => evaluateGame(round, players, game))
+  return round.games.map((game) => evaluateGame(round, players, game, pickup))
 }
 
 /** Týmové body kola ze her, které do týmového skóre vstupují. */

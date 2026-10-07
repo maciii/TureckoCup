@@ -9,6 +9,17 @@ import { t } from '../i18n'
 import { MAX_STROKES, PICKED_UP } from '../model/types'
 import type { Flight, PlayerId, TournamentRound } from '../model/types'
 import { flightProgress, isValidTime } from '../model/schedule'
+import { pickupRuleOf } from '../model/pickup'
+import type { BonusDefinition } from '../model/bonuses'
+import {
+  availableBonuses,
+  bonusGameOf,
+  bonusesAt,
+  holdersOf,
+  toggleBonus as toggleBonusList,
+} from '../model/bonuses'
+import { bonusAwardsAt } from '../evaluations/bonuses'
+import BonusSheet from './BonusSheet'
 import {
   flightCurrentHole,
   grossTotal,
@@ -51,6 +62,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
   const [hole, setHole] = useState<number>(() => readHole(roundId, flight) ?? 0)
   const [showCard, setShowCard] = useState(false)
   const [otherFlight, setOtherFlight] = useState<number | null>(null)
+  const [bonusFor, setBonusFor] = useState<PlayerId | null>(null)
   const longPress = useRef<{ timer: number | null; fired: boolean }>({
     timer: null,
     fired: false,
@@ -66,9 +78,10 @@ export default function PlayScreen({ roundId, flight }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roundId, flight, loaded])
 
+  const pickup = pickupRuleOf(state.tournament?.pickup)
   const results = useMemo(
-    () => (round ? evaluateRound(round, state.players) : []),
-    [round, state.players],
+    () => (round ? evaluateRound(round, state.players, pickup) : []),
+    [round, state.players, pickup.timesPar, pickup.plus, pickup.addStrokes],
   )
 
   if (!round) {
@@ -123,6 +136,8 @@ export default function PlayScreen({ roundId, flight }: Props) {
   const si = strokeIndexRanked(round)[hole]
   const entryEnabled = canWrite && !locked && !notLive
   const stablefordGame = round.games.find((g) => g.kind === 'individual-stableford')
+  const bonusGame = bonusGameOf(round)
+  const bonusChoices = availableBonuses(bonusGame, round, hole)
   const skinsResult = results.find((r) => r.game.kind === 'individual-skins')
   const teamSkinsResult = results.find((r) => r.game.kind === 'team-skins')
   const holeComplete = flightEntry.players.every(
@@ -140,6 +155,35 @@ export default function PlayScreen({ roundId, flight }: Props) {
     const base = current === undefined || current === PICKED_UP ? par : current
     const next = current === undefined ? par + delta : base + delta
     setScore(playerId, Math.max(1, Math.min(MAX_STROKES, next)))
+  }
+
+  /**
+   * Přepnutí bonusu. Longest a Nearest drží jen jeden hráč: dřívějšímu
+   * držiteli se bonus odebere vlastním zápisem (rules pustí jen jednu buňku).
+   */
+  function toggleBonus(playerId: PlayerId, bonus: BonusDefinition) {
+    if (!entryEnabled || !round) return
+    const current = bonusesAt(round, playerId, hole)
+    const adding = !current.includes(bonus.id)
+    if (adding && bonus.exclusive) {
+      for (const holder of holdersOf(round, hole, bonus.id)) {
+        if (holder === playerId) continue
+        store.dispatch({
+          kind: 'setBonuses',
+          roundId,
+          playerId: holder,
+          hole,
+          value: bonusesAt(round, holder, hole).filter((id) => id !== bonus.id),
+        })
+      }
+    }
+    store.dispatch({
+      kind: 'setBonuses',
+      roundId,
+      playerId,
+      hole,
+      value: toggleBonusList(current, bonus.id),
+    })
   }
 
   function startLongPress(playerId: PlayerId) {
@@ -300,6 +344,14 @@ export default function PlayScreen({ roundId, flight }: Props) {
                 : undefined
             const player = state.players.find((p) => p.id === playerId)
             const name = shortName(state.players, playerId)
+            const awards = bonusGame
+              ? bonusAwardsAt(
+                  { round, players: state.players, pickup },
+                  bonusGame,
+                  playerId,
+                  hole,
+                )
+              : []
             return (
               <li key={playerId} className="player-row">
                 <div className="player-info">
@@ -330,6 +382,27 @@ export default function PlayScreen({ roundId, flight }: Props) {
                       <span className="player-mark gain">
                         {t('play.pointsShort', { count: points })}
                       </span>
+                    )}
+                    {bonusGame && (bonusChoices.length > 0 || awards.length > 0) && (
+                      <button
+                        type="button"
+                        className={`bonus-button${awards.length > 0 ? ' active' : ''}`}
+                        disabled={!entryEnabled || bonusChoices.length === 0}
+                        onClick={() => setBonusFor(playerId)}
+                        aria-label={t('play.bonusesFor', { name })}
+                      >
+                        {awards.length > 0
+                          ? awards.map((award) => (
+                              <span
+                                key={award.bonus.id}
+                                className={award.void ? 'void' : undefined}
+                                title={award.void ? t('play.bonusesVoid') : undefined}
+                              >
+                                {award.bonus.mark}
+                              </span>
+                            ))
+                          : '★'}
+                      </button>
                     )}
                   </span>
                 </div>
@@ -403,6 +476,17 @@ export default function PlayScreen({ roundId, flight }: Props) {
           </button>
         </div>
       </footer>
+
+      {bonusFor !== null && bonusGame && (
+        <BonusSheet
+          round={round}
+          game={bonusGame}
+          playerId={bonusFor}
+          hole={hole}
+          onToggle={(bonus) => toggleBonus(bonusFor, bonus)}
+          onClose={() => setBonusFor(null)}
+        />
+      )}
 
       {otherFlight !== null && round.flights[otherFlight] && (
         <OtherFlightSheet

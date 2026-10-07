@@ -3,11 +3,25 @@ import { useData } from '../data'
 import { SEED_ACCESS, SEED_PLAYERS, SEED_TOURNAMENT, seedRounds } from '../data/seed'
 import { t } from '../i18n'
 import { POSITIONS, TEAM_IDS } from '../model/types'
-import type { Player, TeamId } from '../model/types'
+import type { PickupRule, Player, TeamId } from '../model/types'
+import {
+  PICKUP_PRESETS,
+  pickupFormula,
+  pickupPresetId,
+  pickupRuleOf,
+} from '../model/pickup'
 import { formatHandicapIndex, parseHandicapIndex } from '../scoring/whs'
 import { navigate } from '../nav'
 import { APP_VERSION } from '../version'
-import { Header, Section, StatusChip, TeamBadge, accountName, formatDate } from './common'
+import {
+  Header,
+  Section,
+  StatusChip,
+  Switch,
+  TeamBadge,
+  accountName,
+  formatDate,
+} from './common'
 import { isValidEmail, normalizeEmail, setPlayerEmail } from '../model/access'
 import { playerName } from '../model/round'
 
@@ -169,6 +183,8 @@ export default function AdminScreen() {
               </div>
             </Section>
 
+            <RulesEditor />
+
             <AccessEditor />
 
             <Section title={t('admin.export')} accent="navy">
@@ -182,6 +198,73 @@ export default function AdminScreen() {
         )}
       </main>
     </div>
+  )
+}
+
+/** Centrální pravidla turnaje: zatím jen zvednutá jamka ve hře na rány. */
+function RulesEditor() {
+  const { state, store } = useData()
+  const rule = pickupRuleOf(state.tournament?.pickup)
+  const preset = pickupPresetId(rule)
+  function save(next: PickupRule) {
+    store.dispatch({ kind: 'updateTournament', patch: { pickup: next } })
+  }
+  const number = (value: string) => Math.max(0, Number(value.replace(',', '.')) || 0)
+  return (
+    <Section title={t('admin.rules')} note={t('admin.pickupHint')} accent="gold">
+      <div className="px">
+        <div className="field" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+          <span className="field-label">{t('admin.pickup')}</span>
+          <div className="tabs compact" style={{ width: '100%' }}>
+            {[...PICKUP_PRESETS.map((p) => p.id), 'custom' as const].map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={`tab${preset === id ? ' selected' : ''}`}
+                aria-pressed={preset === id}
+                onClick={() => {
+                  const found = PICKUP_PRESETS.find((p) => p.id === id)
+                  if (found) save(found.rule)
+                  else save({ timesPar: 2, plus: 1, addStrokes: false })
+                }}
+              >
+                {t(`pickup.${id}`)}
+              </button>
+            ))}
+          </div>
+          <span className="formula" data-testid="pickup-formula">
+            {t('admin.pickupFormula', {
+              formula: pickupFormula(rule, t('pickup.strokes'), t('pickup.par')),
+            })}
+          </span>
+        </div>
+        <div className="field">
+          <span className="field-label">{t('admin.pickupTimesPar')}</span>
+          <input
+            className="input sm num"
+            inputMode="decimal"
+            aria-label={t('admin.pickupTimesPar')}
+            value={String(rule.timesPar).replace('.', ',')}
+            onChange={(e) => save({ ...rule, timesPar: number(e.target.value) })}
+          />
+        </div>
+        <div className="field">
+          <span className="field-label">{t('admin.pickupPlus')}</span>
+          <input
+            className="input sm num"
+            inputMode="decimal"
+            aria-label={t('admin.pickupPlus')}
+            value={String(rule.plus).replace('.', ',')}
+            onChange={(e) => save({ ...rule, plus: number(e.target.value) })}
+          />
+        </div>
+        <Switch
+          label={t('admin.pickupAddStrokes')}
+          on={rule.addStrokes}
+          onChange={(addStrokes) => save({ ...rule, addStrokes })}
+        />
+      </div>
+    </Section>
   )
 }
 

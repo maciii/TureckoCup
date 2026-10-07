@@ -1,5 +1,6 @@
 import type {
   GameConfig,
+  PickupRule,
   Player,
   PlayerId,
   TeamId,
@@ -75,6 +76,8 @@ export interface EvaluationResult {
 export interface EvaluationContext {
   round: TournamentRound
   players: Player[]
+  /** Centrální pravidlo turnaje pro zvednutou jamku ve hře na rány. */
+  pickup: PickupRule
 }
 
 export type Evaluate = (context: EvaluationContext, game: GameConfig) => EvaluationResult

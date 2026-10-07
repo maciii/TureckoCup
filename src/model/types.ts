@@ -39,6 +39,22 @@ export interface Tournament {
   teams: Record<TeamId, { name: string }>
   playerIds: PlayerId[]
   createdAt?: string
+  /**
+   * Centrální pravidlo pro zvednutou jamku ve hrách na rány (duely a
+   * four-ball na brutto/netto rány); chybí = netto dvojbogey.
+   */
+  pickup?: PickupRule
+}
+
+/**
+ * Kolik ran se počítá za zvednutou jamku ve hře na rány:
+ * `timesPar × par + plus` (+ rány z handicapu na jamce, když `addStrokes`).
+ * Netto dvojbogey = 1 × par + 2 + rány; „dvojnásobek paru“ = 2 × par.
+ */
+export interface PickupRule {
+  timesPar: number
+  plus: number
+  addStrokes: boolean
 }
 
 /**
@@ -89,6 +105,7 @@ export type GameKind =
   | 'team-skins'
   | 'position-duel'
   | 'team-match'
+  | 'bonuses'
 
 /** Formát duelu pozic a hlavní týmové hry. */
 export type DuelFormat = 'strokes-gross' | 'strokes-net' | 'stableford' | 'match-play'
@@ -110,6 +127,10 @@ export interface GameOptions {
   carry?: boolean
   /** Formát duelů (pozice, hlavní hra). */
   format?: DuelFormat
+  /** Extra body: hodnota každého bonusu (`src/model/bonuses.ts`); 0 nebo chybí = vypnuto. */
+  bonusValues?: Record<string, number>
+  /** Extra body: ručně zapsaný bonus platí jen při paru a lepším (netto podle `net`). */
+  confirmByPar?: boolean
 }
 
 /** Kolik týmových bodů hra přináší. */
@@ -120,6 +141,8 @@ export interface TeamPointsRule {
   win?: number
   /** Za remízu duelu/zápasu. */
   halve?: number
+  /** Za každý bod extra bodů (Extra body). */
+  perPoint?: number
 }
 
 /**

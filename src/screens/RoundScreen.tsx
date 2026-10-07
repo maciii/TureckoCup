@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useData } from '../data'
 import { evaluateRound, roundTeamPoints } from '../evaluations'
+import { pickupRuleOf } from '../model/pickup'
 import { t } from '../i18n'
 import { navigate } from '../nav'
 import { Header, Pill, SCORE_CATEGORIES, ScoreMark, Section, formatDate } from './common'
@@ -12,9 +13,10 @@ export default function RoundScreen({ roundId }: { roundId: string }) {
   const { state, meta } = useData()
   const [tab, setTab] = useState<'results' | 'scorecard'>('results')
   const round = state.rounds.find((r) => r.id === roundId)
+  const pickup = pickupRuleOf(state.tournament?.pickup)
   const results = useMemo(
-    () => (round ? evaluateRound(round, state.players) : []),
-    [round, state.players],
+    () => (round ? evaluateRound(round, state.players, pickup) : []),
+    [round, state.players, pickup.timesPar, pickup.plus, pickup.addStrokes],
   )
 
   if (!round) {

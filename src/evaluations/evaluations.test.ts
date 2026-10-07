@@ -191,3 +191,137 @@ describe('agregace turnaje', () => {
     expect(position2.players.B).toEqual([rounds[0]!.positions.B[1]])
   })
 })
+
+describe('zvednutá jamka ve hře na rány', () => {
+  function duelRound(format: 'strokes-gross' | 'strokes-net') {
+    const round = round1()
+    round.games[3]!.options.format = format
+    // Pozice 1: Ota (p3, A1) zvedl jedničku (par 4), Pavlos (p2, B1) zahrál par.
+    round.scores.p3!['0'] = 0
+    round.scores.p2!['0'] = 4
+    return round
+  }
+
+  it('výchozí pravidlo je netto dvojbogey: brutto par + 2 + rány, netto par + 2', () => {
+    const gross = evaluateGame(
+      duelRound('strokes-gross'),
+      SEED_PLAYERS,
+      duelRound('strokes-gross').games[3]!,
+    )
+    const ota = gross.duels!.find((d) => d.position === 1)!.sides[0]!
+    expect(ota.value).toBe(4 + 2 + strokesReceived(round1(), 'p3', 0))
+    const net = evaluateGame(
+      duelRound('strokes-net'),
+      SEED_PLAYERS,
+      duelRound('strokes-net').games[3]!,
+    )
+    expect(net.duels!.find((d) => d.position === 1)!.sides[0]!.value).toBe(6)
+    expect(net.duels!.find((d) => d.position === 1)!.leader).toBe(1)
+  })
+
+  it('centrální pravidlo turnaje mění počet ran: 2 × par, 2 × par + 2, vlastní', () => {
+    const round = duelRound('strokes-gross')
+    const game = round.games[3]!
+    const value = (rule: { timesPar: number; plus: number; addStrokes: boolean }) =>
+      evaluateGame(round, SEED_PLAYERS, game, rule).duels!.find((d) => d.position === 1)!
+        .sides[0]!.value
+    expect(value({ timesPar: 2, plus: 0, addStrokes: false })).toBe(8)
+    expect(value({ timesPar: 2, plus: 2, addStrokes: false })).toBe(10)
+    expect(value({ timesPar: 1, plus: 3, addStrokes: false })).toBe(7)
+    // Netto formát od brutto hodnoty odečte rány z handicapu.
+    const net = duelRound('strokes-net')
+    const strokes = strokesReceived(net, 'p3', 0)
+    expect(
+      evaluateGame(net, SEED_PLAYERS, net.games[3]!, {
+        timesPar: 2,
+        plus: 0,
+        addStrokes: false,
+      }).duels!.find((d) => d.position === 1)!.sides[0]!.value,
+    ).toBe(8 - strokes)
+  })
+
+  it('jamkovku, Stableford ani Skins pravidlo nemění (zvednutí = prohraná jamka, nula)', () => {
+    const round = duelRound('strokes-gross')
+    round.games[3]!.options.format = 'match-play'
+    const rule = { timesPar: 5, plus: 5, addStrokes: false }
+    const match = evaluateGame(round, SEED_PLAYERS, round.games[3]!, rule)
+    expect(match.duels!.find((d) => d.position === 1)!.leader).toBe(1)
+    const stableford = evaluateGame(round, SEED_PLAYERS, round.games[0]!, rule)
+    expect(stableford.rows.find((r) => r.id === 'p3')!.value).toBe(0)
+  })
+})
+
+describe('extra body', () => {
+  function bonusRound() {
+    const round = round1()
+    round.games.push({
+      id: 'bonuses',
+      kind: 'bonuses',
+      options: {
+        allowance: 1,
+        net: false,
+        bonusValues: { longest: 1, nearest: 2, birdie: 1, eagle: 3, sandie: 1 },
+        confirmByPar: true,
+      },
+      countsForTeam: true,
+      teamPoints: { perPoint: 0.5 },
+    })
+    return round
+  }
+  const bonusGame = (round: TournamentRound) => round.games[round.games.length - 1]!
+
+  it('nearest na tříparové jamce, birdie z ran, potvrzení parem', () => {
+    const round = bonusRound()
+    // Jamka 3 (index 2) je par 3: Mac nearest a birdie (2 rány), Ota nearest nemá.
+    round.scores.p1!['2'] = 2
+    round.bonuses.p1!['2'] = ['nearest']
+    // Jamka 1 (par 4): Pavlos sandie, ale bogey - s potvrzením parem propadá.
+    round.scores.p2!['0'] = 5
+    round.bonuses.p2!['0'] = ['sandie']
+    // Jamka 5 (index 4, par 5): Ferry eagle (3 rány) = jen eagle, ne birdie.
+    round.scores.p6!['4'] = 3
+    const result = evaluateGame(round, SEED_PLAYERS, bonusGame(round))
+    const row = (id: string) => result.rows.find((r) => r.id === id)!
+    expect(row('p1').value).toBe(3)
+    expect(row('p1').secondary).toBe(2)
+    expect(row('p2').value).toBe(0)
+    expect(row('p6').value).toBe(3)
+    expect(result.rows[0]!.id).toBe('p1')
+    // Týmové body: A (Mac 3 + Ferry? ne, Ferry je B) -> A 1,5, B 1,5.
+    expect(result.teamPoints).toEqual({ A: 1.5, B: 1.5 })
+
+    bonusGame(round).options.confirmByPar = false
+    expect(
+      evaluateGame(round, SEED_PLAYERS, bonusGame(round)).rows.find((r) => r.id === 'p2')!
+        .value,
+    ).toBe(1)
+  })
+
+  it('longest drží jediný hráč; dva držitelé = nikdo, zvednutá jamka = nic', () => {
+    const round = bonusRound()
+    round.scores.p1!['4'] = 5
+    round.scores.p3!['4'] = 5
+    round.bonuses.p1!['4'] = ['longest']
+    round.bonuses.p3!['4'] = ['longest']
+    let result = evaluateGame(round, SEED_PLAYERS, bonusGame(round))
+    expect(result.rows.find((r) => r.id === 'p1')!.value).toBe(0)
+    delete round.bonuses.p3!['4']
+    result = evaluateGame(round, SEED_PLAYERS, bonusGame(round))
+    expect(result.rows.find((r) => r.id === 'p1')!.value).toBe(1)
+    round.scores.p1!['4'] = 0
+    result = evaluateGame(round, SEED_PLAYERS, bonusGame(round))
+    expect(result.rows.find((r) => r.id === 'p1')!.value).toBe(0)
+  })
+
+  it('bonus s nulovou hodnotou se nepočítá a netto hra potvrzuje osobním parem', () => {
+    const round = bonusRound()
+    bonusGame(round).options.bonusValues = { sandie: 0, birdie: 1 }
+    bonusGame(round).options.net = true
+    // Jamka 15 (index 14, SI 1): Mac má ránu, 4 = netto birdie.
+    round.scores.p1!['14'] = 4
+    round.bonuses.p1!['14'] = ['sandie']
+    const result = evaluateGame(round, SEED_PLAYERS, bonusGame(round))
+    expect(result.rows.find((r) => r.id === 'p1')!.value).toBe(1)
+    expect(result.rows.find((r) => r.id === 'p1')!.secondary).toBe(1)
+  })
+})

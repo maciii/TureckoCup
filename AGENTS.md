@@ -87,9 +87,10 @@ npm run test:e2e:live # kouřový test živé aplikace https://turecko-cup.web.a
 
 ```
 src/
-  model/        typy turnaje (types.ts), výpočty nad kolem (round.ts), program kola (schedule.ts)
+  model/        typy turnaje (types.ts), výpočty nad kolem (round.ts), program kola (schedule.ts),
+                extra body (bonuses.ts), zvednutá jamka (pickup.ts)
   scoring/      WHS vzorce (whs.ts), jádro skins a jamkovky - čisté, bez modelu
-  evaluations/  hry: stableford, skins, duels; registr index.ts; agregace tournament.ts
+  evaluations/  hry: stableford, skins, duels, bonuses; registr index.ts; agregace tournament.ts
   data/         ops.ts (operace + překlad na Firestore), localStore, fireStore, auth, seed
   courses/      snímky čtyř turnajových hřišť z golfgames-courses
   screens/      Overview, Round, Play, Admin, AdminRound, Scorecard, GameResults, MenuSheet
@@ -126,6 +127,9 @@ rules/           testy firestore.rules v emulátoru
 - **Pořadí jamek je per flight** (`flightStartHole`). Přenos banku ve Skins
   jde po pořadí hraní, ne po číslech jamek - evaluace používají `holeOrder()`.
 - **Číslo jamky v UI je `hole + 1`**, klíč v mapě je `String(hole)`.
+- **Extra body jsou taky jedna buňka** (`setBonuses` v `ops.ts`, hráč ×
+  jamka, seznam id). Centrální pravidlo pro zvednutou jamku bere evaluace
+  z `EvaluationContext.pickup` (`tournament.pickup`), ne z kola.
 - **Testovací verze (`?demo=4dny`) je jen raw skóre a konfigurace**
   z `src/data/preview.ts` - výsledky počítají stejné evaluace jako ostrý
   turnaj. Nová hra nebo volba hry patří i do některého dne testovací verze,

@@ -155,6 +155,38 @@ test('zapisovatel nesmí změnit dvě buňky jedním zápisem', async () => {
   await assertFails(scoreUpdate(db, 'p1', '0', 4, 'w1', { 'scores.p1.1': 5 }))
 })
 
+test('zapisovatel zapíše extra body jako jednu buňku, ne dvě', async () => {
+  const db = user('w1', WRITER)
+  const ref = doc(db, 'tournaments', TID, 'rounds', 'r1')
+  await assertSucceeds(
+    updateDoc(ref, {
+      'bonuses.p1.4': ['longest'],
+      lastEdit: { playerId: 'p1', hole: '4', by: 'w1', at: serverTimestamp() },
+    }),
+  )
+  await assertSucceeds(
+    updateDoc(ref, {
+      'bonuses.p1.4': deleteField(),
+      lastEdit: { playerId: 'p1', hole: '4', by: 'w1', at: serverTimestamp() },
+    }),
+  )
+  // Bonus jiného hráče ani bonus a skóre dvou hráčů najednou.
+  await assertFails(
+    updateDoc(ref, {
+      'bonuses.p1.4': ['longest'],
+      'bonuses.p2.4': [],
+      lastEdit: { playerId: 'p1', hole: '4', by: 'w1', at: serverTimestamp() },
+    }),
+  )
+  await assertFails(
+    updateDoc(ref, {
+      'bonuses.p2.4': ['nearest'],
+      'scores.p1.4': 4,
+      lastEdit: { playerId: 'p1', hole: '4', by: 'w1', at: serverTimestamp() },
+    }),
+  )
+})
+
 test('zapisovatel nesmí podvrhnout lastEdit.by ani čas', async () => {
   const db = user('w1', WRITER)
   await assertFails(scoreUpdate(db, 'p1', '0', 4, 'nekdo-jiny'))

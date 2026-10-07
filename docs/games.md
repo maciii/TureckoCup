@@ -53,16 +53,53 @@ proti B3, A4 proti B4 podle snímku pozic v kole. Formát je konfigurovatelný:
 
 V součtových formátech se porovnává jen přes jamky, které mají obě strany
 zapsané (strana o jamku napřed „nevede“ jen proto, že má víc zapsáno), a
-zvednutá jamka se počítá jako netto dvojbogey (par + 2 + rány na jamce).
+zvednutá jamka se počítá podle **centrálního pravidla turnaje** (níže).
 Duel je dohraný po poslední jamce; jamkovka dřív, když je matematicky
 rozhodnutá. Výchozí `countsForTeam: false` - do týmového skóre vstupuje až
 po rozhodnutí administrátora; pak `win` a `halve` bodů za duel.
 
-## Týmový zápas (`team-match`)
+## Four-ball (`team-match`)
 
-Hlavní hra kola, až bude určena: strany z konfigurace (typicky dvojice ve
-flightu, four-ball), rána strany = lepší míč, formát jako u duelů (výchozí
-jamkovka). Body `win`/`halve` do týmového skóre.
+Dvojice proti dvojici, rána strany = lepší míč, formát jako u duelů
+(výchozí jamkovka), `allowance` typicky 85-90 %. Strany (`sides`) jsou
+čtyři dvojice po dvou zápasech: strany 1 a 2 hrají zápas 1, strany 3 a 4
+zápas 2. Admin je nastaví v editoru hry (výchozí „Dvojice z flightů“: první
+dvojice flightu proti druhé, tedy A1+A2 vs B1+B2 a A3+A4 vs B3+B4). Body
+`win`/`halve` do týmového skóre, výchozí `countsForTeam: true`.
+
+## Extra body (`bonuses`)
+
+Vedlejší sázka podle Golfgames (`sideBets.ts`, `BONUSES`): hra určuje
+hodnotu každého bonusu (`options.bonusValues`, 0 = nehraje se).
+
+| Bonus     | Značka | Kdy                                            |
+| --------- | ------ | ---------------------------------------------- |
+| `longest` | L      | jen par 5, na jamce jediný hráč, zaškrtává se  |
+| `nearest` | N      | jen par 3, na jamce jediný hráč, zaškrtává se  |
+| `birdie`  | B      | automaticky z ran (brutto, nebo netto s `net`) |
+| `eagle`   | E      | automaticky, eagle a lepší (bez birdie navíc)  |
+| `sandie`  | S      | zaškrtává se (bunker a přesto dobrý výsledek)  |
+| `water`   | W      | zaškrtává se                                   |
+| `barkie`  | T      | zaškrtává se (strom)                           |
+| `arnie`   | A      | zaškrtává se (mimo fairway)                    |
+
+Zaškrtává se v zápisu tlačítkem u jména (nabízí jen bonusy zapnuté ve hře
+a odpovídající paru jamky); značky jsou vidět u jména i ve scorekartě.
+S `confirmByPar` platí ručně zapsaný bonus jen při paru a lepším (netto
+podle `net`), jinak propadá - stejné „potvrzení parem“ jako v Golfgames.
+Zvednutá jamka bonus nedává. Longest a Nearest drží jediný hráč:
+zaškrtnutí u dalšího hráče ho předchozímu odebere; mají-li ho omylem dva
+(zápis bez signálu ze dvou telefonů), nedostane bod nikdo. Do týmového
+skóre (`countsForTeam`) jde součet bodů hráčů týmu × `teamPoints.perPoint`.
+
+## Zvednutá jamka ve hře na rány (centrální pravidlo)
+
+`tournament.pickup` = `timesPar × par + plus` (+ rány z handicapu na jamce
+při `addStrokes`) brutto ran; v netto formátu se od nich odečtou rány z HCP.
+Výchozí je netto dvojbogey (1 × par + 2 + rány), presety v adminu: 2× par,
+2× par + 2, vlastní. Platí pro duely pozic a four-ball na brutto/netto rány.
+Stableford dává za zvednutí nulu, ve Skins jamka propadá, jamkovku zvednutí
+prohrává - tam pravidlo nic nemění.
 
 ## Týmové skóre turnaje
 
@@ -77,5 +114,3 @@ označuje jako **předběžné**.
   varianta by byla nekonzistentní.
 - Lykia Links drží CR 74,7 ze slope tabulky (scorekarta uvádí 74,0); admin
   může hrací HCP přepsat ručně.
-- Extra body (longest, nearest …) mají v modelu místo (`bonuses`) a rules je
-  pouštějí, ale žádná hra je zatím nevyhodnocuje.

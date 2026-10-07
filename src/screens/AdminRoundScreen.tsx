@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useData } from '../data'
 import type { EditRecord } from '../model/types'
 import { SEED_SCHEDULE, defaultGames, seedRoundConfig } from '../data/seed'
-import { localizedTeeName, t } from '../i18n'
+import { dynamicKey, localizedTeeName, t } from '../i18n'
+import { BONUSES, defaultBonusValues } from '../model/bonuses'
 import type {
   DuelFormat,
   GameConfig,
@@ -509,9 +510,20 @@ function matchPairs(sides: GameSide[]): GameSide[][] {
  */
 function withKind(game: GameConfig, round: TournamentRound, kind: GameKind): GameConfig {
   const { name: _name, ...rest } = game
-  return kind === 'team-match' && !game.sides?.length
-    ? { ...rest, kind, sides: flightSides(round) }
-    : { ...rest, kind }
+  if (kind === 'team-match' && !game.sides?.length)
+    return { ...rest, kind, sides: flightSides(round) }
+  if (kind === 'bonuses' && !game.options.bonusValues)
+    return {
+      ...rest,
+      kind,
+      options: {
+        ...rest.options,
+        net: false,
+        bonusValues: defaultBonusValues(),
+        confirmByPar: true,
+      },
+    }
+  return { ...rest, kind }
 }
 
 /** Prázdný název = název podle druhu hry; klíč se vynechá (Firestore neumí undefined). */
@@ -539,6 +551,20 @@ function newGame(round: TournamentRound): GameConfig {
   const template = defaultGames().find((g) => g.kind === kind)
   const id = `${kind}-${Date.now().toString(36)}`
   if (template) return { ...template, id }
+  if (kind === 'bonuses') {
+    return {
+      id,
+      kind,
+      options: {
+        allowance: 1,
+        net: false,
+        bonusValues: defaultBonusValues(),
+        confirmByPar: true,
+      },
+      countsForTeam: false,
+      teamPoints: { perPoint: 1 },
+    }
+  }
   return {
     id,
     kind,
@@ -547,6 +573,23 @@ function newGame(round: TournamentRound): GameConfig {
     teamPoints: { win: 1, halve: 0.5 },
     ...(kind === 'team-match' ? { sides: flightSides(round) } : {}),
   }
+}
+
+/** Hráč na místě `slot` strany `sideIndex`; ostatní strany si ho nechají (admin rozhodne). */
+function withSidePlayer(
+  game: GameConfig,
+  sideIndex: number,
+  slot: number,
+  playerId: PlayerId,
+): GameConfig {
+  const sides = (game.sides ?? []).map((side, index) => {
+    if (index !== sideIndex) return side
+    const players = [...side.players]
+    while (players.length < 2) players.push('')
+    players[slot] = playerId
+    return { ...side, players: players.filter((id) => id !== '') }
+  })
+  return { ...game, sides }
 }
 
 /**
@@ -857,6 +900,63 @@ function GameEditor({
           )}
         </>
       )}
+      {game.kind === 'bonuses' && (
+        <>
+          <div
+            className="field"
+            style={{ flexDirection: 'column', alignItems: 'stretch' }}
+          >
+            <span className="field-label">{t('admin.gameBonuses')}</span>
+            <span className="hint">{t('admin.gameBonusesHint')}</span>
+          </div>
+          {BONUSES.map((bonus) => (
+            <div key={bonus.id} className="field">
+              <span className="field-label">
+                <span className="bonus-mark">{bonus.mark}</span>
+                {t(dynamicKey('bonus', bonus.id, 'name'))}
+              </span>
+              <input
+                className="input sm num"
+                inputMode="decimal"
+                aria-label={t(dynamicKey('bonus', bonus.id, 'name'))}
+                value={options.bonusValues?.[bonus.id] ?? 0}
+                onChange={(e) =>
+                  setOptions({
+                    bonusValues: {
+                      ...(options.bonusValues ?? {}),
+                      [bonus.id]: Math.max(0, Number(e.target.value) || 0),
+                    },
+                  })
+                }
+              />
+            </div>
+          ))}
+          <Switch
+            label={t('admin.gameConfirmByPar')}
+            on={options.confirmByPar ?? false}
+            onChange={(confirmByPar) => setOptions({ confirmByPar })}
+          />
+          {game.countsForTeam && (
+            <div className="field">
+              <span className="field-label">{t('admin.gamePerPoint')}</span>
+              <input
+                className="input sm num"
+                inputMode="decimal"
+                value={game.teamPoints.perPoint ?? 1}
+                onChange={(e) =>
+                  onChange({
+                    ...game,
+                    teamPoints: {
+                      ...game.teamPoints,
+                      perPoint: Number(e.target.value) || 0,
+                    },
+                  })
+                }
+              />
+            </div>
+          )}
+        </>
+      )}
       {isDuel && (
         <>
           <div className="field">
@@ -903,17 +1003,60 @@ function GameEditor({
             />
           </div>
           {game.kind === 'team-match' && (
-            <p className="hint" style={{ paddingTop: 6 }}>
-              {matchPairs(game.sides ?? [])
-                .map((pair) =>
-                  pair
-                    .map((side) =>
-                      side.players.map((id) => shortName(state.players, id)).join(' + '),
-                    )
-                    .join(' vs '),
-                )
-                .join(' · ')}
-            </p>
+            <div
+              className="field"
+              style={{ flexDirection: 'column', alignItems: 'stretch' }}
+            >
+              <div className="field-row">
+                <span className="field-label">{t('admin.gameSides')}</span>
+                <button
+                  type="button"
+                  className="link-button"
+                  onClick={() => onChange({ ...game, sides: flightSides(round) })}
+                >
+                  {t('admin.pairsFromFlights')}
+                </button>
+              </div>
+              {matchPairs(game.sides ?? []).map((pair, matchIndex) => (
+                <div key={matchIndex} className="pair-row">
+                  <span className="hint" style={{ width: '100%' }}>
+                    {t('admin.gameSidesHint', { number: matchIndex + 1 })}
+                  </span>
+                  {pair.map((side, sideOffset) =>
+                    [0, 1].map((slot) => {
+                      const sideIndex = matchIndex * 2 + sideOffset
+                      const value = side.players[slot] ?? ''
+                      return (
+                        <span key={`${side.id}-${slot}`} style={{ display: 'contents' }}>
+                          {sideOffset === 1 && slot === 0 && (
+                            <span className="vs">vs</span>
+                          )}
+                          <select
+                            className="input sm"
+                            aria-label={`${t('admin.gameSidesHint', { number: matchIndex + 1 })} ${
+                              sideOffset === 0 ? 'A' : 'B'
+                            } ${slot + 1}`}
+                            value={value}
+                            onChange={(e) =>
+                              onChange(
+                                withSidePlayer(game, sideIndex, slot, e.target.value),
+                              )
+                            }
+                          >
+                            <option value="">{t('common.dash')}</option>
+                            {round.playerIds.map((id) => (
+                              <option key={id} value={id}>
+                                {shortName(state.players, id)}
+                              </option>
+                            ))}
+                          </select>
+                        </span>
+                      )
+                    }),
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </>
       )}

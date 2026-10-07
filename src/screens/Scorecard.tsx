@@ -13,6 +13,7 @@ import {
   teamOf,
 } from '../model/round'
 import type { EvaluationResult } from '../evaluations'
+import { bonusesAt, getBonus } from '../model/bonuses'
 import { t } from '../i18n'
 import { ScoreMark, formatToPar } from './common'
 
@@ -148,6 +149,13 @@ export default function Scorecard({
                       score={scoreAt(round, id, hole)}
                       par={parAt(round, hole)}
                     />
+                    {bonusesAt(round, id, hole).length > 0 && (
+                      <span className="cell-marks">
+                        {bonusesAt(round, id, hole)
+                          .map((bonusId) => getBonus(bonusId)?.mark ?? '')
+                          .join('')}
+                      </span>
+                    )}
                   </td>
                 ))}
                 <td className="sum">{sum(id, from!, to!) ?? t('common.dash')}</td>

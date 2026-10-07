@@ -9,6 +9,7 @@ import {
   strokesReceived,
   teamOf,
 } from '../model/round'
+import { pickupStrokes } from '../model/pickup'
 import { computeMatch } from '../scoring/matchCore'
 import { stablefordPoints } from '../scoring/whs'
 import { teamBestBall } from './skins'
@@ -31,9 +32,11 @@ import { rankRows } from './types'
  *   stableford      součet Stablefordových bodů (netto), vyšší vyhrává
  *   match-play      jamkovka na netto rány
  *
- * Zvednutá jamka se v součtových formátech počítá jako netto dvojbogey
- * (par + 2 + rány na jamce) - hráč za ni dostane nejhorší ohodnocení, které
- * jde rozumně přičíst, místo nekonečna, které by zničilo celý součet.
+ * Zvednutá jamka se v součtových formátech počítá podle centrálního
+ * pravidla turnaje (`pickup`, výchozí netto dvojbogey = par + 2 + rány na
+ * jamce) - hráč za ni dostane definovaný počet ran místo nekonečna, které
+ * by zničilo celý součet. Pravidlo dává brutto rány; v netto formátu se od
+ * nich odečtou rány z handicapu.
  */
 
 interface SideScore {
@@ -51,7 +54,7 @@ function strokeOf(
   return teamBestBall(context, players, hole, { net, allowance })
 }
 
-/** Rána strany na jamce pro součtové formáty; zvednutí = netto dvojbogey. */
+/** Rána strany na jamce pro součtové formáty; zvednutí podle pravidla turnaje. */
 function countedStroke(
   context: EvaluationContext,
   players: PlayerId[],
@@ -62,12 +65,11 @@ function countedStroke(
   const value = strokeOf(context, players, hole, net, allowance)
   if (value === undefined) return undefined
   if (value === CONCEDED) {
-    const strokes = net
-      ? Math.max(
-          ...players.map((id) => strokesReceived(context.round, id, hole, allowance)),
-        )
-      : 0
-    return parAt(context.round, hole) + 2 + strokes
+    const strokes = Math.max(
+      ...players.map((id) => strokesReceived(context.round, id, hole, allowance)),
+    )
+    const gross = pickupStrokes(context.pickup, parAt(context.round, hole), strokes)
+    return net ? gross - strokes : gross
   }
   return value
 }

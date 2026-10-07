@@ -14,7 +14,13 @@ const IDENTITY_KEY = 'tc26.preview.demoIdentity.v1'
 const DAYS: { round: string; games: string[]; team: boolean }[] = [
   {
     round: 'r1',
-    games: ['Stableford', 'Skins ve flightu', 'Team Skins', 'Duely pozic netto'],
+    games: [
+      'Stableford',
+      'Skins ve flightu',
+      'Team Skins',
+      'Duely pozic netto',
+      'Extra body',
+    ],
     team: true,
   },
   {
@@ -45,6 +51,7 @@ const DAYS: { round: string; games: string[]; team: boolean }[] = [
       'Skins brutto všech osm',
       'Team Skins zadní devítka',
       'Duely pozic brutto',
+      'Extra body do týmu',
     ],
     team: true,
   },

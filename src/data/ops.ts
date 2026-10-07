@@ -30,6 +30,14 @@ export type Op =
       hole: number
       value: number | null
     }
+  | {
+      kind: 'setBonuses'
+      roundId: string
+      playerId: PlayerId
+      hole: number
+      /** Id zapsaných bonusů; prázdný seznam klíč smaže. */
+      value: string[]
+    }
   | { kind: 'updateRound'; roundId: string; patch: Partial<TournamentRound> }
   | { kind: 'updatePlayer'; playerId: PlayerId; patch: Partial<Player> }
   | { kind: 'updateTournament'; patch: Partial<Tournament> }
@@ -67,6 +75,14 @@ export function applyOp(state: TournamentState, op: Op): TournamentState {
         if (op.value === null) delete player[key]
         else player[key] = op.value
         return { ...round, scores: { ...round.scores, [op.playerId]: player } }
+      })
+    case 'setBonuses':
+      return mapRound(state, op.roundId, (round) => {
+        const key = holeKey(op.hole)
+        const player = { ...(round.bonuses[op.playerId] ?? {}) }
+        if (op.value.length === 0) delete player[key]
+        else player[key] = [...op.value]
+        return { ...round, bonuses: { ...round.bonuses, [op.playerId]: player } }
       })
     case 'clearScores':
       return mapRound(state, op.roundId, (round) => ({
@@ -167,6 +183,21 @@ export function opToWrites(op: Op, meta: OpMeta, state: TournamentState): Write[
         },
       ]
     }
+    case 'setBonuses': {
+      // Stejná jedna buňka a lastEdit jako u skóre - rules to kontrolují stejně.
+      const key = holeKey(op.hole)
+      return [
+        {
+          path: ['rounds', op.roundId],
+          mode: 'update',
+          data: {
+            [`bonuses.${op.playerId}.${key}`]:
+              op.value.length === 0 ? DELETE_FIELD : [...op.value],
+            lastEdit: { playerId: op.playerId, hole: key, by: meta.uid, at: SERVER_TIME },
+          },
+        },
+      ]
+    }
     case 'clearScores': {
       const round = state.rounds.find((r) => r.id === op.roundId)
       const ids = round?.playerIds ?? []
@@ -194,7 +225,12 @@ export function opToWrites(op: Op, meta: OpMeta, state: TournamentState): Write[
 
 /** Smí operaci dělat zapisovatel, nebo je to admin záležitost? */
 export function requiresAdmin(op: Op): boolean {
-  return op.kind !== 'setScore'
+  return op.kind !== 'setScore' && op.kind !== 'setBonuses'
+}
+
+/** Zápis do buňky kola (skóre nebo extra body) - smí ho zapisovatel. */
+export function isCellOp(op: Op): op is Extract<Op, { kind: 'setScore' | 'setBonuses' }> {
+  return op.kind === 'setScore' || op.kind === 'setBonuses'
 }
 
 /**

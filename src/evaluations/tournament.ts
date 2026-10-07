@@ -1,5 +1,13 @@
-import type { GameKind, Player, PlayerId, TeamId, TournamentRound } from '../model/types'
+import type {
+  GameKind,
+  PickupRule,
+  Player,
+  PlayerId,
+  TeamId,
+  TournamentRound,
+} from '../model/types'
 import { POSITIONS } from '../model/types'
+import { DEFAULT_PICKUP } from '../model/pickup'
 import { evaluateRound, roundTeamPoints } from './index'
 import type { EvaluationResult } from './types'
 import { rankRows } from './types'
@@ -53,9 +61,10 @@ export function playedRounds(rounds: TournamentRound[]): TournamentRound[] {
 export function summarizeTournament(
   rounds: TournamentRound[],
   players: Player[],
+  pickup: PickupRule = DEFAULT_PICKUP,
 ): TournamentSummary {
   const evaluated: RoundEvaluation[] = playedRounds(rounds).map((round) => {
-    const results = evaluateRound(round, players)
+    const results = evaluateRound(round, players, pickup)
     return { round, results, teamPoints: roundTeamPoints(results) }
   })
 

@@ -1928,3 +1928,154 @@ a.menu-item {
 .other-flight-list .row-title {
   gap: 6px;
 }
+
+/* --- extra body ----------------------------------------------------------- */
+
+/* Značky bonusů u jména v zápisu; klikací, otevírá výběr. */
+.bonus-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+  min-height: 22px;
+  padding: 0 7px;
+  border-radius: 6px;
+  background: var(--track);
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.bonus-button.active {
+  background: var(--green-soft);
+  color: var(--fairway-deep);
+}
+
+.bonus-button:disabled {
+  opacity: 0.5;
+}
+
+.bonus-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  padding: 0 4px;
+  border-radius: 5px;
+  background: var(--green-soft);
+  color: var(--fairway-deep);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.bonus-mark.void {
+  background: var(--track);
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
+.bonus-list {
+  list-style: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bonus-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  color: var(--ink);
+}
+
+.bonus-option.selected {
+  border-color: var(--green);
+  background: var(--green-soft);
+}
+
+.bonus-check {
+  flex: none;
+  width: 22px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--green);
+}
+
+.bonus-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bonus-name {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.bonus-desc {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.bonus-value {
+  flex: none;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Značky bonusů pod ranou ve scorekartě. */
+.scorecard .cell-marks {
+  display: block;
+  margin-top: -2px;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: var(--fairway-deep);
+}
+
+/* Výběr hráče do dvojice four-ballu. */
+.pair-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 6px 0;
+}
+
+.pair-row .vs {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--ink-3);
+  padding: 0 2px;
+}
+
+.pair-row select.input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+
+/* Vzorec pro zvednutou jamku v nastavení turnaje. */
+.formula {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--fairway-deep);
+  font-variant-numeric: tabular-nums;
+}
