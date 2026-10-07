@@ -7,6 +7,7 @@ import type {
   DuelFormat,
   GameConfig,
   GameKind,
+  GameSide,
   PlayerId,
   RoundStatus,
   TournamentRound,
@@ -435,6 +436,51 @@ function EditsLog({ roundId }: { roundId: string }) {
   )
 }
 
+/** Strany týmového zápasu z flightů: první dvojice flightu proti druhé. */
+function flightSides(round: TournamentRound): GameSide[] {
+  return round.flights.flatMap((flight, index) => [
+    { id: `f${index}a`, players: flight.players.slice(0, 2) },
+    { id: `f${index}b`, players: flight.players.slice(2, 4) },
+  ])
+}
+
+/** Zápasy po dvou stranách, jak je páruje evaluace (1 vs 2, 3 vs 4 …). */
+function matchPairs(sides: GameSide[]): GameSide[][] {
+  const pairs: GameSide[][] = []
+  for (let i = 0; i + 1 < sides.length; i += 2) pairs.push([sides[i]!, sides[i + 1]!])
+  return pairs
+}
+
+/**
+ * Změna druhu hry: vlastní název popisoval původní hru, proto se zahodí;
+ * týmový zápas bez stran by nic nevyhodnotil, dostane dvojice z flightů.
+ */
+function withKind(game: GameConfig, round: TournamentRound, kind: GameKind): GameConfig {
+  const { name: _name, ...rest } = game
+  return kind === 'team-match' && !game.sides?.length
+    ? { ...rest, kind, sides: flightSides(round) }
+    : { ...rest, kind }
+}
+
+/** Prázdný název = název podle druhu hry; klíč se vynechá (Firestore neumí undefined). */
+function withName(game: GameConfig, value: string): GameConfig {
+  const { name: _name, ...rest } = game
+  return value.trim() ? { ...rest, name: value } : rest
+}
+
+/** Rozsah jamek; celé kolo se neukládá, aby hra sledovala délku hřiště. */
+function withHoles(
+  game: GameConfig,
+  round: TournamentRound,
+  from: number,
+  to: number,
+): GameConfig {
+  const { holes: _holes, ...rest } = game
+  const last = round.course.holeCount - 1
+  const range = { from: Math.min(from, to), to: Math.max(from, to) }
+  return range.from === 0 && range.to === last ? rest : { ...rest, holes: range }
+}
+
 function newGame(round: TournamentRound): GameConfig {
   const used = new Set(round.games.map((g) => g.kind))
   const kind = GAME_KINDS.find((k) => !used.has(k)) ?? 'position-duel'
@@ -447,14 +493,7 @@ function newGame(round: TournamentRound): GameConfig {
     options: { allowance: 1, net: true, format: 'match-play' },
     countsForTeam: kind === 'team-match',
     teamPoints: { win: 1, halve: 0.5 },
-    ...(kind === 'team-match'
-      ? {
-          sides: round.flights.flatMap((flight, index) => [
-            { id: `f${index}a`, players: flight.players.slice(0, 2) },
-            { id: `f${index}b`, players: flight.players.slice(2, 4) },
-          ]),
-        }
-      : {}),
+    ...(kind === 'team-match' ? { sides: flightSides(round) } : {}),
   }
 }
 
@@ -571,6 +610,8 @@ function GameEditor({
     onChange({ ...game, options: { ...options, ...next } })
   const isDuel = game.kind === 'position-duel' || game.kind === 'team-match'
   const isSkins = game.kind === 'individual-skins' || game.kind === 'team-skins'
+  const holeNumbers = Array.from({ length: round.course.holeCount }, (_, i) => i)
+  const holes = game.holes ?? { from: 0, to: round.course.holeCount - 1 }
 
   return (
     <div
@@ -583,7 +624,7 @@ function GameEditor({
           aria-label={t('admin.games')}
           value={game.kind}
           style={{ flex: 1 }}
-          onChange={(e) => onChange({ ...game, kind: e.target.value as GameKind })}
+          onChange={(e) => onChange(withKind(game, round, e.target.value as GameKind))}
         >
           {GAME_KINDS.map((kind) => (
             <option key={kind} value={kind}>
@@ -599,6 +640,50 @@ function GameEditor({
         >
           {t('admin.removeGame')}
         </button>
+      </div>
+      <div className="field">
+        <span className="field-label fixed">{t('admin.gameName')}</span>
+        <input
+          className="input sm grow"
+          aria-label={t('admin.gameName')}
+          value={game.name ?? ''}
+          placeholder={gameTitle({ ...game, name: undefined })}
+          onChange={(e) => onChange(withName(game, e.target.value))}
+        />
+      </div>
+      <div className="field">
+        <span className="field-label">{t('admin.gameHoles')}</span>
+        <span className="row-inline">
+          <select
+            className="input sm num"
+            aria-label={t('admin.gameHolesFrom')}
+            value={holes.from}
+            onChange={(e) =>
+              onChange(withHoles(game, round, Number(e.target.value), holes.to))
+            }
+          >
+            {holeNumbers.map((hole) => (
+              <option key={hole} value={hole}>
+                {hole + 1}
+              </option>
+            ))}
+          </select>
+          <span>–</span>
+          <select
+            className="input sm num"
+            aria-label={t('admin.gameHolesTo')}
+            value={holes.to}
+            onChange={(e) =>
+              onChange(withHoles(game, round, holes.from, Number(e.target.value)))
+            }
+          >
+            {holeNumbers.map((hole) => (
+              <option key={hole} value={hole}>
+                {hole + 1}
+              </option>
+            ))}
+          </select>
+        </span>
       </div>
       <Switch
         label={t('admin.gameCountsForTeam')}
@@ -713,16 +798,15 @@ function GameEditor({
           </div>
           {game.kind === 'team-match' && (
             <p className="hint" style={{ paddingTop: 6 }}>
-              {(game.sides ?? [])
-                .map((side) =>
-                  side.players.map((id) => shortName(state.players, id)).join(' + '),
+              {matchPairs(game.sides ?? [])
+                .map((pair) =>
+                  pair
+                    .map((side) =>
+                      side.players.map((id) => shortName(state.players, id)).join(' + '),
+                    )
+                    .join(' vs '),
                 )
-                .join(' vs ') ||
-                round.flights
-                  .map((f) =>
-                    f.players.map((id) => shortName(state.players, id)).join(', '),
-                  )
-                  .join(' | ')}
+                .join(' · ')}
             </p>
           )}
         </>

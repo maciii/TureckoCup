@@ -5,7 +5,9 @@ individuální vyhodnocení ze stejných raw dat (Stableford, Skins, Team Skins,
 duely pozic), veřejný leaderboard bez přihlášení a administrace turnaje.
 
 **Živá verze:** https://turecko-cup.web.app na Firebase Hosting
-(ukázkový režim bez přihlášení a databáze: https://turecko-cup.web.app/?demo=1).
+(ukázkový režim bez přihlášení a databáze: https://turecko-cup.web.app/?demo=1,
+testovací verze s vymyšlenými čtyřmi odehranými dny:
+https://turecko-cup.web.app/?demo=4dny).
 
 Aplikace je PWA – přidá se na plochu telefonu a běží i bez signálu; zápisy se
 odešlou po návratu připojení. Design a výpočty handicapů vycházejí

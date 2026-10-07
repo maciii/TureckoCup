@@ -3,7 +3,7 @@ import { EMPTY_STATE } from '../model/types'
 import { t } from '../i18n'
 import type { Op } from './ops'
 import { applyOp, checkOp, opProblemMessage, opToWrites } from './ops'
-import type { Listener, Role, Store, StoreMeta } from './store'
+import type { DemoVariant, Listener, Role, Store, StoreMeta } from './store'
 import { STORAGE_PREFIX } from './store'
 import {
   BOOTSTRAP_ADMIN_EMAIL,
@@ -13,6 +13,7 @@ import {
   seedRounds,
 } from './seed'
 import { decodeAccess, playerIdByEmail } from '../model/access'
+import { PREVIEW_SEED, previewState } from './preview'
 
 const DEMO_WRITER_EMAIL = 'bezdekf@gmail.com'
 
@@ -22,15 +23,35 @@ const DEMO_WRITER_EMAIL = 'bezdekf@gmail.com'
  * Stav drží `localStorage`; událost `storage` přenáší změny mezi záložkami,
  * takže dvě záložky = dva flighty a třetí = visitor. Přihlášení je falešné:
  * identita se vybírá v menu a určuje roli.
+ *
+ * Testovací verze (`preview`) má vlastní klíče, aby se nepletla s ukázkovým
+ * režimem ani s e2e testy, které s ním počítají.
  */
 
-const STATE_KEY = `${STORAGE_PREFIX}state.v1`
-const IDENTITY_KEY = `${STORAGE_PREFIX}demoIdentity.v1`
-const EDITS_KEY = `${STORAGE_PREFIX}edits.v1`
+interface Keys {
+  state: string
+  identity: string
+  edits: string
+  /** Předpona jamek, které si pamatuje zápis (`PlayScreen`). */
+  playHole: string
+}
+
+function keysOf(variant: DemoVariant): Keys {
+  const prefix = variant === 'preview' ? `${STORAGE_PREFIX}preview.` : STORAGE_PREFIX
+  return {
+    state: `${prefix}state.v1`,
+    identity: `${prefix}demoIdentity.v1`,
+    edits: `${prefix}edits.v1`,
+    playHole: `${prefix}playHole.`,
+  }
+}
+
+// Na stránce běží jediný místní store; klíče mu nastaví `createLocalStore`.
+let keys = keysOf('demo')
 
 function readEdits(): (EditRecord & { roundId: string })[] {
   try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(EDITS_KEY) ?? '[]')
+    const parsed: unknown = JSON.parse(localStorage.getItem(keys.edits) ?? '[]')
     return Array.isArray(parsed) ? (parsed as (EditRecord & { roundId: string })[]) : []
   } catch {
     return []
@@ -39,7 +60,7 @@ function readEdits(): (EditRecord & { roundId: string })[] {
 
 function readState(): TournamentState {
   try {
-    const raw = localStorage.getItem(STATE_KEY)
+    const raw = localStorage.getItem(keys.state)
     if (!raw) return EMPTY_STATE
     const parsed: unknown = JSON.parse(raw)
     if (!parsed || typeof parsed !== 'object') return EMPTY_STATE
@@ -70,7 +91,7 @@ function readAccess(value: unknown): TournamentState['access'] {
 
 function writeState(state: TournamentState): void {
   try {
-    localStorage.setItem(STATE_KEY, JSON.stringify(state))
+    localStorage.setItem(keys.state, JSON.stringify(state))
   } catch {
     /* privátní režim - stav zůstane jen v paměti */
   }
@@ -78,23 +99,36 @@ function writeState(state: TournamentState): void {
 
 function readIdentity(): Role {
   try {
-    const raw = localStorage.getItem(IDENTITY_KEY)
+    const raw = localStorage.getItem(keys.identity)
     return raw === 'admin' || raw === 'writer' || raw === 'visitor' ? raw : 'visitor'
   } catch {
     return 'visitor'
   }
 }
 
-export function createLocalStore(options: { seed?: boolean } = {}): Store {
+function seedState(variant: DemoVariant, previewSeed: number): TournamentState {
+  return applyOp(
+    EMPTY_STATE,
+    variant === 'preview'
+      ? { kind: 'init', ...previewState(previewSeed) }
+      : {
+          kind: 'init',
+          tournament: SEED_TOURNAMENT,
+          players: SEED_PLAYERS,
+          rounds: seedRounds(),
+          access: SEED_ACCESS,
+        },
+  )
+}
+
+export function createLocalStore(
+  options: { seed?: boolean; variant?: DemoVariant } = {},
+): Store {
+  const variant = options.variant ?? 'demo'
+  keys = keysOf(variant)
   let state = readState()
-  if (options.seed && !state.tournament) {
-    state = applyOp(state, {
-      kind: 'init',
-      tournament: SEED_TOURNAMENT,
-      players: SEED_PLAYERS,
-      rounds: seedRounds(),
-      access: SEED_ACCESS,
-    })
+  if ((options.seed || variant === 'preview') && !state.tournament) {
+    state = seedState(variant, PREVIEW_SEED)
     writeState(state)
   }
   let role = readIdentity()
@@ -102,7 +136,7 @@ export function createLocalStore(options: { seed?: boolean } = {}): Store {
   let error: string | null = null
 
   function meta(): StoreMeta {
-    // Ukázkové identity odpovídají seedu: admin je Mac (p1), hráč je Fery (p6).
+    // Ukázkové identity odpovídají seedu: admin je Mac (p1), hráč je Ferry (p6).
     const email = role === 'admin' ? BOOTSTRAP_ADMIN_EMAIL : DEMO_WRITER_EMAIL
     const account =
       role === 'visitor'
@@ -121,6 +155,7 @@ export function createLocalStore(options: { seed?: boolean } = {}): Store {
       account,
       role,
       authReady: true,
+      demo: variant,
     }
   }
 
@@ -130,7 +165,7 @@ export function createLocalStore(options: { seed?: boolean } = {}): Store {
 
   if (typeof window !== 'undefined') {
     window.addEventListener('storage', (event) => {
-      if (event.key === STATE_KEY) {
+      if (event.key === keys.state) {
         state = readState()
         notify()
       }
@@ -177,7 +212,7 @@ export function createLocalStore(options: { seed?: boolean } = {}): Store {
           appVersion: 'demo',
         })
         try {
-          localStorage.setItem(EDITS_KEY, JSON.stringify(edits.slice(0, 500)))
+          localStorage.setItem(keys.edits, JSON.stringify(edits.slice(0, 500)))
         } catch {
           /* log je jen pohodlí */
         }
@@ -206,6 +241,22 @@ export function createLocalStore(options: { seed?: boolean } = {}): Store {
       persistIdentity()
       notify()
     },
+    resetDemo() {
+      // Testovací verze vylosuje nová data, ukázkový režim se vrátí na seed.
+      state = seedState(variant, Math.floor(Math.random() * 2 ** 31))
+      writeState(state)
+      try {
+        localStorage.removeItem(keys.edits)
+        // Zapamatované jamky zápisu patří ke starým datům.
+        for (const key of Object.keys(localStorage)) {
+          if (key.startsWith(keys.playHole)) localStorage.removeItem(key)
+        }
+      } catch {
+        /* ignore */
+      }
+      error = null
+      notify()
+    },
     async loadEdits(roundId, limit = 50) {
       return readEdits()
         .filter((edit) => edit.roundId === roundId)
@@ -215,7 +266,7 @@ export function createLocalStore(options: { seed?: boolean } = {}): Store {
 
   function persistIdentity() {
     try {
-      localStorage.setItem(IDENTITY_KEY, role)
+      localStorage.setItem(keys.identity, role)
     } catch {
       /* ignore */
     }

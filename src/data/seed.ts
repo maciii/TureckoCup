@@ -73,8 +73,8 @@ export const SEED_PLAYERS: Player[] = [
   },
   {
     id: 'p6',
-    name: 'Fery',
-    nick: 'Fery',
+    name: 'Ferry',
+    nick: 'Ferry',
     teamId: 'B',
     position: 2,
     handicapIndex: 9.4,
@@ -82,8 +82,8 @@ export const SEED_PLAYERS: Player[] = [
   },
   {
     id: 'p7',
-    name: 'Radek',
-    nick: 'Radek',
+    name: 'Vrbič',
+    nick: 'Vrbič',
     teamId: 'A',
     position: 4,
     handicapIndex: null,

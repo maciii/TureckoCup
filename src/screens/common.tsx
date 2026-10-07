@@ -11,6 +11,7 @@ import { playerById, shortName } from '../model/round'
 import type { StandingRow } from '../evaluations'
 import { dynamicKey, t } from '../i18n'
 import { goBack } from '../nav'
+import { useData } from '../data'
 
 /** Kategorie výsledku na jamce - tvar i barva značky podle golfové konvence. */
 export type ScoreCategory = 'eagle' | 'birdie' | 'par' | 'bogey' | 'double' | 'triple'
@@ -94,7 +95,18 @@ export function gameTitle(game: GameConfig): string {
 }
 
 export function gameDescription(game: GameConfig): string {
-  return t(dynamicKey('games', game.kind, 'description'))
+  const base =
+    game.kind === 'individual-skins' && game.options.scope === 'all'
+      ? t('games.individual-skins.descriptionAll')
+      : t(dynamicKey('games', game.kind, 'description'))
+  return game.holes ? `${base} · ${gameHolesLabel(game)}` : base
+}
+
+/** Rozsah jamek hry pro popisek (`jamky 1–9`); bez rozsahu celé kolo. */
+export function gameHolesLabel(game: GameConfig): string {
+  return game.holes
+    ? t('games.holes', { from: game.holes.from + 1, to: game.holes.to + 1 })
+    : t('games.allHoles')
 }
 
 export function teamName(
@@ -296,8 +308,11 @@ export function Header({
   left?: ReactNode
   right?: ReactNode
 }) {
+  // Testovací verze nese štítek na každé obrazovce, aby si ji nikdo nespletl
+  // s ostrým turnajem, když do ní zapisuje.
+  const preview = useData().meta.demo === 'preview'
   return (
-    <header className="app-header">
+    <header className={`app-header${preview ? ' preview' : ''}`}>
       {left ?? (
         <button
           type="button"
@@ -309,7 +324,10 @@ export function Header({
         </button>
       )}
       <div className="header-main">
-        <h1>{title}</h1>
+        <h1>
+          {preview && <span className="preview-tag">{t('app.previewTag')}</span>}
+          {title}
+        </h1>
         {subtitle && <p className="subtitle">{subtitle}</p>}
       </div>
       {right ?? <span className="header-spacer" />}

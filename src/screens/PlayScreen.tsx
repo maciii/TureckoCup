@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useData } from '../data'
+import { demoVariant, useData } from '../data'
 import { evaluateRound } from '../evaluations'
 import { skinsAtStake } from '../evaluations/skins'
 import { stablefordAt } from '../evaluations/stableford'
@@ -27,7 +27,9 @@ import { Header, ScoreMark, TeamBadge, formatToPar, sideLabel } from './common'
 import Scorecard from './Scorecard'
 
 const LONG_PRESS_MS = 500
-const HOLE_KEY = 'tc26.playHole.v1'
+// Testovací verze si pamatuje jamky zvlášť, jinak by otevřela jamku z ostrého kola.
+const HOLE_KEY =
+  demoVariant() === 'preview' ? 'tc26.preview.playHole.v1' : 'tc26.playHole.v1'
 
 interface Props {
   roundId: string
@@ -52,20 +54,14 @@ export default function PlayScreen({ roundId, flight }: Props) {
   })
 
   // Při otevření flightu skočit na jamku, kde flight nejspíš je.
+  // Při přímém otevření adresy data ještě nejsou načtená - skok proběhne, až dorazí.
+  const loaded = Boolean(round && flightEntry)
   useEffect(() => {
     if (!round || !flightEntry) return
     setHole(readHole(roundId, flight) ?? flightCurrentHole(round, flightEntry))
-    // Jen při změně flightu/kola, ne při každém zápisu.
+    // Jen při změně flightu/kola (a načtení dat), ne při každém zápisu.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roundId, flight])
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(`${HOLE_KEY}:${roundId}:${flight}`, String(hole))
-    } catch {
-      /* ignore */
-    }
-  }, [hole, roundId, flight])
+  }, [roundId, flight, loaded])
 
   const results = useMemo(
     () => (round ? evaluateRound(round, state.players) : []),
@@ -169,7 +165,11 @@ export default function PlayScreen({ roundId, flight }: Props) {
 
   function goTo(step: number) {
     const next = order[orderIndex + step]
-    if (next !== undefined) setHole(next)
+    if (next === undefined) return
+    setHole(next)
+    // Ukládá se jen jamka, na kterou zapisovatel sám přešel; automatický skok
+    // na aktuální jamku by se jinak uložil dřív, než dorazí data.
+    saveHole(roundId, flight, next)
   }
 
   const flightSkins = skinsResult ? skinsAtStake(skinsResult, hole) : 0
@@ -428,6 +428,14 @@ function Shell({
       <main className="content">{children}</main>
     </div>
   )
+}
+
+function saveHole(roundId: string, flight: number | null, hole: number): void {
+  try {
+    localStorage.setItem(`${HOLE_KEY}:${roundId}:${flight}`, String(hole))
+  } catch {
+    /* ignore */
+  }
 }
 
 function readHole(roundId: string, flight: number | null): number | undefined {

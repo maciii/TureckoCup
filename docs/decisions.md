@@ -146,6 +146,22 @@ emulátorům proto běží přes long polling na vlastním dev serveru; Android
 testuje výchozí přenos. Živou synchronizaci na skutečném iPhonu ověří zkouška
 nanečisto (`setup-firebase.md`, krok 7).
 
+## 15. Testovací verze jako varianta ukázkového režimu
+
+**Kontext.** Admin si chce před turnajem ověřit, jak bude aplikace vypadat
+po několika dnech a jak se chovají různé hry, bez zápisů do ostré databáze.
+
+**Rozhodnutí.** `?demo=4dny` spustí místní úložiště s vlastními klíči a daty
+z generátoru (`preview.ts`) místo prázdného seedu. Generuje se jen raw skóre
+a konfigurace kol, výsledky počítají stejné evaluace. Semínko je pevné, aby
+dva lidé na stejném odkazu viděli stejná čísla; „Vylosovat nová data“ v menu
+dá nová. Kvůli testovací verzi umí admin nově měnit i název hry a rozsah
+jamek - jinak by v nastavení neviděl, čím se hry dne liší.
+
+**Důsledek.** Žádná nová infrastruktura ani data ve Firestoru; testovací
+verze funguje offline a na produkci bez přihlášení. Zápisy v ní zůstávají
+jen v prohlížeči, proto ji odlišuje zlatý štítek „Test“ na každé obrazovce.
+
 ## Otevřené otázky
 
 - Hlavní hra kola a její bodování (do rozhodnutí je týmové skóre jen Team

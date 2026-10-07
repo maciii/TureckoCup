@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useData } from '../data'
+import { useData, variantHref } from '../data'
 import { t } from '../i18n'
 import { navigate } from '../nav'
 import type { Route } from '../nav'
@@ -122,6 +122,29 @@ export default function MenuSheet({ onClose, playRoute, current }: Props) {
           current === 'admin' || current === 'adminRound',
         )}
 
+        <div className="menu-label">{t('app.versions')}</div>
+        {meta.demo === 'preview' ? (
+          <a className="menu-item" href={variantHref(null)}>
+            <Icon>
+              <path d="M5 21V4" />
+              <path d="M5 4h11l-2 4 2 4H5" />
+            </Icon>
+            <span>{t('app.toLive')}</span>
+          </a>
+        ) : (
+          <a className="menu-item preview" href={variantHref('preview')}>
+            <Icon>
+              <path d="M9 3h6" />
+              <path d="M10 3v6L5 19a1.5 1.5 0 001.3 2h11.4a1.5 1.5 0 001.3-2l-5-10V3" />
+              <path d="M7.5 15h9" />
+            </Icon>
+            <span className="menu-item-text">
+              {t('app.toPreview')}
+              <small>{t('app.toPreviewHint')}</small>
+            </span>
+          </a>
+        )}
+
         <div className="menu-foot">
           {meta.mode === 'local' && store.setDemoIdentity && (
             <div className="stack">
@@ -148,6 +171,19 @@ export default function MenuSheet({ onClose, playRoute, current }: Props) {
                 ))}
               </div>
             </div>
+          )}
+          {store.resetDemo && (
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => {
+                store.resetDemo?.()
+                onClose()
+                navigate({ view: 'overview' })
+              }}
+            >
+              {t(meta.demo === 'preview' ? 'app.resetPreview' : 'app.resetDemo')}
+            </button>
           )}
           <p className="menu-version">{t('common.version', { version: APP_VERSION })}</p>
         </div>

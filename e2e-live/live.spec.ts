@@ -114,3 +114,23 @@ test('ukázkový režim běží i na produkci', async ({ page }) => {
   await expect(page.locator('.list .row')).toHaveCount(5)
   expect(errors()).toEqual([])
 })
+
+test('testovací verze ukáže vymyšlený turnaj po čtyřech dnech', async ({ page }) => {
+  const errors = collectErrors(page)
+  await page.goto('/?demo=4dny#/')
+  await page.waitForSelector('.screen')
+  await expect(page.getByTestId('preview-notice')).toBeVisible()
+  await expect(page.locator('.app-header .preview-tag')).toBeVisible()
+  const rows = page.locator('.list > button.row')
+  await expect(rows).toHaveCount(5)
+  await expect(rows.nth(3)).toContainText('Živě')
+  for (let i = 0; i < 4; i += 1) await expect(rows.nth(i).locator('.pill')).toHaveCount(2)
+  await page.goto('/?demo=4dny#/round/r3')
+  await expect(page.getByRole('heading', { name: 'Four-ball dvojic' })).toBeVisible()
+  // Odkaz zpět vede na ostrý turnaj bez parametru.
+  await page.goto('/?demo=4dny#/')
+  await expect(
+    page.getByTestId('preview-notice').getByRole('link', { name: /Ostrý turnaj/ }),
+  ).toHaveAttribute('href', '/')
+  expect(errors()).toEqual([])
+})

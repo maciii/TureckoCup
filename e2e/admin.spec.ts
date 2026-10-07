@@ -69,14 +69,14 @@ test('e-mail hráče se uloží malými písmeny a nejde dát dvěma hráčům',
 })
 
 test('přihlášený hráč se ukáže svým jménem ze soupisky', async ({ page }) => {
-  // Ukázková identita hráče má e-mail Feryho (p6), admin je Mac (p1).
+  // Ukázková identita hráče má e-mail Ferryho (p6), admin je Mac (p1).
   await setIdentity(page, 'writer')
   await open(page, '#/admin')
-  await expect(page.locator('.account-name')).toHaveText('Fery')
+  await expect(page.locator('.account-name')).toHaveText('Ferry')
   await expect(page.locator('.account-name + .hint')).toContainText('Hráč')
   await open(page, '#/')
   await page.getByRole('button', { name: 'Menu' }).click()
-  await expect(page.locator('.menu-drawer')).toContainText('Fery')
+  await expect(page.locator('.menu-drawer')).toContainText('Ferry')
 })
 
 test('log úprav ukazuje datum, čas a změnu', async ({ page }) => {

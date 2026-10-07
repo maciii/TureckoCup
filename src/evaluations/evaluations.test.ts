@@ -113,7 +113,7 @@ describe('Team Skins', () => {
   it('dělená jamka přenáší skin', () => {
     const round = round1()
     for (const id of round.playerIds) enter(round, id, [4, 4])
-    // Jamka 1 (SI 4): ránu dostávají Ota, Pavlos, Fery i Mac -> oba týmy netto 3, dělená.
+    // Jamka 1 (SI 4): ránu dostávají Ota, Pavlos, Ferry i Mac -> oba týmy netto 3, dělená.
     // Jamka 2 (SI 16): nikdo ránu nemá; Mac zahraje 3 a bere i přenesený skin.
     round.scores.p1!['1'] = 3
     const result = evaluateGame(round, SEED_PLAYERS, round.games[2]!)
@@ -149,7 +149,7 @@ describe('duely pozic', () => {
     const duel1 = result.duels!.find((d) => d.position === 1)!
     expect(duel1.finished).toBe(true)
     expect(duel1.leader).toBeNull()
-    // Pozice 2: Mac (13) vs Fery (9,4 -> 9): Mac dostává víc ran -> vyhrává.
+    // Pozice 2: Mac (13) vs Ferry (9,4 -> 9): Mac dostává víc ran -> vyhrává.
     const duel2 = result.duels!.find((d) => d.position === 2)!
     expect(duel2.leader).toBe(0)
     // Pozice 3 a 4: hráči bez indexu (0 ran) hrají stejně - remízy.

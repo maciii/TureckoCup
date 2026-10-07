@@ -168,6 +168,37 @@ a {
   min-width: 0;
 }
 
+/* Testovací verze: zlatý proužek a štítek, ať je na první pohled jiná než ostrá. */
+.app-header.preview {
+  border-bottom: 3px solid var(--gold);
+}
+
+.preview-tag {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--gold-soft);
+  color: var(--gold);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 2px;
+}
+
+.notice.preview {
+  background: var(--gold-soft);
+  color: var(--team-a-text);
+}
+
+.notice.preview a {
+  display: inline-block;
+  margin-top: 4px;
+  color: inherit;
+  font-weight: 800;
+}
+
 .icon-button {
   width: 36px;
   height: 36px;
@@ -1702,6 +1733,25 @@ a {
   color: var(--gold);
 }
 
+.menu-item.preview .menu-icon {
+  color: var(--gold);
+}
+
+a.menu-item {
+  text-decoration: none;
+}
+
+.menu-item-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-item-text small {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
 .menu-foot {
   margin-top: auto;
   padding: 14px 4px 0;
@@ -1795,4 +1845,25 @@ a {
   .screen {
     border-inline: 1px solid var(--line);
   }
+}
+
+.menu-foot .link-button {
+  align-self: flex-start;
+}
+
+.row-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Krátký popisek vedle širokého pole: popisek drží šířku, pole zabere zbytek. */
+.field-label.fixed {
+  flex: none;
+  white-space: nowrap;
+}
+
+.field .input.grow {
+  flex: 1;
+  min-width: 0;
 }

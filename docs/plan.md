@@ -31,7 +31,8 @@ změnit konfigurací v aplikaci.
 4. Zkouška nanečisto 7. 10. (dva telefony, letadlový režim, zabití aplikace).
 
 Do té doby jde všechno vyzkoušet v ukázkovém režimu
-(`?demo=1`, identita se přepíná v menu).
+(`?demo=1`, identita se přepíná v menu) nebo v testovací verzi po čtyřech
+dnech (`?demo=4dny`, odkaz je i v menu ostrého turnaje).
 
 ## 1. Cíl a hranice
 
@@ -85,8 +86,8 @@ Podrobně v [`architecture.md`](architecture.md). Ve zkratce:
 | Týmy a pozice    | zástupné rozdělení ze seedu `[P]`                            | Admin → Hráči, Admin → kolo |
 | Flighty          | A1 A2 B1 B2 / A3 A4 B3 B4 `[P]`, start z jedničky            | Admin → kolo → Flighty      |
 | Lykia Links CR   | 74,7 (slope tabulka) `[P]`                                   | ruční přepis hracího HCP    |
-| Chybějící HCP    | Soldík, Jarin, Radek, Honza hrají s nulou a otazníkem        | Admin → Hráči               |
-| E-maily hráčů    | Mac `mac.kubecka@gmail.com`, Fery `bezdekf@gmail.com`        | Admin → Hráči               |
+| Chybějící HCP    | Soldík, Jarin, Vrbič, Honza hrají s nulou a otazníkem        | Admin → Hráči               |
+| E-maily hráčů    | Mac `mac.kubecka@gmail.com`, Ferry `bezdekf@gmail.com`       | Admin → Hráči               |
 
 ## 5. Rizika a opatření
 

@@ -5,11 +5,12 @@ import { EMPTY_STATE } from '../model/types'
 import { isFirebaseConfigured } from './firebase'
 import { createFireStore } from './fireStore'
 import { createLocalStore } from './localStore'
-import type { Store, StoreMeta } from './store'
+import type { DemoVariant, Store, StoreMeta } from './store'
 
 /**
  * Výběr datové vrstvy:
  *   - vývoj (`import.meta.env.DEV`) nebo `?demo=1`  -> místní ukázkový režim
+ *   - `?demo=4dny`                                 -> testovací verze (vymyšlené 4 dny)
  *   - produkční build s konfigurací Firebase      -> Firestore
  *   - produkční build bez konfigurace             -> blokující hláška
  * Produkce bez konfigurace **nikdy** tiše nespadne na localStorage: hráči by
@@ -25,6 +26,22 @@ export function resolveDataMode(): DataMode {
   if (demo || import.meta.env.DEV)
     return isFirebaseConfigured() && !demo ? 'firestore' : 'local'
   return isFirebaseConfigured() ? 'firestore' : 'unconfigured'
+}
+
+/** Hodnota `?demo=`, která otevře testovací verzi místo prázdného ukázkového turnaje. */
+export const PREVIEW_PARAM = '4dny'
+
+export function demoVariant(): DemoVariant {
+  if (typeof window === 'undefined') return 'demo'
+  return new URLSearchParams(window.location.search).get('demo') === PREVIEW_PARAM
+    ? 'preview'
+    : 'demo'
+}
+
+/** Adresa testovací verze, nebo (`null`) ostrého turnaje - plné načtení stránky. */
+export function variantHref(variant: DemoVariant | null): string {
+  const base = import.meta.env.BASE_URL
+  return variant === 'preview' ? `${base}?demo=${PREVIEW_PARAM}` : base
 }
 
 export const TOURNAMENT_ID = import.meta.env.VITE_TOURNAMENT_ID || 'tc26'
@@ -59,7 +76,7 @@ export function DataProvider({
       store ??
       (resolveDataMode() === 'firestore'
         ? createFireStore(TOURNAMENT_ID)
-        : createLocalStore({ seed: true })),
+        : createLocalStore({ seed: true, variant: demoVariant() })),
     [store],
   )
   const [snapshot, setSnapshot] = useState<{ state: TournamentState; meta: StoreMeta }>({

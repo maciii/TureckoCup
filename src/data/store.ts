@@ -24,6 +24,12 @@ export interface Account {
 
 export type Role = 'admin' | 'writer' | 'visitor'
 
+/**
+ * Varianta místního režimu: `demo` je čerstvý turnaj ze seedu (vývoj, e2e,
+ * `?demo=1`), `preview` testovací verze s vymyšlenými čtyřmi dny (`?demo=4dny`).
+ */
+export type DemoVariant = 'demo' | 'preview'
+
 export interface StoreMeta {
   mode: StoreMode
   status: SyncStatus
@@ -36,6 +42,8 @@ export interface StoreMeta {
   role: Role
   /** Je SDK připravené otevřít přihlašovací okno? */
   authReady: boolean
+  /** Jen místní režim: která ukázková data běží. */
+  demo?: DemoVariant
 }
 
 export type Listener = (state: TournamentState, meta: StoreMeta) => void
@@ -50,6 +58,8 @@ export interface Store {
   dismissError(): void
   /** Ukázkový režim: přepnutí identity (admin / zapisovatel / visitor). */
   setDemoIdentity?(role: Role): void
+  /** Místní režim: zahodit změny a založit ukázková data znovu (testovací verze nová náhodná). */
+  resetDemo?(): void
   /** Log úprav kola, nejnovější první. */
   loadEdits(roundId: string, limit?: number): Promise<EditRecord[]>
 }

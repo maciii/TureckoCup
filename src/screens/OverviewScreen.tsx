@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useData } from '../data'
+import { useData, variantHref } from '../data'
 import { summarizeTournament } from '../evaluations/tournament'
 import { t } from '../i18n'
 import { navigate } from '../nav'
@@ -82,7 +82,15 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
       />
 
       <main className="content">
-        {meta.mode === 'local' && <p className="notice info">{t('app.demoMode')}</p>}
+        {meta.demo === 'preview' ? (
+          <p className="notice preview" data-testid="preview-notice">
+            {t('app.previewMode')}
+            <br />
+            <a href={variantHref(null)}>{t('app.toLive')} ›</a>
+          </p>
+        ) : (
+          meta.mode === 'local' && <p className="notice info">{t('app.demoMode')}</p>
+        )}
         {meta.error && (
           <p className="notice error" role="alert">
             {meta.error}

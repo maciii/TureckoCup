@@ -33,6 +33,7 @@ v [`docs/audit-golfgames.md`](docs/audit-golfgames.md).
 ```bash
 npm install
 npm run dev        # http://localhost:5173/?demo=1 - ukázkový režim bez Firebase
+                   # http://localhost:5173/?demo=4dny - testovací verze po 4 dnech
 npm run check      # typy + testy + formát; tohle musí projít před commitem
 npm run test:e2e   # Playwright: iPhone 13, iPhone SE, Pixel 7, Galaxy S9+
                    # (bez WebKitu: PW_CHROMIUM=cesta k Chromiu, iOS profily pak v Chromiu)
@@ -73,7 +74,7 @@ npm run test:e2e:live # kouřový test živé aplikace https://turecko-cup.web.a
 7. **Zápisy se neawaitují.** Offline promise nedoběhne; stav dává
    `hasPendingWrites`, odmítnutí rules se zachytí z promise do `meta.error`.
 8. **Produkce bez konfigurace Firebase nikdy nespadne na localStorage.**
-   Ukázkový režim jen ve vývoji nebo s `?demo=1`.
+   Ukázkový režim jen ve vývoji nebo s `?demo=1` (testovací verze `?demo=4dny`).
 9. **Nic placeného.** Firebase jen na Sparku (i Hosting), repozitář soukromý.
 10. **Texty jen v `src/i18n/cs.ts`**, barvy jen přes CSS proměnné (schéma je
     jen světlé, žádné `#hex` v komponentách), komentáře vysvětlují proč.
@@ -125,4 +126,8 @@ rules/           testy firestore.rules v emulátoru
 - **Pořadí jamek je per flight** (`flightStartHole`). Přenos banku ve Skins
   jde po pořadí hraní, ne po číslech jamek - evaluace používají `holeOrder()`.
 - **Číslo jamky v UI je `hole + 1`**, klíč v mapě je `String(hole)`.
+- **Testovací verze (`?demo=4dny`) je jen raw skóre a konfigurace**
+  z `src/data/preview.ts` - výsledky počítají stejné evaluace jako ostrý
+  turnaj. Nová hra nebo volba hry patří i do některého dne testovací verze,
+  ať jde vyzkoušet, než se nastaví naostro.
 - **`noUncheckedIndexedAccess` je zapnuté** - indexování vrací `T | undefined`.

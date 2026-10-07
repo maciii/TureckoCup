@@ -3,6 +3,32 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.6.0] – 2026-10-07
+
+### Přidáno
+
+- **Testovací verze** na https://turecko-cup.web.app/?demo=4dny (odkaz
+  v menu): vymyšlený turnaj po čtyřech dnech. Tři kola dohraná, čtvrté
+  rozehrané (flight 2 na 15. jamce), páté naplánované. Každý den jiné hry:
+  Stableford netto, brutto i s 90 % allowance, Skins ve flightu, přes všech
+  osm, brutto, bez přenosu i jen na přední devítce, Team Skins s přenosem,
+  bez něj i na zadní devítce za 2 body, duely pozic netto, brutto, jamkovkou
+  i na body a four-ball dvojic. Jiné pozice, odpaliště, ruční HCP a start
+  druhého flightu z desítky. Dá se v ní zapisovat i měnit hry; všechno
+  zůstává jen v prohlížeči, menu umí vylosovat nová data.
+- Admin může u hry změnit **název** a **rozsah jamek** (např. jen přední
+  devítka). Popisek hry ve výsledcích rozsah ukazuje.
+
+### Opraveno
+
+- Zápis otevřený přímo odkazem (nebo po načtení stránky) skočí na jamku, kde
+  flight je. Dřív se uložila jamka 1 dřív, než dorazila data, a zůstala.
+- Změna druhu hry zahodí vlastní název původní hry; týmový zápas dostane
+  dvojice z flightů, jinak by nic nevyhodnotil.
+- Popisek Skins přes všech osm už netvrdí „ve flightu“; strany týmového
+  zápasu se v nastavení ukazují po zápasech.
+- Seed: přezdívky Ferry a Vrbič jako v ostrém turnaji.
+
 ## [0.5.1] – 2026-10-07
 
 ### Opraveno

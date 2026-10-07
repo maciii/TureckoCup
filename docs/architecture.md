@@ -76,8 +76,18 @@ zapisovateli, stejně jako rules.
 | Adapter           | Kdy                                  | Jak                                                                  |
 | ----------------- | ------------------------------------ | -------------------------------------------------------------------- |
 | `localStore.ts`   | `import.meta.env.DEV` nebo `?demo=1` | localStorage + `storage` event (2 záložky = 2 flighty), falešná role |
+| `localStore.ts`   | `?demo=4dny` (varianta `preview`)    | totéž s vlastními klíči `tc26.preview.*`, data z `preview.ts`        |
 | `fireStore.ts`    | produkční build s `VITE_FIREBASE_*`  | `onSnapshot` na turnaj/hráče/kola, `writeBatch` z `opToWrites`       |
 | (bez konfigurace) | produkční build bez secrets          | blokující hláška „Turnaj není připojený“, nikdy tichý localStorage   |
+
+**Testovací verze** (`?demo=4dny`, `src/data/preview.ts`) je vymyšlený turnaj
+po čtyřech dnech: kola 1-3 dohraná, 4 rozehrané (flight 2 na 15. jamce),
+5 plánované. Každý den má jinou sadu her (všech pět druhů, netto i brutto,
+allowance, rozsah jamek, přenos banku, různé bodování), jiné pozice,
+odpaliště, ruční HCP i startovní jamku. Skóre losuje deterministický
+generátor z pevného semínka, takže všichni na odkazu vidí totéž; menu umí
+vylosovat nová data. Ukládá se jen raw skóre a konfigurace jako v ostrém
+turnaji. V hlavičce každé obrazovky je štítek „Test“.
 
 Zápis skóre je vždy jedna buňka: `update(rounds/r1, { 'scores.p3.7': 5,
 lastEdit })` plus záznam do `edits`. Zápisy se **neawaitují** - offline promise
