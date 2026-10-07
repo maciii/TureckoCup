@@ -100,7 +100,9 @@ test('přihlášení Googlem je připravené', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Přihlásit se Googlem' })).toBeEnabled({
     timeout: 30_000,
   })
-  await expect(page.getByRole('button', { name: /Nemám Google účet/ })).toBeVisible()
+  // Přihlásit se smějí jen hráči a admin: žádné anonymní přihlášení.
+  await expect(page.getByText(/Přihlas se Google účtem, který má admin/)).toBeVisible()
+  await expect(page.getByRole('button', { name: /Nemám Google účet/ })).toHaveCount(0)
   expect(errors()).toEqual([])
 })
 
