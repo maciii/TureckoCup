@@ -38,17 +38,26 @@ test('aplikace je připojená a visitor vidí turnaj', async ({ page }) => {
   expect(errors()).toEqual([])
 })
 
-test('PWA: manifest, service worker a hlavičky cache', async ({ page, request }) => {
-  const manifest = await request.get('/manifest.webmanifest')
-  expect(manifest.ok()).toBe(true)
-  expect((await manifest.json()).name).toBe('Turecko Cup 26')
-
-  const sw = await request.get('/sw.js')
-  expect(sw.ok()).toBe(true)
-  expect(sw.headers()['cache-control']).toContain('no-cache')
-
+test('PWA: manifest, service worker a hlavičky cache', async ({ page }) => {
   await page.goto('/')
   await page.waitForSelector('.screen')
+  // Stahuje se v prohlížeči stejně jako na telefonu (a přes stejnou síť),
+  // ne HTTP klientem testovacího běhu.
+  const files = await page.evaluate(async () => {
+    const manifest = await fetch('/manifest.webmanifest', { cache: 'no-store' })
+    const sw = await fetch('/sw.js', { cache: 'no-store' })
+    return {
+      manifestOk: manifest.ok,
+      name: manifest.ok ? ((await manifest.json()) as { name?: string }).name : null,
+      swOk: sw.ok,
+      swCache: sw.headers.get('cache-control') ?? '',
+    }
+  })
+  expect(files.manifestOk).toBe(true)
+  expect(files.name).toBe('Turecko Cup 26')
+  expect(files.swOk).toBe(true)
+  expect(files.swCache).toContain('no-cache')
+
   const active = await page.evaluate(async () => {
     if (!('serviceWorker' in navigator)) return 'unsupported'
     const registration = await Promise.race([
@@ -58,6 +67,41 @@ test('PWA: manifest, service worker a hlavičky cache', async ({ page, request }
     return registration?.active ? 'active' : 'none'
   })
   expect(active).toBe('active')
+})
+
+test('všech pět kol jde otevřít a mají scorekartu', async ({ page }) => {
+  const errors = collectErrors(page)
+  await page.goto('/')
+  await page.waitForSelector('.screen')
+  await expect(page.getByText('Načítám…')).toHaveCount(0, { timeout: 30_000 })
+  test.skip(
+    !(await page.locator('.score-hero').first().isVisible()),
+    'Turnaj ještě není založený',
+  )
+  for (let number = 1; number <= 5; number += 1) {
+    await page.goto(`/#/round/r${number}`)
+    await expect(
+      page.getByRole('heading', { level: 1, name: new RegExp(`Kolo ${number}`) }),
+    ).toBeVisible()
+    await page.getByRole('button', { name: 'Scorekarta' }).click()
+    // Dva flighty, každý se svou tabulkou.
+    await expect(page.locator('table.scorecard').first()).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+  }
+  expect(errors()).toEqual([])
+})
+
+test('přihlášení Googlem je připravené', async ({ page }) => {
+  const errors = collectErrors(page)
+  await page.goto('/#/admin')
+  await page.waitForSelector('.screen')
+  // Tlačítko se odemkne, až se načte přihlašovací SDK (preloadAuth). Když
+  // zůstane „Připravuji přihlášení…“, popup na iPhonu nepůjde otevřít.
+  await expect(page.getByRole('button', { name: 'Přihlásit se Googlem' })).toBeEnabled({
+    timeout: 30_000,
+  })
+  await expect(page.getByRole('button', { name: /Nemám Google účet/ })).toBeVisible()
+  expect(errors()).toEqual([])
 })
 
 test('ukázkový režim běží i na produkci', async ({ page }) => {
