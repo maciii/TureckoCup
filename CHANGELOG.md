@@ -3,6 +3,14 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.4.1] – 2026-10-07
+
+### Přidáno
+
+- Adresa aplikace https://turecko-cup.web.app v dokumentaci.
+- Kouřový test živé aplikace po každém nasazení (`npm run test:e2e:live`,
+  iPhone ve WebKitu a Android): jen čtení, ostrou databázi nemění.
+
 ## [0.4.0] – 2026-10-06
 
 ### Změněno

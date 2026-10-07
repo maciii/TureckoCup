@@ -6,14 +6,14 @@ Googlem a databázi Firestore. Repozitář může zůstat soukromý. Tenhle post
 musí udělat administrátor ručně, vývoj k Firebase přístup nemá. Zabere asi
 30 minut.
 
-Adresa aplikace pro turnaj: **`https://<id-projektu>.web.app`** - id projektu
-ukáže konzole Firebase v kroku 1 (např. `turecko-cup-26`). Vlastní doména až
+Adresa aplikace pro turnaj: **https://turecko-cup.web.app** (projekt Firebase
+`turecko-cup`). Vlastní doména až
 po turnaji, změna adresy by všem zrušila instalaci PWA i přihlášení.
 
 ## 1. Projekt Firebase
 
 1. https://console.firebase.google.com → **Add project** → název např.
-   `turecko-cup-26`. Google Analytics vypnout.
+   `turecko-cup`. Google Analytics vypnout.
 2. Plán nechat **Spark**. Blaze nikdy nezapínat.
 
 ## 2. Přihlášení
@@ -21,8 +21,8 @@ po turnaji, změna adresy by všem zrušila instalaci PWA i přihlášení.
 1. Build → **Authentication** → Get started.
 2. Sign-in method → **Google** → Enable → vyplnit support e-mail → Save.
 3. Sign-in method → **Anonymous** → Enable (záloha pro hráče bez Google účtu).
-4. Settings → **Authorized domains**: domény `<id-projektu>.web.app`
-   a `<id-projektu>.firebaseapp.com` tam Firebase přidá sám, nic se
+4. Settings → **Authorized domains**: domény `turecko-cup.web.app`
+   a `turecko-cup.firebaseapp.com` tam Firebase přidá sám, nic se
    nedoplňuje.
 
 ## 3. Databáze
@@ -57,7 +57,7 @@ po turnaji, změna adresy by všem zrušila instalaci PWA i přihlášení.
 GitHub nasazuje pod servisním účtem, který smí jen nahrávat Hosting.
 
 1. Build → **Hosting** → Get started → průvodce proklikat (CLI kroky
-   přeskočit). Tím vznikne web `<id-projektu>.web.app`.
+   přeskočit). Tím vznikne web `turecko-cup.web.app`.
 2. https://console.cloud.google.com/iam-admin/serviceaccounts → nahoře
    vybrat projekt Firebase → **Create service account** → název
    `github-deploy` → Create and continue.
@@ -85,11 +85,11 @@ GitHub nasazuje pod servisním účtem, který smí jen nahrávat Hosting.
    nebo jakýkoli push do `main`. Krok „Kontrola konfigurace Firebase“ v logu
    vypíše u každé hodnoty „vyplněno“ nebo „CHYBÍ“; nasazení samo hlásí
    chybějící `FIREBASE_SERVICE_ACCOUNT`.
-3. Po zeleném běhu je aplikace na `https://<id-projektu>.web.app`.
+3. Po zeleném běhu je aplikace na `https://turecko-cup.web.app`.
 
 ## 7. První spuštění
 
-1. Otevřít `https://<id-projektu>.web.app` v Safari (iPhone) nebo
+1. Otevřít `https://turecko-cup.web.app` v Safari (iPhone) nebo
    Chrome (Android).
 2. **Nejdřív přidat na plochu** (Sdílet → Přidat na plochu), **pak** otevřít
    z ikony a teprve tam se přihlásit. Instalovaná PWA má na iOS oddělené
@@ -122,9 +122,9 @@ doménu aplikace. Udělat **oba kroky**, jinak Google přihlášení odmítne:
 
 1. https://console.cloud.google.com/apis/credentials → OAuth 2.0 Client IDs →
    **Web client (auto created by Google Service)** → Authorized redirect
-   URIs → Add URI → `https://<id-projektu>.web.app/__/auth/handler` → Save.
+   URIs → Add URI → `https://turecko-cup.web.app/__/auth/handler` → Save.
 2. V GitHubu změnit secret `VITE_FIREBASE_AUTH_DOMAIN` na
-   `<id-projektu>.web.app` a spustit workflow znovu.
+   `turecko-cup.web.app` a spustit workflow znovu.
 
 ## 8. Zkouška nanečisto (doporučeno 7. 10.)
 

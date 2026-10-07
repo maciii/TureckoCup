@@ -20,8 +20,10 @@
     "src",
     "e2e",
     "e2e-firebase",
+    "e2e-live",
     "vite.config.ts",
     "playwright.config.ts",
-    "playwright.firebase.config.ts"
+    "playwright.firebase.config.ts",
+    "playwright.live.config.ts"
   ]
 }

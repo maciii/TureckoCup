@@ -38,6 +38,7 @@ npm run test:e2e   # Playwright: iPhone 13, iPhone SE, Pixel 7, Galaxy S9+
                    # (bez WebKitu: PW_CHROMIUM=cesta k Chromiu, iOS profily pak v Chromiu)
 npm run test:e2e:firebase # Playwright proti emulátorům Auth + Firestore (Java)
 npm run test:rules # security rules v emulátoru Firestoru (Java)
+npm run test:e2e:live # kouřový test živé aplikace https://turecko-cup.web.app (jen čtení)
 ```
 
 1. Změna kódu.
@@ -48,7 +49,10 @@ npm run test:rules # security rules v emulátoru Firestoru (Java)
 3. `npm run check` musí projít.
 4. Zvedni verzi (`node scripts/bump-version.mjs`, `npm run bump:minor`) a
    zapiš věcnou změnu do `CHANGELOG.md`.
-5. Nasazuje se **z `main`** na Firebase Hosting (`https://<id-projektu>.web.app`).
+5. Nasazuje se **z `main`** na Firebase Hosting: **https://turecko-cup.web.app**
+   (projekt Firebase `turecko-cup`). Tam se aplikace i testuje: po každém
+   nasazení CI pustí `npm run test:e2e:live` (jen čtení, nic nezapisuje).
+   Ručně testovat proti živé databázi jen s vědomím admina - zápisy jsou ostré.
 
 ## Nepřekročitelná pravidla
 
@@ -94,6 +98,7 @@ firestore.rules  pravidla zabezpečení (nasazují se ručně z konzole)
 firebase.json    Hosting (hlavičky cache), emulátory
 e2e/             Playwright v ukázkovém režimu: smoke, play, admin, layout
 e2e-firebase/    Playwright proti emulátorům: produkční datová vrstva a rules
+e2e-live/        Playwright proti živé aplikaci, jen čtení (visitor, PWA, ukázkový režim)
 rules/           testy firestore.rules v emulátoru
 ```
 

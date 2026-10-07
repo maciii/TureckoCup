@@ -156,3 +156,6 @@ se bere ze Secrets (viz [`setup-firebase.md`](setup-firebase.md)).
   přihlášení skutečným popupem emulátoru, lokálně
   (bez přístupu na apis.google.com) přes testovací háček ve vývojovém buildu
 - `rules/` - testy `firestore.rules` v emulátoru (`npm run test:rules`), i v CI
+- `e2e-live/` - kouřový test živé aplikace https://turecko-cup.web.app po každém
+  nasazení (`npm run test:e2e:live`): visitor bez přihlášení, PWA manifest
+  a service worker, ukázkový režim. Jen čte, ostrou databázi nemění

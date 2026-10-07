@@ -65,7 +65,7 @@ Vazba účet → hráč by byla složitost bez užitku.
 **Proč.** Změna indexu nebo pozice třetí den nesmí přepočítat odehraná kola.
 Allowance per hra, aby stejné kolo mohlo mít Skins na 100 % a zápas na 90 %.
 
-## 7. Hosting na Firebase (`<id-projektu>.web.app`) bez vlastní domény
+## 7. Hosting na Firebase (`turecko-cup.web.app`) bez vlastní domény
 
 **Kontext.** GitHub Pages zdarma jen pro veřejné repozitáře. Veřejný kód by
 ukázal e-maily adminů a soupisku hráčů.

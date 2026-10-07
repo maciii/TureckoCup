@@ -24,7 +24,7 @@ změnit konfigurací v aplikaci.
    Google + Anonymous přihlášení, Firestore `eur3`, **vložit
    `firestore.rules`**, Hosting, servisní účet pro nasazení a pět secrets
    do GitHubu.
-2. Otevřít `https://<id-projektu>.web.app` v nainstalované PWA,
+2. Otevřít `https://turecko-cup.web.app` v nainstalované PWA,
    přihlásit se jako `mac.kubecka@gmail.com`, **Inicializovat turnaj**.
 3. Doplnit oprávnění zapisovatelů (e-maily), HCP indexy čtyř hráčů, týmy,
    pozice, odpaliště a flighty; rozhodnout formát hlavní hry (kap. 4).
@@ -36,7 +36,7 @@ Do té doby jde všechno vyzkoušet v ukázkovém režimu
 ## 1. Cíl a hranice
 
 Samostatná PWA (`maciii/TureckoCup`, soukromý repozitář, vlastní Firebase
-projekt, Firebase Hosting na `<id-projektu>.web.app`). Golfgames se nemění; převzaté jsou WHS výpočty,
+projekt, Firebase Hosting na `turecko-cup.web.app`). Golfgames se nemění; převzaté jsou WHS výpočty,
 infrastruktura, design a mechanika přihlášení. Mimo rozsah: peníze,
 angličtina, ruční zadávání hřišť, extra body v UI.
 

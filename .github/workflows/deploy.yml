@@ -158,3 +158,31 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: ${{ secrets.VITE_FIREBASE_PROJECT_ID || vars.VITE_FIREBASE_PROJECT_ID }}
           channelId: live
+
+  # Kouřový test živé aplikace po nasazení (jen čtení, nic nezapisuje).
+  live:
+    needs: deploy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+    env:
+      HOME: /root
+      LIVE_URL: https://turecko-cup.web.app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Živá aplikace na iPhonu a Androidu
+        run: npm run test:e2e:live
+      - name: Záznam selhání
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-results
+          path: test-results
+          retention-days: 7
