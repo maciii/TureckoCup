@@ -39,7 +39,8 @@ interface TournamentRound {
   defaultTeeId, playerTees       // odpaliště kola a výjimky per hráč
   playerIndex                    // snímek HCP indexů pro tohle kolo
   courseHandicapOverride         // ruční přepis hracího HCP (celé rány)
-  flights: [{ players, startHole }]
+  flights: [{ players, startHole, teeTime }]  // teeTime 'HH:MM', místní čas
+  departure                      // hromadný odjezd 'HH:MM'; '' / chybí = nezadaný
   positions: { A: [p..], B: [p..] }   // snímek pozic 1-4
   games: GameConfig[]            // viz games.md
   scores: { p1: { '0': 4, '1': 0 } }  // mapa hráč -> jamka -> rány; 0 = zvednuto
@@ -130,8 +131,15 @@ u hráče jen proto, že zapsal první.
 
 Hash v adrese (`#/round/r1`, `#/play/r1/0`, `#/admin`): zpět/swipe funguje
 přes historii prohlížeče, obrazovka přežije obnovení stránky (service worker
-v režimu `autoUpdate` umí aplikaci znovu načíst) a odkaz jde poslat. Právě
-zapisovaná jamka se drží v localStorage per kolo a flight.
+v režimu `autoUpdate` umí aplikaci znovu načíst) a odkaz jde poslat. Jamka,
+na kterou zapisovatel sám přešel, se drží v localStorage per kolo a flight;
+jinak zápis otevře jamku, kde flight je (`flightCurrentHole`).
+
+Program kola (`src/model/schedule.ts`): úvodní obrazovka ukazuje odjezd
+a tee time „nejbližšího kola“ - rozehraného, jinak prvního plánovaného od
+dneška. Časy jsou text `HH:MM` v místním čase Beleku, bez časových pásem.
+Zápis ukazuje štítek s postupem druhého flightu; klepnutí otevře jen náhled
+(rány proti paru, Stableford, Team Skins), zápis zůstává u vlastního flightu.
 
 ## Build a nasazení
 

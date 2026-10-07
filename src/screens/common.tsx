@@ -229,6 +229,17 @@ export function formatDate(iso: string): string {
   return date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' })
 }
 
+/** Datum s dnem v týdnu (`čt 8. 10.`) - program kola se čte podle dnů. */
+export function formatDay(iso: string): string {
+  const date = new Date(`${iso}T12:00:00`)
+  if (Number.isNaN(date.getTime())) return iso
+  return date.toLocaleDateString('cs-CZ', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'numeric',
+  })
+}
+
 /**
  * Datum a čas záznamu (log úprav): den, měsíc, hodiny a minuty. Opravy z rána
  * po kole se tak dají odlišit od zápisu během hry. Neplatná hodnota = `null`.

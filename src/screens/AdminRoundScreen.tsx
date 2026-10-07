@@ -23,6 +23,12 @@ import {
   teamOf,
 } from '../model/round'
 import { GAME_KINDS } from '../evaluations'
+import {
+  TEE_INTERVAL_MINUTES,
+  addMinutes,
+  isValidTime,
+  normalizeTime,
+} from '../model/schedule'
 import { playerIdByEmail } from '../model/access'
 import { navigate } from '../nav'
 import {
@@ -63,7 +69,37 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
     const entry = SEED_SCHEDULE.find((s) => s.number === round!.number)
     if (!entry) return
     const config = seedRoundConfig(entry, state.players)
-    patch({ ...config, status: round!.status })
+    // Program kola (odjezd, tee time) není konfigurace her - zadané časy
+    // zůstávají, seed je jen doplní, kde chybí.
+    const departure = round!.departure ?? config.departure
+    patch({
+      ...config,
+      status: round!.status,
+      flights: config.flights.map((flight, index) => {
+        const teeTime = round!.flights[index]?.teeTime ?? flight.teeTime
+        const { teeTime: _seedTime, ...rest } = flight
+        return teeTime ? { ...rest, teeTime } : rest
+      }),
+      ...(departure ? { departure } : {}),
+    })
+  }
+
+  /**
+   * Tee time flightu. Flighty jdou vždy za sebou, takže čas doplní
+   * následujícím flightům, které ho ještě nemají (po 10 minutách).
+   */
+  function setTeeTime(index: number, value: string) {
+    patch({
+      flights: round!.flights.map((flight, i) => {
+        if (i === index) return { ...flight, teeTime: value }
+        if (i > index && isValidTime(value) && !isValidTime(flight.teeTime))
+          return {
+            ...flight,
+            teeTime: addMinutes(value, (i - index) * TEE_INTERVAL_MINUTES),
+          }
+        return flight
+      }),
+    })
   }
 
   function clearScores() {
@@ -170,9 +206,17 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
           </div>
         </Section>
 
-        <Section title={t('admin.flights')} accent="navy">
+        <Section title={t('admin.flights')} note={t('admin.scheduleHint')} accent="navy">
           {noWriters && <p className="notice error">{t('admin.noWriters')}</p>}
           <div className="px">
+            <div className="field">
+              <span className="field-label">{t('schedule.departure')}</span>
+              <TimeInput
+                label={t('schedule.departure')}
+                value={round.departure ?? ''}
+                onCommit={(departure) => patch({ departure })}
+              />
+            </div>
             {round.flights.map((flight, index) => (
               <div
                 key={index}
@@ -211,6 +255,14 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
                       ))}
                     </select>
                   </span>
+                </div>
+                <div className="field-row">
+                  <span className="hint">{t('schedule.teeTime')}</span>
+                  <TimeInput
+                    label={t('admin.teeTimeOf', { number: index + 1 })}
+                    value={flight.teeTime ?? ''}
+                    onCommit={(time) => setTeeTime(index, time)}
+                  />
                 </div>
                 <div className="chip-row">
                   {round.playerIds.map((id) => {
@@ -495,6 +547,60 @@ function newGame(round: TournamentRound): GameConfig {
     teamPoints: { win: 1, halve: 0.5 },
     ...(kind === 'team-match' ? { sides: flightSides(round) } : {}),
   }
+}
+
+/**
+ * Pole pro čas programu. Systémové `type="time"` ukazuje podle jazyka
+ * prohlížeče i 12hodinový formát a na úzkém displeji se nevejde; tady se
+ * píše `1550` nebo `15:50`. Ukládá se až po dopsání (opuštění pole, Enter),
+ * jinak by rozepsané `155` uložilo 01:55 a dopočítalo tee time dalšího flightu.
+ */
+function TimeInput({
+  label,
+  value,
+  onCommit,
+}: {
+  label: string
+  value: string
+  onCommit: (value: string) => void
+}) {
+  const [draft, setDraft] = useState(value)
+  const [editing, setEditing] = useState(false)
+  useEffect(() => {
+    if (!editing) setDraft(value)
+  }, [value, editing])
+
+  function commit() {
+    setEditing(false)
+    if (draft.trim() === '') {
+      if (value !== '') onCommit('')
+      return
+    }
+    const time = normalizeTime(draft)
+    if (time === null) {
+      setDraft(value)
+      return
+    }
+    setDraft(time)
+    if (time !== value) onCommit(time)
+  }
+
+  return (
+    <input
+      className="input sm num time-input"
+      inputMode="numeric"
+      autoComplete="off"
+      placeholder={t('admin.timePlaceholder')}
+      aria-label={label}
+      value={draft}
+      onFocus={() => setEditing(true)}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') e.currentTarget.blur()
+      }}
+    />
+  )
 }
 
 function HandicapRow({

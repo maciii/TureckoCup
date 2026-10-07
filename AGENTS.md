@@ -87,7 +87,7 @@ npm run test:e2e:live # kouřový test živé aplikace https://turecko-cup.web.a
 
 ```
 src/
-  model/        typy turnaje (types.ts) a čisté výpočty nad kolem (round.ts)
+  model/        typy turnaje (types.ts), výpočty nad kolem (round.ts), program kola (schedule.ts)
   scoring/      WHS vzorce (whs.ts), jádro skins a jamkovky - čisté, bez modelu
   evaluations/  hry: stableford, skins, duels; registr index.ts; agregace tournament.ts
   data/         ops.ts (operace + překlad na Firestore), localStore, fireStore, auth, seed

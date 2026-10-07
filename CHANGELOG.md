@@ -3,6 +3,27 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.7.0] – 2026-10-07
+
+### Přidáno
+
+- **Program kola na úvodní obrazovce:** hromadný odjezd na hřiště a tee time
+  obou flightů se jmény hráčů pro rozehrané nebo nejbližší kolo. Seznam kol
+  ukazuje tee time u kol, která se teprve hrají.
+- Admin zadá odjezd a tee time v nastavení kola (oddíl Flighty). Stačí napsat
+  `1550` nebo `15:50`; čas prvního flightu doplní druhému o 10 minut později.
+  První kolo má v seedu odjezd 14:45 a tee time 15:50 a 16:00.
+- **Náhled druhého flightu při zápisu:** štítek „Flight 2 · 7. jamka“ otevře
+  přehled hráčů druhého flightu (jamky, rány proti paru, Stableford) a stav
+  Team Skins; tlačítko „Zpět na flight 1“ vrátí na rozepsanou jamku.
+- Výběr flightu v zápisu ukazuje tee time; testovací verze má program
+  u všech kol.
+
+### Opraveno
+
+- Na úzkém Androidu se v zápisu zkracovala jména („Ja…“), když se u nich
+  ukazovaly body za jamku. Body jsou teď pod jménem vedle součtu ran.
+
 ## [0.6.0] – 2026-10-07
 
 ### Přidáno

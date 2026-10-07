@@ -288,19 +288,37 @@ interface DayPlan {
   secondStart?: number
   /** Kolik jamek po pořadí hraní má flight zapsáno; poslední může být rozepsaná. */
   played?: [number, number]
+  /** Program kola: hromadný odjezd a tee time obou flightů. */
+  departure: string
+  teeTimes: [string, string]
 }
 
 const DAY_PLANS: DayPlan[] = [
-  { status: 'finished', tee: 'yellow' },
-  { status: 'finished', tee: 'white', playerTees: { p8: 'red' } },
-  { status: 'finished', tee: 'white', secondStart: 9 },
+  { status: 'finished', tee: 'yellow', departure: '14:45', teeTimes: ['15:50', '16:00'] },
+  {
+    status: 'finished',
+    tee: 'white',
+    playerTees: { p8: 'red' },
+    departure: '07:30',
+    teeTimes: ['08:40', '08:50'],
+  },
+  // Start z jedničky i z desítky ve stejnou chvíli.
+  {
+    status: 'finished',
+    tee: 'white',
+    secondStart: 9,
+    departure: '08:10',
+    teeTimes: ['09:20', '09:20'],
+  },
   {
     status: 'live',
     tee: 'yellow',
     courseHandicapOverride: { p8: 30 },
     played: [18, 14],
+    departure: '11:15',
+    teeTimes: ['12:30', '12:40'],
   },
-  { status: 'planned', tee: 'white' },
+  { status: 'planned', tee: 'white', departure: '08:00', teeTimes: ['09:10', '09:20'] },
 ]
 
 export function previewRounds(seed = PREVIEW_SEED): TournamentRound[] {
@@ -321,12 +339,15 @@ export function previewRounds(seed = PREVIEW_SEED): TournamentRound[] {
         {
           players: [positions.A[0]!, positions.A[1]!, positions.B[0]!, positions.B[1]!],
           startHole: 0,
+          teeTime: plan.teeTimes[0],
         },
         {
           players: [positions.A[2]!, positions.A[3]!, positions.B[2]!, positions.B[3]!],
           startHole: plan.secondStart ?? 0,
+          teeTime: plan.teeTimes[1],
         },
       ],
+      departure: plan.departure,
       games: day <= 4 ? gamesForDay(day, positions) : base.games,
       ...emptyScoreMaps(base.playerIds),
     }

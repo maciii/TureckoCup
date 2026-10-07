@@ -252,3 +252,19 @@ test('obrazovky testovací verze se vejdou na displej', async ({ page }) => {
   }
   expect(errors()).toEqual([])
 })
+
+test('jména v zápisu se vejdou i s body za jamku', async ({ page }) => {
+  await setPreviewIdentity(page, 'writer')
+  // Dohraný flight: u každého hráče svítí body poslední jamky.
+  await openPreview(page, '#/play/r4/0')
+  await expect(page.locator('.player-total .player-mark').first()).toBeVisible()
+  const names = await page.locator('.player-name-text').evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      text: node.textContent ?? '',
+      clipped: node.scrollWidth > node.clientWidth + 1,
+    })),
+  )
+  expect(names).toHaveLength(4)
+  for (const name of names)
+    expect(name.clipped, `oříznuté jméno ${name.text}`).toBe(false)
+})

@@ -1,6 +1,7 @@
 import type {
   Access,
   CourseSnapshot,
+  Flight,
   GameConfig,
   Player,
   PlayerId,
@@ -123,8 +124,25 @@ const COURSES: Record<string, CourseSnapshot> = {
 
 export const SEED_COURSES: CourseSnapshot[] = Object.values(COURSES)
 
-const SCHEDULE: { number: number; date: string; courseId: string; tee: string }[] = [
-  { number: 1, date: '2026-10-08', courseId: 'aspendos', tee: 'white' },
+interface ScheduleEntry {
+  number: number
+  date: string
+  courseId: string
+  tee: string
+  /** Hromadný odjezd a tee time flightů, pokud už jsou známé. */
+  departure?: string
+  teeTimes?: string[]
+}
+
+const SCHEDULE: ScheduleEntry[] = [
+  {
+    number: 1,
+    date: '2026-10-08',
+    courseId: 'aspendos',
+    tee: 'white',
+    departure: '14:45',
+    teeTimes: ['15:50', '16:00'],
+  },
   { number: 2, date: '2026-10-09', courseId: 'lykia-links', tee: 'white' },
   { number: 3, date: '2026-10-10', courseId: 'belek-carya', tee: 'white' },
   { number: 4, date: '2026-10-12', courseId: 'kaya-palazzo-golf-course', tee: 'white' },
@@ -175,22 +193,21 @@ function positionsOf(players: Player[]): Record<TeamId, PlayerId[]> {
 }
 
 /** Flighty: A1, A2, B1, B2 a A3, A4, B3, B4 - oba týmy v každém flightu. */
-function flightsOf(players: Player[]) {
+function flightsOf(players: Player[], teeTimes: string[] = []): Flight[] {
   const positions = positionsOf(players)
-  return [
-    {
-      players: [positions.A[0], positions.A[1], positions.B[0], positions.B[1]].flatMap(
-        (id) => (id ? [id] : []),
-      ),
-      startHole: 0,
-    },
-    {
-      players: [positions.A[2], positions.A[3], positions.B[2], positions.B[3]].flatMap(
-        (id) => (id ? [id] : []),
-      ),
-      startHole: 0,
-    },
+  const slots = [
+    [positions.A[0], positions.A[1], positions.B[0], positions.B[1]],
+    [positions.A[2], positions.A[3], positions.B[2], positions.B[3]],
   ]
+  return slots.map((ids, index) => {
+    const teeTime = teeTimes[index]
+    return {
+      players: ids.flatMap((id) => (id ? [id] : [])),
+      startHole: 0,
+      // Bez času klíč chybí - Firestore neumí undefined.
+      ...(teeTime ? { teeTime } : {}),
+    }
+  })
 }
 
 export function emptyScoreMaps(playerIds: PlayerId[]) {
@@ -206,7 +223,7 @@ export function emptyScoreMaps(playerIds: PlayerId[]) {
 
 /** Konfigurace kola ze seedu - bez skóre, to se při re-seedu nikdy nesahá. */
 export function seedRoundConfig(
-  entry: (typeof SCHEDULE)[number],
+  entry: ScheduleEntry,
   players: Player[],
 ): Omit<TournamentRound, 'scores' | 'bonuses'> {
   const course = COURSES[entry.courseId]
@@ -222,9 +239,10 @@ export function seedRoundConfig(
     playerTees: {},
     playerIndex: Object.fromEntries(players.map((p) => [p.id, p.handicapIndex])),
     courseHandicapOverride: {},
-    flights: flightsOf(players),
+    flights: flightsOf(players, entry.teeTimes),
     positions: positionsOf(players),
     games: defaultGames(),
+    ...(entry.departure ? { departure: entry.departure } : {}),
   }
 }
 

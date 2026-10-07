@@ -145,6 +145,8 @@ export interface Flight {
   players: PlayerId[]
   /** Index první hrané jamky (0 = jednička, 9 = desítka). */
   startHole: number
+  /** Tee time flightu, místní čas `HH:MM`; chybí nebo `''` = zatím nezadaný. */
+  teeTime?: string
 }
 
 /** Klíč jamky v mapách skóre: `'0'`..`'17'`. */
@@ -191,6 +193,11 @@ export interface TournamentRound {
   bonuses: BonusMap
   lastEdit?: LastEdit
   note?: string
+  /**
+   * Hromadný odjezd na hřiště, místní čas `HH:MM`; chybí nebo `''` =
+   * nezadaný (prázdný text místo mazání pole, `updateRound` pole nemaže).
+   */
+  departure?: string
 }
 
 /** Záznam v logu úprav `rounds/{rid}/edits`. */

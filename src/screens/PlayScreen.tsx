@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { demoVariant, useData } from '../data'
 import { evaluateRound } from '../evaluations'
+import type { EvaluationResult } from '../evaluations'
 import { skinsAtStake } from '../evaluations/skins'
 import { stablefordAt } from '../evaluations/stableford'
 import { t } from '../i18n'
 import { MAX_STROKES, PICKED_UP } from '../model/types'
-import type { PlayerId } from '../model/types'
+import type { Flight, PlayerId, TournamentRound } from '../model/types'
+import { flightProgress, isValidTime } from '../model/schedule'
 import {
   flightCurrentHole,
   grossTotal,
@@ -23,7 +25,7 @@ import {
   strokesReceived,
 } from '../model/round'
 import { goBack, navigate } from '../nav'
-import { Header, ScoreMark, TeamBadge, formatToPar, sideLabel } from './common'
+import { Header, Pill, ScoreMark, TeamBadge, formatToPar, sideLabel } from './common'
 import Scorecard from './Scorecard'
 
 const LONG_PRESS_MS = 500
@@ -48,6 +50,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
   const flightEntry = flight !== null ? round?.flights[flight] : undefined
   const [hole, setHole] = useState<number>(() => readHole(roundId, flight) ?? 0)
   const [showCard, setShowCard] = useState(false)
+  const [otherFlight, setOtherFlight] = useState<number | null>(null)
   const longPress = useRef<{ timer: number | null; fired: boolean }>({
     timer: null,
     fired: false,
@@ -98,6 +101,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
                 <span className="row-main">
                   <span className="option-title">
                     {t('round.flight', { number: index + 1 })}
+                    {isValidTime(entry.teeTime) && ` · ${entry.teeTime}`}
                   </span>
                   <span className="option-meta">
                     {sideLabel(state.players, entry.players)}
@@ -171,6 +175,11 @@ export default function PlayScreen({ roundId, flight }: Props) {
     // na aktuální jamku by se jinak uložil dřív, než dorazí data.
     saveHole(roundId, flight, next)
   }
+
+  // Ostatní flighty: jen náhled stavu, zápis zůstává u vlastního flightu.
+  const others = round.flights
+    .map((entry, index) => ({ entry, index }))
+    .filter(({ index, entry }) => index !== flight && entry.players.length > 0)
 
   const flightSkins = skinsResult ? skinsAtStake(skinsResult, hole) : 0
   const teamSkins = teamSkinsResult ? skinsAtStake(teamSkinsResult, hole) : 0
@@ -248,7 +257,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
           <span className="sep">·</span>
           {t('play.holeOf', { index: orderIndex + 1, count })}
         </div>
-        {(skinsResult || teamSkinsResult || meta.pending > 0) && (
+        {(skinsResult || teamSkinsResult || meta.pending > 0 || others.length > 0) && (
           <div className="stakes">
             {skinsResult && (
               <span className={`tag${flightSkins > 1 ? ' hot' : ''}`}>
@@ -265,6 +274,17 @@ export default function PlayScreen({ roundId, flight }: Props) {
                 {t('play.pendingWrites', { count: meta.pending })}
               </span>
             )}
+            {others.map(({ entry, index }) => (
+              <button
+                key={index}
+                type="button"
+                className="tag other-flight"
+                onClick={() => setOtherFlight(index)}
+              >
+                {t('round.flight', { number: index + 1 })} · {progressLabel(round, entry)}{' '}
+                ›
+              </button>
+            ))}
           </div>
         )}
 
@@ -297,11 +317,6 @@ export default function PlayScreen({ roundId, flight }: Props) {
                     {!hasHandicap(round, playerId) && (
                       <span className="player-mark warn">?</span>
                     )}
-                    {points !== undefined && (
-                      <span className="player-mark gain">
-                        {t('play.pointsShort', { count: points })}
-                      </span>
-                    )}
                   </span>
                   <span className="player-total">
                     {completed === 0 && holesPlayed(round, playerId) === 0
@@ -310,6 +325,12 @@ export default function PlayScreen({ roundId, flight }: Props) {
                           strokes: grossTotal(round, playerId),
                           toPar: formatToPar(toPar),
                         })}
+                    {/* Body jamky pod jménem, ne vedle: na úzkém displeji by jméno ořízly. */}
+                    {points !== undefined && (
+                      <span className="player-mark gain">
+                        {t('play.pointsShort', { count: points })}
+                      </span>
+                    )}
                   </span>
                 </div>
                 <button
@@ -383,6 +404,16 @@ export default function PlayScreen({ roundId, flight }: Props) {
         </div>
       </footer>
 
+      {otherFlight !== null && round.flights[otherFlight] && (
+        <OtherFlightSheet
+          round={round}
+          flightIndex={otherFlight}
+          ownFlight={flight ?? 0}
+          results={results}
+          onClose={() => setOtherFlight(null)}
+        />
+      )}
+
       {showCard && (
         <div
           className="sheet-backdrop"
@@ -409,6 +440,99 @@ export default function PlayScreen({ roundId, flight }: Props) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+/** Krátký stav flightu: nezačal, na které jamce je, nebo dohrál. */
+function progressLabel(round: TournamentRound, flight: Flight): string {
+  const progress = flightProgress(round, flight)
+  if (progress.finished) return t('play.otherFinished')
+  if (progress.started === 0) return t('play.otherNotStarted')
+  return t('play.otherAtHole', { number: progress.hole + 1 })
+}
+
+/**
+ * Náhled na jiný flight: kde je, jak si hráči vedou (rány proti paru,
+ * Stableford) a stav Team Skins. Zavření vrací zpět na vlastní flight
+ * i jamku - zápis se nepřepíná, aby nikdo omylem nepsal do cizího flightu.
+ */
+function OtherFlightSheet({
+  round,
+  flightIndex,
+  ownFlight,
+  results,
+  onClose,
+}: {
+  round: TournamentRound
+  flightIndex: number
+  ownFlight: number
+  results: EvaluationResult[]
+  onClose: () => void
+}) {
+  const { state } = useData()
+  const flight = round.flights[flightIndex]!
+  const stableford = results.find((r) => r.game.kind === 'individual-stableford')
+  const teamSkins = results.find((r) => r.game.kind === 'team-skins')
+  const rows = [...flight.players].sort((a, b) => {
+    const pa = stableford?.rows.find((r) => r.id === a)?.value ?? 0
+    const pb = stableford?.rows.find((r) => r.id === b)?.value ?? 0
+    return pb - pa
+  })
+  return (
+    <div className="sheet-backdrop" onClick={onClose} role="presentation">
+      <div
+        className="sheet"
+        role="dialog"
+        aria-label={t('round.flight', { number: flightIndex + 1 })}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="eyebrow" style={{ marginTop: 4 }}>
+          {t('round.flight', { number: flightIndex + 1 })} ·{' '}
+          {progressLabel(round, flight)}
+          {isValidTime(flight.teeTime) && ` · ${flight.teeTime}`}
+        </p>
+        <ul className="list other-flight-list">
+          {rows.map((id) => {
+            const player = state.players.find((p) => p.id === id)
+            const completed = holesCompleted(round, id)
+            const toPar = grossTotal(round, id) - parForPlayedHoles(round, id)
+            const points = stableford?.rows.find((r) => r.id === id)?.value
+            return (
+              <li key={id} className="row">
+                <span className="row-main">
+                  <span className="row-title">
+                    <TeamBadge teamId={player?.teamId} />
+                    <span>{shortName(state.players, id)}</span>
+                  </span>
+                  <span className="row-meta">
+                    {holesPlayed(round, id) === 0
+                      ? t('play.noScore')
+                      : `${t('common.holes', { count: completed })} · ${formatToPar(toPar)}`}
+                  </span>
+                </span>
+                {stableford && points !== undefined && (
+                  <Pill teamId={player?.teamId}>
+                    {t('play.pointsShort', { count: points })}
+                  </Pill>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+        {teamSkins && (
+          <p className="hint center px" style={{ paddingTop: 8 }}>
+            {t('games.team-skins.name')}: A{' '}
+            {teamSkins.rows.find((r) => r.id === 'A')?.value ?? 0} : B{' '}
+            {teamSkins.rows.find((r) => r.id === 'B')?.value ?? 0}
+          </p>
+        )}
+        <div className="px" style={{ paddingTop: 14 }}>
+          <button type="button" className="btn primary" onClick={onClose}>
+            {t('play.backToFlight', { number: ownFlight + 1 })}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

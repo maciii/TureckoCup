@@ -1867,3 +1867,64 @@ a.menu-item {
   flex: 1;
   min-width: 0;
 }
+
+/* Časy programu: úzké pole, číslice pod sebou zarovnané. */
+.time-input {
+  width: 112px;
+  flex: none;
+  text-align: center;
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.player-total .player-mark {
+  margin-left: 6px;
+}
+
+/* --- program kola na přehledu ------------------------------------------------ */
+
+.schedule {
+  margin-top: 6px;
+}
+
+.schedule-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 0 var(--pad) 4px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.schedule-title .chev {
+  color: var(--ink-3);
+}
+
+.schedule-time {
+  flex: none;
+  min-width: 64px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fairway-deep);
+}
+
+/* Náhled druhého flightu: štítek jako ostatní, ale klikací. */
+.tag.other-flight {
+  background: var(--track);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.other-flight-list .row-title {
+  gap: 6px;
+}

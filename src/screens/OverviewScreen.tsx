@@ -14,10 +14,14 @@ import {
   StatusChip,
   TeamBadge,
   formatDate,
+  formatDay,
   playerLabel,
   teamName,
 } from './common'
 import GameResults from './GameResults'
+import type { TournamentRound } from '../model/types'
+import { shortName } from '../model/round'
+import { hasSchedule, isValidTime, localToday, upcomingRound } from '../model/schedule'
 import MenuSheet from './MenuSheet'
 
 /**
@@ -37,6 +41,8 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
     live ??
     [...state.rounds].reverse().find((r) => r.status === 'finished') ??
     state.rounds.find((r) => r.status === 'planned')
+  const today = localToday()
+  const upcoming = upcomingRound(state.rounds, today)
   const currentEvaluation = summary.rounds.find((entry) => entry.round.id === current?.id)
   const teams = state.tournament?.teams
   const played = summary.rounds.filter((e) => e.round.status === 'finished').length
@@ -115,6 +121,10 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
           <p className="hint center px">{t('app.noTournamentHint')}</p>
         )}
 
+        {upcoming && hasSchedule(upcoming) && (
+          <RoundSchedule round={upcoming} today={today} />
+        )}
+
         {state.tournament && (
           <>
             <div className="divider" />
@@ -169,6 +179,9 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
                       </span>
                       <span className="row-meta">
                         {formatDate(round.date)}
+                        {round.status !== 'finished' &&
+                          isValidTime(round.flights[0]?.teeTime) &&
+                          ` · ${round.flights[0]!.teeTime}`}
                         {' · '}
                         <StatusChip status={round.status} />
                       </span>
@@ -312,5 +325,61 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
         />
       )}
     </div>
+  )
+}
+
+/**
+ * Program nejbližšího kola: hromadný odjezd a tee time obou flightů se
+ * jmény. Hráči ho potřebují po ruce, proto je hned pod hlavičkou turnaje.
+ */
+function RoundSchedule({ round, today }: { round: TournamentRound; today: string }) {
+  const { state } = useData()
+  const label =
+    round.status === 'live'
+      ? t('schedule.live')
+      : round.date === today
+        ? t('schedule.today')
+        : t('schedule.next')
+  return (
+    <section className="schedule" aria-label={t('schedule.teeTime')}>
+      <p className="eyebrow">
+        {label} · {formatDay(round.date)}
+      </p>
+      <button
+        type="button"
+        className="schedule-title"
+        onClick={() => navigate({ view: 'round', roundId: round.id })}
+      >
+        {t('round.title', { number: round.number })} · {round.course.name}
+        <span className="chev">›</span>
+      </button>
+      <ul className="list schedule-list">
+        {isValidTime(round.departure) && (
+          <li className="row">
+            <span className="schedule-time">{round.departure}</span>
+            <span className="row-main">
+              <span className="row-title">{t('schedule.departure')}</span>
+            </span>
+          </li>
+        )}
+        {round.flights.map((flight, index) => (
+          <li key={index} className="row">
+            <span className="schedule-time">
+              {isValidTime(flight.teeTime) ? flight.teeTime : t('common.dash')}
+            </span>
+            <span className="row-main">
+              <span className="row-title">
+                {t('round.flight', { number: index + 1 })}
+                {flight.startHole > 0 &&
+                  ` · ${t('schedule.startHole', { number: flight.startHole + 1 })}`}
+              </span>
+              <span className="row-meta">
+                {flight.players.map((id) => shortName(state.players, id)).join(', ')}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
