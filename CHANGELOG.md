@@ -3,6 +3,16 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.5.1] – 2026-10-07
+
+### Opraveno
+
+- **Rychlé úpravy nastavení za sebou se neztrácejí.** Snímek ze serveru, který
+  dorazil mezi úpravou a jejím odesláním, vrátil obrazovku do starého stavu
+  a další úprava pozic, her nebo flightů pak přepsala tu první. Neodeslané
+  změny se teď na každý snímek použijí znovu, dokud je Firestore nepotvrdí.
+- Kouřový test živé aplikace počítá s přihlášením bez anonymní varianty.
+
 ## [0.5.0] – 2026-10-07
 
 ### Změněno

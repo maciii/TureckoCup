@@ -114,7 +114,27 @@ function materialize(
 }
 
 export function createFireStore(tournamentId: string): Store {
+  /** Stav, jak ho naposledy poslal Firestore (včetně jeho vlastní latency compensation). */
+  let server: TournamentState = EMPTY_STATE
+  /**
+   * Operace, které uživatel udělal, ale Firestore je ještě nepotvrdil.
+   * Zobrazený stav = `server` + tyhle operace. Bez toho by snímek, který
+   * dorazí mezi okamžitou odezvou a předáním zápisu SDK, vrátil obrazovku do
+   * starého stavu a další úprava (pozice, hry - posílají se celé) by se
+   * spočítala ze starých dat a první změnu přepsala. Operace jsou
+   * idempotentní (nastavují hodnoty), opakované použití nevadí.
+   */
+  let unsent: Op[] = []
   let state: TournamentState = EMPTY_STATE
+
+  function recompute(): void {
+    state = unsent.reduce((acc, op) => applyOp(acc, op), server)
+  }
+
+  function setServer(update: (current: TournamentState) => TournamentState): void {
+    server = update(server)
+    recompute()
+  }
   let status: SyncStatus = 'loading'
   let pendingWrites = 0
   let error: string | null = null
@@ -154,10 +174,10 @@ export function createFireStore(tournamentId: string): Store {
       root,
       { includeMetadataChanges: true },
       (snapshot) => {
-        state = {
-          ...state,
+        setServer((current) => ({
+          ...current,
           tournament: snapshot.exists() ? decodeTournament(snapshot.data()) : null,
-        }
+        }))
         status = snapshot.metadata.fromCache && !navigator.onLine ? 'offline' : 'synced'
         notify()
       },
@@ -167,13 +187,13 @@ export function createFireStore(tournamentId: string): Store {
     module.onSnapshot(
       module.collection(root, 'players'),
       (snapshot) => {
-        state = {
-          ...state,
+        setServer((current) => ({
+          ...current,
           players: snapshot.docs
             .map((entry) => decodePlayer(entry.data()))
             .filter((p): p is Player => p !== null)
             .sort((a, b) => a.order - b.order),
-        }
+        }))
         notify()
       },
       (err) => fail(t('error.loadPlayers', { reason: err.message })),
@@ -186,13 +206,13 @@ export function createFireStore(tournamentId: string): Store {
         pendingWrites = snapshot.docs.filter(
           (entry) => entry.metadata.hasPendingWrites,
         ).length
-        state = {
-          ...state,
+        setServer((current) => ({
+          ...current,
           rounds: snapshot.docs
             .map((entry) => decodeRound(entry.data()))
             .filter((r): r is TournamentRound => r !== null)
             .sort((a, b) => a.number - b.number),
-        }
+        }))
         notify()
       },
       (err) => fail(t('error.loadRounds', { reason: err.message })),
@@ -227,7 +247,7 @@ export function createFireStore(tournamentId: string): Store {
   function updateRole(db: Firestore, module: FirestoreModule): void {
     accessUnsub?.()
     accessUnsub = null
-    state = { ...state, access: null }
+    setServer((current) => ({ ...current, access: null }))
     if (!account) {
       role = 'visitor'
       notify()
@@ -249,7 +269,7 @@ export function createFireStore(tournamentId: string): Store {
           rejectAccount(signedIn)
           return
         }
-        state = { ...state, access: data }
+        setServer((current) => ({ ...current, access: data }))
         role = identity.role
         account = { ...signedIn, playerId: identity.playerId }
         notify()
@@ -315,9 +335,16 @@ export function createFireStore(tournamentId: string): Store {
         fail(opProblemMessage(problem))
         return
       }
-      // Optimistická odezva: snímek z cache dorazí vzápětí a stav přepíše.
-      state = applyOp(state, op)
+      // Okamžitá odezva; operace se znovu použije na každý snímek, dokud ji
+      // Firestore nepotvrdí nebo neodmítne (viz `unsent`).
+      unsent.push(op)
+      recompute()
       notify()
+      const settle = () => {
+        unsent = unsent.filter((pending) => pending !== op)
+        recompute()
+        notify()
+      }
 
       const signedIn = account
       const reject = (err: unknown) => {
@@ -368,9 +395,15 @@ export function createFireStore(tournamentId: string): Store {
             else batch.set(ref, data)
           }
           // Záměrně bez await v UI: offline by promise nikdy nedoběhl.
-          batch.commit().catch(reject)
+          batch.commit().then(settle, (err: unknown) => {
+            settle()
+            reject(err)
+          })
         })
-        .catch(reject)
+        .catch((err: unknown) => {
+          settle()
+          reject(err)
+        })
     },
     prepareSignIn() {
       void preloadAuth()
