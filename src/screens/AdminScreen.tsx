@@ -4,6 +4,7 @@ import {
   SEED_ACCESS,
   SEED_PLAYERS,
   SEED_TOURNAMENT,
+  playerIndexOps,
   rosterOutdated,
   rosterSnapshot,
   seedRounds,
@@ -438,7 +439,12 @@ function PlayerEditor({ player }: { player: Player }) {
         placeholder={t('admin.handicapIndex')}
         value={hcp}
         onChange={(e) => setHcp(e.target.value)}
-        onBlur={() => patch({ handicapIndex: parseHandicapIndex(hcp) })}
+        onBlur={() => {
+          const value = parseHandicapIndex(hcp)
+          if (value === player.handicapIndex) return
+          // Index patří hráči; kola, která nejsou dohraná, ho dostanou rovnou.
+          for (const op of playerIndexOps(state, player.id, value)) store.dispatch(op)
+        }}
         aria-label={t('admin.handicapIndex')}
         style={{
           width: 64,

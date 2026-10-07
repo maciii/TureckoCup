@@ -3,6 +3,15 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.9.1] – 2026-10-07
+
+### Změněno
+
+- **HCP index se nastavuje jen u hráče.** Kola, která nejsou dohraná, ho
+  dostanou hned; index změněný v tabulce Hrací HCP u kola se zapíše i hráči
+  a do dalších nedohraných kol. Dohraná kola si nechají svůj snímek.
+  Tlačítko „Promítnout soupisku“ zůstává pro změnu týmu nebo pozice.
+
 ## [0.9.0] – 2026-10-07
 
 ### Přidáno

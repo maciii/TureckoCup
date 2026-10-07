@@ -124,17 +124,36 @@ test('hry kola jde přidat a odebrat bez ztráty skóre', async ({ page }) => {
   await expect(page.locator('.player-row').nth(0).locator('.mark')).toHaveText('4')
 })
 
-test('změna HCP v soupisce se na jedno klepnutí promítne do plánovaných kol', async ({
+test('HCP index patří hráči: kola si ho berou samy a změna v kole ho vrátí hráči', async ({
   page,
 }) => {
   const errors = collectErrors(page)
   await open(page, '#/admin')
+  // Soldík dostane index 18,8 v soupisce - bez dalšího klepání je ve všech kolech.
+  await page.getByLabel('HCP index').nth(3).fill('18,8')
+  await page.getByLabel('HCP index').nth(3).blur()
   await expect(
     page.getByRole('button', { name: 'Promítnout soupisku do plánovaných kol' }),
   ).toHaveCount(0)
-  // Soldík dostane index 18,8.
-  await page.getByLabel('HCP index').nth(3).fill('18,8')
-  await page.getByLabel('HCP index').nth(3).blur()
+  await open(page, '#/admin/round/r2')
+  const soldikIndex = page
+    .locator('.table-plain tbody tr')
+    .nth(3)
+    .locator('input')
+    .first()
+  await expect(soldikIndex).toHaveValue('18.8')
+
+  // Změna u kola 2 se zapíše hráči i do kola 5.
+  await soldikIndex.fill('19,1')
+  await soldikIndex.blur()
+  await open(page, '#/admin')
+  await expect(page.getByLabel('HCP index').nth(3)).toHaveValue('19,1')
+  await open(page, '#/admin/round/r5')
+  await expect(soldikIndex).toHaveValue('19.1')
+
+  // Změna týmu se promítá tlačítkem (složení flightů a pozice).
+  await open(page, '#/admin')
+  await page.getByLabel('Tým').nth(3).selectOption('A')
   await expect(
     page.locator('.notice.info', { hasText: 'plánovaných kol má starší HCP' }),
   ).toBeVisible()
@@ -144,10 +163,6 @@ test('změna HCP v soupisce se na jedno klepnutí promítne do plánovaných kol
   await expect(
     page.getByRole('button', { name: 'Promítnout soupisku do plánovaných kol' }),
   ).toHaveCount(0)
-  await open(page, '#/admin/round/r2')
-  await expect(
-    page.locator('.table-plain tbody tr').nth(3).locator('input').first(),
-  ).toHaveValue('18.8')
   expect(errors()).toEqual([])
 })
 

@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useData } from '../data'
 import type { EditRecord } from '../model/types'
-import { SEED_SCHEDULE, defaultGames, seedRoundConfig } from '../data/seed'
+import {
+  SEED_SCHEDULE,
+  defaultGames,
+  playerIndexOps,
+  seedRoundConfig,
+} from '../data/seed'
 import { dynamicKey, localizedTeeName, t } from '../i18n'
 import { BONUSES, defaultBonusValues } from '../model/bonuses'
 import type {
@@ -659,7 +664,7 @@ function HandicapRow({
   playerId: PlayerId
   onPatch: (patch: Partial<TournamentRound>) => void
 }) {
-  const { state } = useData()
+  const { state, store } = useData()
   const override = round.courseHandicapOverride[playerId]
   const [draft, setDraft] = useState(override === undefined ? '' : String(override))
   const indexValue = round.playerIndex[playerId]
@@ -679,14 +684,19 @@ function HandicapRow({
     onPatch({ courseHandicapOverride: next })
   }
 
+  /**
+   * Index zadaný u kola se zapíše i hráči a do dalších nedohraných kol -
+   * admin ho nevyplňuje u každého kola znovu. Dohrané kolo si nechá svůj.
+   */
   function saveIndex() {
-    const value = index.trim() === '' ? null : Number.parseFloat(index.replace(',', '.'))
-    onPatch({
-      playerIndex: {
-        ...round.playerIndex,
-        [playerId]: value === null || Number.isNaN(value) ? null : value,
-      },
-    })
+    const parsed = index.trim() === '' ? null : Number.parseFloat(index.replace(',', '.'))
+    const value = parsed === null || Number.isNaN(parsed) ? null : parsed
+    if (value === (round.playerIndex[playerId] ?? null)) return
+    if (round.status === 'finished') {
+      onPatch({ playerIndex: { ...round.playerIndex, [playerId]: value } })
+      return
+    }
+    for (const op of playerIndexOps(state, playerId, value)) store.dispatch(op)
   }
 
   return (

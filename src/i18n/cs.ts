@@ -232,7 +232,7 @@ export const cs = {
   'admin.reseedRound': 'Obnovit konfiguraci kola ze seedu (skóre zůstane)',
   'admin.players': 'Hráči',
   'admin.playersHint':
-    'HCP index, tým a pozice. Změna se promítne do dalších kol, odehraná kola si nesou svůj snímek.',
+    'HCP index, tým a pozice. Index se zapíše do všech nedohraných kol; změnu týmu nebo pozice promítneš tlačítkem u kol. Dohraná kola si nesou svůj snímek.',
   'admin.rosterOutdated': {
     one: '{count} plánované kolo má starší HCP, týmy nebo pozice než soupiska.',
     few: '{count} plánovaná kola mají starší HCP, týmy nebo pozice než soupiska.',
@@ -251,7 +251,7 @@ export const cs = {
   'admin.playerTee': 'Odpaliště hráče',
   'admin.courseHandicap': 'Hrací HCP',
   'admin.courseHandicapHint':
-    'Z indexu a normy odpaliště. Ruční hodnota má přednost; prázdné pole ji zruší.',
+    'Index je z hráče a zadaný tady se zapíše i hráči a do dalších nedohraných kol. Hrací HCP je z indexu a normy odpaliště; ruční hodnota má přednost, prázdné pole ji zruší.',
   'admin.override': 'Ručně',
   'admin.flights': 'Flighty',
   'admin.noWriters':

@@ -9,7 +9,9 @@ import type {
   TeamId,
   Tournament,
   TournamentRound,
+  TournamentState,
 } from '../model/types'
+import type { Op } from './ops'
 import aspendos from '../courses/aspendos.json'
 import lykia from '../courses/lykia-links.json'
 import carya from '../courses/belek-carya.json'
@@ -271,6 +273,29 @@ export function rosterSnapshot(
       return current ? { ...current, players: flight.players } : flight
     }),
   }
+}
+
+/**
+ * HCP index se nastavuje u hráče a kola si ho berou samy: změna u hráče
+ * (v soupisce i v tabulce Hrací HCP u kola) se zapíše hráči a do všech kol,
+ * která nejsou dohraná. Dohraná kola si nechají snímek, s nímž se hrála.
+ */
+export function playerIndexOps(
+  state: TournamentState,
+  playerId: PlayerId,
+  value: number | null,
+): Op[] {
+  const ops: Op[] = [{ kind: 'updatePlayer', playerId, patch: { handicapIndex: value } }]
+  for (const round of state.rounds) {
+    if (round.status === 'finished') continue
+    if ((round.playerIndex[playerId] ?? null) === value) continue
+    ops.push({
+      kind: 'updateRound',
+      roundId: round.id,
+      patch: { playerIndex: { ...round.playerIndex, [playerId]: value } },
+    })
+  }
+  return ops
 }
 
 /** Liší se snímek kola od aktuální soupisky (HCP, pozice, flighty, režim HCP)? */

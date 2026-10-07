@@ -5,6 +5,7 @@ import {
   SEED_ACCESS,
   SEED_PLAYERS,
   SEED_TOURNAMENT,
+  playerIndexOps,
   rosterOutdated,
   rosterSnapshot,
   seedRounds,
@@ -305,5 +306,38 @@ describe('snímek soupisky do kola', () => {
         opToWrites({ kind: 'updateRound', roundId: 'r1', patch }, meta, state),
       ),
     ).toBeNull()
+  })
+})
+
+describe('HCP index patří hráči', () => {
+  it('změna indexu jde hráči a všem nedohraným kolům, dohrané si nechají snímek', () => {
+    let state = initial()
+    state = applyOp(state, {
+      kind: 'updateRound',
+      roundId: 'r1',
+      patch: { status: 'finished' },
+    })
+    state = applyOp(state, {
+      kind: 'updateRound',
+      roundId: 'r2',
+      patch: { status: 'live' },
+    })
+    const ops = playerIndexOps(state, 'p4', 18.8)
+    expect(ops[0]).toEqual({
+      kind: 'updatePlayer',
+      playerId: 'p4',
+      patch: { handicapIndex: 18.8 },
+    })
+    expect(
+      ops.slice(1).map((op) => (op.kind === 'updateRound' ? op.roundId : '')),
+    ).toEqual(['r2', 'r3', 'r4', 'r5'])
+    for (const op of ops) state = applyOp(state, op)
+    expect(state.players.find((p) => p.id === 'p4')?.handicapIndex).toBe(18.8)
+    expect(state.rounds[0]!.playerIndex.p4).toBeNull()
+    expect(state.rounds[1]!.playerIndex.p4).toBe(18.8)
+    expect(state.rounds[4]!.playerIndex.p4).toBe(18.8)
+    // Beze změny se nic nepíše.
+    expect(playerIndexOps(state, 'p4', 18.8)).toHaveLength(1)
+    for (const op of ops) expect(findInvalidWrite(opToWrites(op, meta, state))).toBeNull()
   })
 })
