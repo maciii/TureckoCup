@@ -68,7 +68,8 @@ npm run test:e2e:live # kouřový test živé aplikace https://turecko-cup.web.a
    nezapsáno. Jamka je ve hře rozhodnutá, až když zapsali všichni, kterých se
    týká (flight u Skins, všech osm u Team Skins).
 5. **Kolo si nese snímek**: hřiště, HCP indexy, odpaliště, pozice. Změna
-   u hráče se promítne do dalších kol, odehraná kola se nepřepočítají.
+   u hráče se do plánovaných kol promítne tlačítkem v adminu
+   (`rosterSnapshot`), odehraná kola se nepřepočítají.
 6. **Žádné pole v poli** v datech - Firestore ho odmítne. Flighty a strany
    jsou seznamy objektů, skóre je mapa map.
 7. **Zápisy se neawaitují.** Offline promise nedoběhne; stav dává

@@ -233,6 +233,14 @@ export const cs = {
   'admin.players': 'Hráči',
   'admin.playersHint':
     'HCP index, tým a pozice. Změna se promítne do dalších kol, odehraná kola si nesou svůj snímek.',
+  'admin.rosterOutdated': {
+    one: '{count} plánované kolo má starší HCP, týmy nebo pozice než soupiska.',
+    few: '{count} plánovaná kola mají starší HCP, týmy nebo pozice než soupiska.',
+    other: '{count} plánovaných kol má starší HCP, týmy nebo pozice než soupiska.',
+  },
+  'admin.rosterSync': 'Promítnout soupisku do plánovaných kol',
+  'admin.rosterSyncHint':
+    'Přepíše HCP indexy, pozice a složení flightů podle soupisky. Odpaliště, hry, časy, ruční HCP i rozehraná kola zůstanou.',
   'admin.handicapIndex': 'HCP index',
   'admin.handicapIndexShort': 'Index',
   'admin.courseHandicapShort': 'HCP',

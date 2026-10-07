@@ -123,3 +123,30 @@ test('hry kola jde přidat a odebrat bez ztráty skóre', async ({ page }) => {
   await open(page, '#/play/r1/0')
   await expect(page.locator('.player-row').nth(0).locator('.mark')).toHaveText('4')
 })
+
+test('změna HCP v soupisce se na jedno klepnutí promítne do plánovaných kol', async ({
+  page,
+}) => {
+  const errors = collectErrors(page)
+  await open(page, '#/admin')
+  await expect(
+    page.getByRole('button', { name: 'Promítnout soupisku do plánovaných kol' }),
+  ).toHaveCount(0)
+  // Soldík dostane index 18,8.
+  await page.getByLabel('HCP index').nth(3).fill('18,8')
+  await page.getByLabel('HCP index').nth(3).blur()
+  await expect(
+    page.locator('.notice.info', { hasText: 'plánovaných kol má starší HCP' }),
+  ).toBeVisible()
+  await page
+    .getByRole('button', { name: 'Promítnout soupisku do plánovaných kol' })
+    .click()
+  await expect(
+    page.getByRole('button', { name: 'Promítnout soupisku do plánovaných kol' }),
+  ).toHaveCount(0)
+  await open(page, '#/admin/round/r2')
+  await expect(
+    page.locator('.table-plain tbody tr').nth(3).locator('input').first(),
+  ).toHaveValue('18.8')
+  expect(errors()).toEqual([])
+})

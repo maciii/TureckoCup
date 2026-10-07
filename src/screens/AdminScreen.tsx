@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useData } from '../data'
-import { SEED_ACCESS, SEED_PLAYERS, SEED_TOURNAMENT, seedRounds } from '../data/seed'
+import {
+  SEED_ACCESS,
+  SEED_PLAYERS,
+  SEED_TOURNAMENT,
+  rosterOutdated,
+  rosterSnapshot,
+  seedRounds,
+} from '../data/seed'
 import { t } from '../i18n'
 import { POSITIONS, TEAM_IDS } from '../model/types'
 import type { PickupRule, Player, TeamId } from '../model/types'
@@ -143,6 +150,7 @@ export default function AdminScreen() {
         {isAdmin && state.tournament && (
           <>
             <Section title={t('admin.rounds')} accent="fairway">
+              <RosterSync />
               <div className="list">
                 {state.rounds.map((round) => (
                   <button
@@ -197,6 +205,42 @@ export default function AdminScreen() {
           </>
         )}
       </main>
+    </div>
+  )
+}
+
+/**
+ * Kola si nesou snímek soupisky (pravidlo 5). Když admin změní HCP, tým nebo
+ * pozici hráče, plánovaná kola tu změnu nedostanou samy - tady je na jedno
+ * klepnutí promítne do všech, která ještě nezačala.
+ */
+function RosterSync() {
+  const { state, store } = useData()
+  const outdated = state.rounds.filter(
+    (round) => round.status === 'planned' && rosterOutdated(round, state.players),
+  )
+  if (outdated.length === 0) return null
+  return (
+    <div className="px stack" style={{ paddingBottom: 10 }}>
+      <p className="notice info" style={{ margin: 0, width: '100%' }}>
+        {t('admin.rosterOutdated', { count: outdated.length })}
+      </p>
+      <button
+        type="button"
+        className="btn primary"
+        onClick={() => {
+          for (const round of outdated) {
+            store.dispatch({
+              kind: 'updateRound',
+              roundId: round.id,
+              patch: rosterSnapshot(round, state.players),
+            })
+          }
+        }}
+      >
+        {t('admin.rosterSync')}
+      </button>
+      <p className="hint">{t('admin.rosterSyncHint')}</p>
     </div>
   )
 }

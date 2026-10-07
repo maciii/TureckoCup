@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { EMPTY_STATE } from '../model/types'
-import type { TournamentState } from '../model/types'
-import { SEED_ACCESS, SEED_PLAYERS, SEED_TOURNAMENT, seedRounds } from './seed'
+import type { TournamentRound, TournamentState } from '../model/types'
+import {
+  SEED_ACCESS,
+  SEED_PLAYERS,
+  SEED_TOURNAMENT,
+  rosterOutdated,
+  rosterSnapshot,
+  seedRounds,
+} from './seed'
 import {
   DELETE_FIELD,
   applyOp,
@@ -249,5 +256,46 @@ describe('extra body', () => {
     state = applyOp(state, clear)
     expect(state.rounds[0]!.bonuses.p1).toEqual({})
     expect(opToWrites(clear, meta, state)[0]!.data['bonuses.p1.4']).toBe(DELETE_FIELD)
+  })
+})
+
+describe('snímek soupisky do kola', () => {
+  it('promítne HCP, pozice a flighty, ale nechá start, tee time, odpaliště i hry', () => {
+    const state = initial()
+    const round: TournamentRound = {
+      ...state.rounds[0]!,
+      defaultTeeId: 'yellow',
+      flights: [
+        { ...state.rounds[0]!.flights[0]!, startHole: 9, teeTime: '15:50' },
+        { ...state.rounds[0]!.flights[1]!, teeTime: '16:00' },
+      ],
+    }
+    expect(rosterOutdated(round, state.players)).toBe(false)
+    // Soldík dostane index a přejde do týmu A na pozici 1, Ota jde na trojku.
+    const players = state.players.map((p) =>
+      p.id === 'p4'
+        ? { ...p, handicapIndex: 18.8, teamId: 'A' as const, position: 1 as const }
+        : p.id === 'p3'
+          ? { ...p, position: 3 as const }
+          : p,
+    )
+    expect(rosterOutdated(round, players)).toBe(true)
+    const patch = rosterSnapshot(round, players)
+    expect(patch.playerIndex.p4).toBe(18.8)
+    expect(patch.positions.A[0]).toBe('p4')
+    expect(patch.flights[0]!.players).toContain('p4')
+    expect(patch.flights[0]!.startHole).toBe(9)
+    expect(patch.flights[0]!.teeTime).toBe('15:50')
+    expect(patch.flights[1]!.teeTime).toBe('16:00')
+    expect(Object.keys(patch)).toEqual(['playerIndex', 'positions', 'flights'])
+    const synced = applyOp(state, { kind: 'updateRound', roundId: 'r1', patch })
+    expect(
+      rosterOutdated({ ...synced.rounds[0]!, flights: patch.flights }, players),
+    ).toBe(false)
+    expect(
+      findInvalidWrite(
+        opToWrites({ kind: 'updateRound', roundId: 'r1', patch }, meta, state),
+      ),
+    ).toBeNull()
   })
 })

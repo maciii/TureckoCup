@@ -3,6 +3,17 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.8.1] – 2026-10-07
+
+### Přidáno
+
+- **Promítnout soupisku do plánovaných kol** (Admin → Kola): když se změní
+  HCP index, tým nebo pozice hráče, kola založená dřív to sama nedostanou
+  (nesou si snímek). Admin teď vidí upozornění, kolik plánovaných kol má
+  starší soupisku, a jedním klepnutím do nich promítne HCP indexy, pozice
+  a složení flightů. Odpaliště, hry, časy, ruční HCP i rozehraná kola
+  zůstanou - na rozdíl od „Obnovit konfiguraci kola ze seedu“.
+
 ## [0.8.0] – 2026-10-07
 
 ### Přidáno

@@ -246,6 +246,38 @@ export function seedRoundConfig(
   }
 }
 
+/**
+ * Snímek soupisky do kola: HCP indexy, pozice a složení flightů podle
+ * aktuálních hráčů. Startovní jamky a tee time flightů zůstávají, stejně
+ * jako odpaliště, hry a ruční přepisy - na rozdíl od „Obnovit ze seedu“
+ * se mění jen to, co opravdu plyne ze soupisky.
+ */
+export function rosterSnapshot(
+  round: TournamentRound,
+  players: Player[],
+): Pick<TournamentRound, 'playerIndex' | 'positions' | 'flights'> {
+  const fresh = flightsOf(players)
+  return {
+    playerIndex: Object.fromEntries(players.map((p) => [p.id, p.handicapIndex])),
+    positions: positionsOf(players),
+    flights: fresh.map((flight, index) => {
+      const current = round.flights[index]
+      return current ? { ...current, players: flight.players } : flight
+    }),
+  }
+}
+
+/** Liší se snímek kola od aktuální soupisky (HCP, pozice, flighty)? */
+export function rosterOutdated(round: TournamentRound, players: Player[]): boolean {
+  const fresh = rosterSnapshot(round, players)
+  const index = players.some((p) => (round.playerIndex[p.id] ?? null) !== p.handicapIndex)
+  const positions = JSON.stringify(fresh.positions) !== JSON.stringify(round.positions)
+  const flights =
+    JSON.stringify(fresh.flights.map((f) => f.players)) !==
+    JSON.stringify(round.flights.map((f) => f.players))
+  return index || positions || flights
+}
+
 export function seedRounds(players: Player[] = SEED_PLAYERS): TournamentRound[] {
   return SCHEDULE.map((entry) => ({
     ...seedRoundConfig(entry, players),
