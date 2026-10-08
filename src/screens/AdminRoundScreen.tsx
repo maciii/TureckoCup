@@ -35,6 +35,7 @@ import {
   normalizeTime,
 } from '../model/schedule'
 import { playerIdByEmail } from '../model/access'
+import { getBonus } from '../model/bonuses'
 import { navigate } from '../nav'
 import {
   Header,
@@ -448,6 +449,15 @@ function EditsLog({ roundId }: { roundId: string }) {
 
   const value = (v: number | null) =>
     v === null ? t('common.dash') : v === 0 ? t('common.pickedUp') : String(v)
+  // Změna extra bodů: značky bonusů (L, N, S…) místo ran.
+  const marks = (ids: string[]) =>
+    ids.length === 0
+      ? t('common.dash')
+      : ids.map((id) => getBonus(id)?.mark ?? id).join(' ')
+  const change = (edit: EditRecord) =>
+    edit.bonusTo
+      ? `★ ${marks(edit.bonusFrom ?? [])} → ${marks(edit.bonusTo)}`
+      : `${value(edit.from)} → ${value(edit.to)}`
 
   return (
     <Section
@@ -483,9 +493,7 @@ function EditsLog({ roundId }: { roundId: string }) {
                     {shortName(state.players, edit.playerId)} ·{' '}
                     {t('common.hole', { number: Number(edit.hole) + 1 })}
                   </td>
-                  <td className="num">
-                    {value(edit.from)} → {value(edit.to)}
-                  </td>
+                  <td className="num">{change(edit)}</td>
                   <td className="hint">{editorName(edit)}</td>
                 </tr>
               ))}

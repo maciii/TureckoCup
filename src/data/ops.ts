@@ -184,8 +184,11 @@ export function opToWrites(op: Op, meta: OpMeta, state: TournamentState): Write[
       ]
     }
     case 'setBonuses': {
-      // Stejná jedna buňka a lastEdit jako u skóre - rules to kontrolují stejně.
+      // Stejná jedna buňka, lastEdit i log úprav jako u skóre - extra body jsou
+      // surová data: z nich se počítají body a hry, a log říká, kdo je kdy přiznal.
       const key = holeKey(op.hole)
+      const round = state.rounds.find((r) => r.id === op.roundId)
+      const bonusFrom = round?.bonuses[op.playerId]?.[key] ?? []
       return [
         {
           path: ['rounds', op.roundId],
@@ -194,6 +197,24 @@ export function opToWrites(op: Op, meta: OpMeta, state: TournamentState): Write[
             [`bonuses.${op.playerId}.${key}`]:
               op.value.length === 0 ? DELETE_FIELD : [...op.value],
             lastEdit: { playerId: op.playerId, hole: key, by: meta.uid, at: SERVER_TIME },
+          },
+        },
+        {
+          path: ['rounds', op.roundId, 'edits'],
+          mode: 'set',
+          autoId: true,
+          data: {
+            playerId: op.playerId,
+            hole: key,
+            from: null,
+            to: null,
+            bonusFrom: [...bonusFrom],
+            bonusTo: [...op.value],
+            by: meta.uid,
+            ...(meta.email ? { byEmail: meta.email } : {}),
+            at: SERVER_TIME,
+            clientAt: meta.clientAt,
+            appVersion: meta.appVersion,
           },
         },
       ]

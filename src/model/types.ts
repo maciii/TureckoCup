@@ -252,8 +252,12 @@ export interface TournamentRound {
 export interface EditRecord {
   playerId: PlayerId
   hole: HoleKey
+  /** Skóre před a po; u změny extra bodů `null` a hodnoty jsou v `bonusFrom`/`bonusTo`. */
   from: number | null
   to: number | null
+  /** Extra body před a po (id bonusů) - log říká, kdo komu kdy který přiznal. */
+  bonusFrom?: string[]
+  bonusTo?: string[]
   by: string
   byEmail?: string
   at: unknown

@@ -1065,6 +1065,115 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
+/* Druhý řádek hráče jako tlačítko extra bodů: plná šířka, 38 px na prst,
+   záporné okraje, aby řádek nenarostl. */
+.player-total.bonus-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  min-height: 38px;
+  margin: -12px 0 -11px;
+  padding: 0;
+  text-align: left;
+  color: var(--ink-3);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.bonus-star {
+  flex: none;
+  font-size: 13px;
+  color: var(--ink-3);
+  opacity: 0.6;
+}
+
+.bonus-row.active .bonus-star {
+  color: var(--gold);
+  opacity: 1;
+}
+
+/* Stav her na jamce v záhlaví zápisu: hra, co rozhodla tady, průběžný stav. */
+.hole-status {
+  margin: 4px var(--pad) 0;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  cursor: pointer;
+}
+
+.hole-status-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.hole-status-row dt {
+  flex: none;
+  width: 64px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--brand);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hole-status-row dd {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hole-status-sep {
+  margin: 0 4px;
+  color: var(--ink-3);
+}
+
+.hole-status.expanded dd {
+  white-space: normal;
+}
+
+.hole-status.expanded .hole-status-sep {
+  display: none;
+}
+
+.hole-status.expanded .hole-status-total {
+  display: block;
+}
+
+.hole-status-hole {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.hole-status-total {
+  color: var(--ink-3);
+  font-weight: 600;
+}
+
+/* Na úzkém displeji se nápověda k zápisu zalomí na tři řádky a čtyři hráči
+   by se nevešli; ovládání je stejně vidět z tlačítek. */
+@media (max-width: 359px) {
+  .play-help {
+    display: none;
+  }
+}
+
+.menu-item.guide .menu-icon {
+  color: var(--brand);
+}
+
 .stepper {
   display: flex;
   align-items: center;

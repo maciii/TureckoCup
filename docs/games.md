@@ -71,6 +71,14 @@ dvojice flightu proti druhé, tedy A1+A2 vs B1+B2 a A3+A4 vs B3+B4). Body
 
 ## Extra body (centrální, v každém kole)
 
+**Uložení.** Extra body jsou surová data jako rány: `round.bonuses[hráč][jamka]`
+je seznam id bonusů (`['longest', 'sandie']`), zapisuje se jedna buňka
+(`setBonuses`) a každá změna jde do logu úprav kola (`edits`: kdo, kdy, komu,
+z čeho na co). Body za ně se nikam neukládají - počítají se při zobrazení
+z téhle mapy a z centrální konfigurace, takže z nich mohou čerpat i další
+hry a bonusy. Zapisují se hvězdičkou v řádku hráče v zápisu, panel nabídne
+jen bonusy možné na dané jamce.
+
 Vedlejší sázka podle Golfgames (`sideBets.ts`, `BONUSES`): hraje se vedle
 her v **každém kole** a nastavuje se **jednou pro celý turnaj**
 (`tournament.bonuses`, Admin → Pravidla turnaje), ne u hry ani u kola.

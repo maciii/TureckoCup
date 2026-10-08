@@ -244,13 +244,26 @@ describe('extra body', () => {
       hole: 4,
       value: ['longest'],
     }
+    // Zápisy vznikají ze stavu před změnou - log nese předchozí hodnotu.
+    const writes = opToWrites(op, meta, state)
     state = applyOp(state, op)
     expect(state.rounds[0]!.bonuses.p1).toEqual({ '4': ['longest'] })
-    const writes = opToWrites(op, meta, state)
-    expect(writes).toHaveLength(1)
+    // Buňka + záznam v logu úprav: kdo komu kdy který bonus přiznal.
+    expect(writes).toHaveLength(2)
     expect(writes[0]!.data).toEqual({
       'bonuses.p1.4': ['longest'],
       lastEdit: { playerId: 'p1', hole: '4', by: 'u1', at: expect.anything() },
+    })
+    expect(writes[1]!.path).toEqual(['rounds', 'r1', 'edits'])
+    expect(writes[1]!.data).toMatchObject({
+      playerId: 'p1',
+      hole: '4',
+      from: null,
+      to: null,
+      bonusFrom: [],
+      bonusTo: ['longest'],
+      by: 'u1',
+      byEmail: 'a@b.cz',
     })
     expect(findInvalidWrite(writes)).toBeNull()
     expect(checkOp(op, 'writer', writes)).toBeNull()

@@ -131,9 +131,8 @@ test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky
   const rows = page.locator('.player-row')
   const mac = rows.nth(1)
   const pavlos = rows.nth(2)
-  // Jamka 1 a 2 (par 4): tlačítko jamky nabízí sandie, water, barkie, arnie - ne nearest.
-  const entry = page.getByRole('button', { name: '★ Extra body' })
-  await entry.click()
+  // Jamka 1 a 2 (par 4): hvězdička v řádku nabízí sandie, water, barkie, arnie - ne nearest.
+  await mac.getByRole('button', { name: 'Extra body: Mac' }).click()
   const sheet = page.getByRole('dialog', { name: 'Extra body' })
   await expect(sheet.locator('.bonus-option')).toHaveCount(4)
   await expect(sheet.getByRole('button', { name: /Nearest/ })).toHaveCount(0)
@@ -155,8 +154,7 @@ test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky
   await mac.locator('.step-button').first().click()
   await expect(mac.locator('.mark')).toHaveText('2')
   await pavlos.locator('.score-value').click()
-  await entry.click()
-  await sheet.getByRole('button', { name: 'Mac', exact: true }).click()
+  await mac.getByRole('button', { name: 'Extra body: Mac' }).click()
   await expect(sheet).toContainText('Mac · jamka 3')
   await expect(sheet.locator('.bonus-option')).toHaveCount(5)
   await expect(sheet.getByRole('button', { name: /Longest/ })).toHaveCount(0)
@@ -173,6 +171,12 @@ test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky
   await sheet.getByRole('button', { name: 'Zavřít' }).click()
   await expect(mac.locator('.bonus-marks')).toHaveText('S')
   await expect(pavlos.locator('.bonus-marks')).toHaveText('N')
+  // Záhlaví jamky: co hry spočítaly tady a průběžný stav, včetně extra bodů.
+  const status = page.locator('.hole-status')
+  await expect(status).toContainText('Extra body')
+  await expect(status).toContainText('Mac S+2')
+  await expect(status).toContainText('Pavlos N+2')
+  await expect(status).toContainText('Stableford')
 
   // Scorekarta ukazuje značku u rány a sloupec Extra se součtem bodů.
   await page.getByRole('button', { name: 'Scorekarta' }).click()

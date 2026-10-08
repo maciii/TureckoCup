@@ -3,6 +3,21 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.15.0] – 2026-10-08
+
+### Změněno
+
+- **Extra body hvězdičkou v řádku hráče** v zápisu (jako v Golfgames):
+  druhý řádek hráče je tlačítko ★, otevře panel pro toho hráče. Tlačítko
+  u jamky zmizelo.
+- **Stav her v záhlaví jamky**: u každé hry kola, co na téhle jamce
+  spočítala (skin, dělená jamka a bank, body, duel) a průběžný stav
+  (pořadí, skiny, týmové skóre, stav duelů, extra body).
+- **Změny extra bodů jdou do logu úprav** kola stejně jako rány: kdo, kdy,
+  komu a z čeho na co. Log v administraci je ukazuje značkami (★ – → L S).
+- Menu má sekci **Návody** s odkazem na návod pro hráče a (pro admina)
+  příručku admina.
+
 ## [0.14.0] – 2026-10-08
 
 ### Změněno

@@ -11,8 +11,9 @@ test.beforeEach(async ({ page }) => {
   await resetDemo(page)
 })
 
+// Přesná shoda: „Příručka admina“ v Návodech by jinak položku Admin matchla taky.
 const menuItem = (page: import('@playwright/test').Page, label: string) =>
-  page.locator('nav .menu-item', { hasText: label })
+  page.locator('nav .menu-item', { hasText: new RegExp(`^${label}$`) })
 
 test('nepřihlášený se přihlásí z menu, hráč nevidí Admin a odhlásí se', async ({
   page,

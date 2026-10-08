@@ -3,13 +3,13 @@ import type { ReactNode } from 'react'
 import { demoVariant, useData } from '../data'
 import { evaluateRound } from '../evaluations'
 import type { EvaluationResult } from '../evaluations'
-import { skinsAtStake } from '../evaluations/skins'
 import { stablefordAt } from '../evaluations/stableford'
 import { t } from '../i18n'
 import { MAX_STROKES, PICKED_UP } from '../model/types'
 import type { Flight, PlayerId, TournamentRound } from '../model/types'
 import { flightProgress, isValidTime } from '../model/schedule'
 import { pickupRuleOf } from '../model/pickup'
+import HoleStatus from './HoleStatus'
 import type { BonusDefinition } from '../model/bonuses'
 import {
   availableBonuses,
@@ -225,9 +225,6 @@ export default function PlayScreen({ roundId, flight }: Props) {
     .map((entry, index) => ({ entry, index }))
     .filter(({ index, entry }) => index !== flight && entry.players.length > 0)
 
-  const flightSkins = skinsResult ? skinsAtStake(skinsResult, hole) : 0
-  const teamSkins = teamSkinsResult ? skinsAtStake(teamSkinsResult, hole) : 0
-
   return (
     <div className="screen">
       <Header
@@ -301,33 +298,9 @@ export default function PlayScreen({ roundId, flight }: Props) {
           <span className="sep">·</span>
           {t('play.holeOf', { index: orderIndex + 1, count })}
         </div>
-        {(skinsResult ||
-          teamSkinsResult ||
-          meta.pending > 0 ||
-          others.length > 0 ||
-          bonusChoices.length > 0) && (
+        {/* Skiny ve hře říká panel stavu her; tady zbývá náhled flightů a čekající zápisy. */}
+        {(meta.pending > 0 || others.length > 0) && (
           <div className="stakes">
-            {/* Extra body jednou pro celou jamku - u jmen by se na úzkém displeji
-                tlačítko nevešlo a čtyři hráči by se museli rolovat. */}
-            {bonusChoices.length > 0 && entryEnabled && (
-              <button
-                type="button"
-                className="tag bonus-entry"
-                onClick={() => setBonusFor(flightEntry.players[0] ?? null)}
-              >
-                ★ {t('bonus.title')}
-              </button>
-            )}
-            {skinsResult && (
-              <span className={`tag${flightSkins > 1 ? ' hot' : ''}`}>
-                {t('games.individual-skins.name')} · {flightSkins}
-              </span>
-            )}
-            {teamSkinsResult && (
-              <span className={`tag${teamSkins > 1 ? ' hot' : ' navy'}`}>
-                {t('games.team-skins.name')} · {teamSkins}
-              </span>
-            )}
             {meta.pending > 0 && (
               <span className="tag gold">
                 {t('play.pendingWrites', { count: meta.pending })}
@@ -346,6 +319,16 @@ export default function PlayScreen({ roundId, flight }: Props) {
             ))}
           </div>
         )}
+
+        <HoleStatus
+          round={round}
+          results={results}
+          players={state.players}
+          teams={state.tournament?.teams}
+          flight={flightEntry}
+          hole={hole}
+          bonusConfig={bonusConfig}
+        />
 
         <ul className="player-list">
           {flightEntry.players.map((playerId) => {
@@ -378,38 +361,64 @@ export default function PlayScreen({ roundId, flight }: Props) {
                       <span className="player-mark warn">?</span>
                     )}
                   </span>
-                  <span className="player-total">
-                    {completed === 0 && holesPlayed(round, playerId) === 0
-                      ? t('play.noScore')
-                      : t('play.total', {
-                          strokes: grossTotal(round, playerId),
-                          toPar: formatToPar(toPar),
-                        })}
-                    {/* Body jamky pod jménem, ne vedle: na úzkém displeji by jméno ořízly. */}
-                    {points !== undefined && (
-                      <span className="player-mark gain">
-                        {t('play.pointsShort', { count: points })}
-                      </span>
-                    )}
-                    {awards.length > 0 && (
-                      <span
-                        className="bonus-marks"
+                  {/* Druhý řádek je u zapisovatele tlačítko s hvězdičkou (extra body
+                      jako v Golfgames); záporné okraje drží výšku řádku, aby se čtyři
+                      hráči vešli na displej. */}
+                  {(() => {
+                    const totalLine = (
+                      <>
+                        {completed === 0 && holesPlayed(round, playerId) === 0
+                          ? t('play.noScore')
+                          : t('play.total', {
+                              strokes: grossTotal(round, playerId),
+                              toPar: formatToPar(toPar),
+                            })}
+                        {/* Body jamky pod jménem, ne vedle: na úzkém displeji by jméno ořízly. */}
+                        {points !== undefined && (
+                          <span className="player-mark gain">
+                            {t('play.pointsShort', { count: points })}
+                          </span>
+                        )}
+                        {awards.length > 0 && (
+                          <span
+                            className="bonus-marks"
+                            aria-label={t('play.bonusesFor', { name })}
+                          >
+                            {awards.map((award) => (
+                              <span
+                                key={award.bonus.id}
+                                className={
+                                  award.void
+                                    ? 'void'
+                                    : award.pending
+                                      ? 'pending'
+                                      : undefined
+                                }
+                                title={award.void ? t('play.bonusesVoid') : undefined}
+                              >
+                                {award.bonus.mark}
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                      </>
+                    )
+                    return bonusChoices.length > 0 && entryEnabled ? (
+                      <button
+                        type="button"
+                        className={`player-total bonus-row${awards.length > 0 ? ' active' : ''}`}
+                        onClick={() => setBonusFor(playerId)}
                         aria-label={t('play.bonusesFor', { name })}
                       >
-                        {awards.map((award) => (
-                          <span
-                            key={award.bonus.id}
-                            className={
-                              award.void ? 'void' : award.pending ? 'pending' : undefined
-                            }
-                            title={award.void ? t('play.bonusesVoid') : undefined}
-                          >
-                            {award.bonus.mark}
-                          </span>
-                        ))}
-                      </span>
-                    )}
-                  </span>
+                        <span className="bonus-star" aria-hidden="true">
+                          ★
+                        </span>
+                        {totalLine}
+                      </button>
+                    ) : (
+                      <span className="player-total">{totalLine}</span>
+                    )
+                  })()}
                 </div>
                 <button
                   type="button"
@@ -461,7 +470,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
             )
           })}
         </ul>
-        <p className="hint center px" style={{ paddingTop: 10 }}>
+        <p className="hint center px play-help" style={{ paddingTop: 10 }}>
           {t('play.clearHint', { par })}
         </p>
       </main>

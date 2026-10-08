@@ -7,6 +7,10 @@ import type { Route } from '../nav'
 import { APP_VERSION } from '../version'
 import { Crest, accountName } from './common'
 
+/** Návody žijí mimo aplikaci (sdílené stránky), ať jdou měnit bez nasazení. */
+const GUIDE_PLAYERS_URL = 'https://claude.ai/artifact/A1eJ6aEgAkLpUyp3QKXufe'
+const GUIDE_ADMIN_URL = 'https://claude.ai/artifact/U3HtGDKhNiRQCASJ61kxVX'
+
 interface Props {
   onClose: () => void
   playRoute: Route | null
@@ -147,6 +151,40 @@ export default function MenuSheet({ onClose, playRoute, current }: Props) {
             'admin',
             current === 'admin' || current === 'adminRound',
           )}
+
+        <div className="menu-label">{t('nav.guides')}</div>
+        <a
+          className="menu-item guide"
+          href={GUIDE_PLAYERS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Icon>
+            <path d="M4 5a2 2 0 012-2h5v18H6a2 2 0 01-2-2z" />
+            <path d="M20 5a2 2 0 00-2-2h-5v18h5a2 2 0 002-2z" />
+          </Icon>
+          <span className="menu-item-text">
+            {t('nav.guidePlayers')}
+            <small>{t('nav.guideHint')}</small>
+          </span>
+        </a>
+        {meta.role === 'admin' && (
+          <a
+            className="menu-item guide"
+            href={GUIDE_ADMIN_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Icon>
+              <path d="M6 3h9l4 4v14H6z" />
+              <path d="M9 12h6M9 16h6" />
+            </Icon>
+            <span className="menu-item-text">
+              {t('nav.guideAdmin')}
+              <small>{t('nav.guideHint')}</small>
+            </span>
+          </a>
+        )}
 
         <div className="menu-label">{t('app.versions')}</div>
         {meta.demo === 'preview' ? (

@@ -44,7 +44,7 @@ interface TournamentRound {
   positions: { A: [p..], B: [p..] }   // snímek pozic 1-4
   games: GameConfig[]            // viz games.md
   scores: { p1: { '0': 4, '1': 0 } }  // mapa hráč -> jamka -> rány; 0 = zvednuto
-  bonuses: { p1: { '4': ['longest'] } }
+  bonuses: { p1: { '4': ['longest'] } }   // extra body hráče po jamkách (id bonusů); každá změna i do edits
   lastEdit: { playerId, hole, by, at }
 }
 ```
