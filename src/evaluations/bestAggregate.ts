@@ -167,6 +167,7 @@ export const bestAggregate: Evaluate = (context, game): EvaluationResult => {
         hole,
         options,
         game.options.bonuses ?? false,
+        game.options.doubleBest ?? 0,
       )
       if (!hp) {
         pending += 1
