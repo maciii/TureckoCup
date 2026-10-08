@@ -38,6 +38,7 @@ import {
   TeamBadge,
   accountName,
   formatDate,
+  DecimalInput,
 } from './common'
 import { isValidEmail, normalizeEmail, setPlayerEmail } from '../model/access'
 import { playerName } from '../model/round'
@@ -280,7 +281,6 @@ function RulesEditor() {
   function save(next: PickupRule) {
     store.dispatch({ kind: 'updateTournament', patch: { pickup: next } })
   }
-  const number = (value: string) => Math.max(0, Number(value.replace(',', '.')) || 0)
   const mode = state.tournament?.handicapMode ?? 'course'
   /**
    * Režim je centrální, ale kolo si nese snímek: změna se hned promítne do
@@ -346,22 +346,20 @@ function RulesEditor() {
         </div>
         <div className="field">
           <span className="field-label">{t('admin.pickupTimesPar')}</span>
-          <input
+          <DecimalInput
             className="input sm num"
-            inputMode="decimal"
-            aria-label={t('admin.pickupTimesPar')}
-            value={String(rule.timesPar).replace('.', ',')}
-            onChange={(e) => save({ ...rule, timesPar: number(e.target.value) })}
+            label={t('admin.pickupTimesPar')}
+            value={rule.timesPar}
+            onCommit={(n) => save({ ...rule, timesPar: n })}
           />
         </div>
         <div className="field">
           <span className="field-label">{t('admin.pickupPlus')}</span>
-          <input
+          <DecimalInput
             className="input sm num"
-            inputMode="decimal"
-            aria-label={t('admin.pickupPlus')}
-            value={String(rule.plus).replace('.', ',')}
-            onChange={(e) => save({ ...rule, plus: number(e.target.value) })}
+            label={t('admin.pickupPlus')}
+            value={rule.plus}
+            onCommit={(n) => save({ ...rule, plus: n })}
           />
         </div>
         <Switch
@@ -385,7 +383,6 @@ function BonusSettings() {
       patch: { bonuses: { ...config, ...patch } },
     })
   }
-  const number = (value: string) => Math.max(0, Number(value.replace(',', '.')) || 0)
   return (
     <>
       <div className="field" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
@@ -399,14 +396,11 @@ function BonusSettings() {
             {t(dynamicKey('bonus', bonus.id, 'name'))}
             {bonus.auto && <span className="hint">{t('admin.bonusAuto')}</span>}
           </span>
-          <input
+          <DecimalInput
             className="input sm num"
-            inputMode="decimal"
-            aria-label={t(dynamicKey('bonus', bonus.id, 'name'))}
-            value={String(config.values[bonus.id] ?? 0).replace('.', ',')}
-            onChange={(e) =>
-              save({ values: { ...config.values, [bonus.id]: number(e.target.value) } })
-            }
+            label={t(dynamicKey('bonus', bonus.id, 'name'))}
+            value={config.values[bonus.id] ?? 0}
+            onCommit={(n) => save({ values: { ...config.values, [bonus.id]: n } })}
           />
         </div>
       ))}
@@ -427,40 +421,37 @@ function BonusSettings() {
       />
       <div className="field">
         <span className="field-label">{t('admin.bonusMultiplierBirdie')}</span>
-        <input
+        <DecimalInput
           className="input sm num"
-          inputMode="decimal"
-          aria-label={t('admin.bonusMultiplierBirdie')}
-          value={String(config.multipliers.birdie).replace('.', ',')}
-          onChange={(e) =>
+          label={t('admin.bonusMultiplierBirdie')}
+          value={config.multipliers.birdie}
+          onCommit={(n) =>
             save({
-              multipliers: { ...config.multipliers, birdie: number(e.target.value) },
+              multipliers: { ...config.multipliers, birdie: n },
             })
           }
         />
       </div>
       <div className="field">
         <span className="field-label">{t('admin.bonusMultiplierEagle')}</span>
-        <input
+        <DecimalInput
           className="input sm num"
-          inputMode="decimal"
-          aria-label={t('admin.bonusMultiplierEagle')}
-          value={String(config.multipliers.eagle).replace('.', ',')}
-          onChange={(e) =>
+          label={t('admin.bonusMultiplierEagle')}
+          value={config.multipliers.eagle}
+          onCommit={(n) =>
             save({
-              multipliers: { ...config.multipliers, eagle: number(e.target.value) },
+              multipliers: { ...config.multipliers, eagle: n },
             })
           }
         />
       </div>
       <div className="field">
         <span className="field-label">{t('admin.bonusTeamPerPoint')}</span>
-        <input
+        <DecimalInput
           className="input sm num"
-          inputMode="decimal"
-          aria-label={t('admin.bonusTeamPerPoint')}
-          value={String(config.teamPerPoint).replace('.', ',')}
-          onChange={(e) => save({ teamPerPoint: number(e.target.value) })}
+          label={t('admin.bonusTeamPerPoint')}
+          value={config.teamPerPoint}
+          onCommit={(n) => save({ teamPerPoint: n })}
         />
       </div>
     </>

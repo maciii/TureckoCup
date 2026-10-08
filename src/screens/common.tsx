@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import crestUrl from '../assets/crest.png'
 import type {
@@ -194,6 +195,52 @@ export function Standings({
         </li>
       ))}
     </ol>
+  )
+}
+
+/**
+ * Desetinné číslo s čárkou i tečkou. Řízený vstup přepsaný číslem by rozepsané
+ * „0,“ hned srazil na 0 a čárka by nikdy nezůstala - text žije v poli, číslo
+ * se ukládá průběžně, jakmile jde přečíst, a při opuštění pole se text srovná.
+ */
+export function DecimalInput({
+  value,
+  onCommit,
+  label,
+  className = 'input sm num',
+}: {
+  value: number
+  onCommit: (next: number) => void
+  label?: string
+  className?: string
+}) {
+  const [text, setText] = useState<string | null>(null)
+  const parse = (raw: string) => Math.max(0, Number(raw.trim().replace(',', '.')) || 0)
+  return (
+    <input
+      className={className}
+      inputMode="decimal"
+      aria-label={label}
+      value={text ?? String(value).replace('.', ',')}
+      onChange={(e) => {
+        const raw = e.target.value
+        setText(raw)
+        if (raw.trim() !== '' && !/[.,]$/.test(raw.trim())) {
+          const next = parse(raw)
+          if (next !== value) onCommit(next)
+        }
+      }}
+      onBlur={() => {
+        if (text !== null) {
+          const next = parse(text)
+          if (next !== value) onCommit(next)
+        }
+        setText(null)
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+      }}
+    />
   )
 }
 

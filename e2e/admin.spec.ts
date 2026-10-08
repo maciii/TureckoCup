@@ -166,6 +166,20 @@ test('HCP index patří hráči: kola si ho berou samy a změna v kole ho vrát�
   expect(errors()).toEqual([])
 })
 
+test('body za remízu jdou zadat s desetinnou čárkou a přežijí obnovení', async ({
+  page,
+}) => {
+  await setIdentity(page, 'admin')
+  await open(page, '#/admin/round/r1')
+  const halve = page.getByLabel('Bodů za remízu').first()
+  await halve.fill('0,5')
+  await expect(halve).toHaveValue('0,5')
+  await halve.blur()
+  await page.reload()
+  await page.waitForSelector('.screen')
+  await expect(page.getByLabel('Bodů za remízu').first()).toHaveValue('0,5')
+})
+
 test('kolo rozhodne, zda extra body jdou do týmového skóre', async ({ page }) => {
   await setIdentity(page, 'admin')
   await open(page, '#/admin/round/r1')

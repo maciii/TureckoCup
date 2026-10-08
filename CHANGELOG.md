@@ -3,6 +3,14 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.17.2] – 2026-10-08
+
+### Opraveno
+
+- Desetinná čísla v administraci (body za výhru a remízu, bod za skin,
+  hodnoty a násobiče extra bodů, pravidlo zvednuté jamky) jdou zadat
+  s čárkou i tečkou; dřív pole rozepsané „0,“ hned srazilo na 0.
+
 ## [0.17.1] – 2026-10-08
 
 ### Změněno

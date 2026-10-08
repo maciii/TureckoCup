@@ -46,6 +46,7 @@ import {
   formatDateTime,
   gameTitle,
   teamName,
+  DecimalInput,
 } from './common'
 
 const STATUSES: RoundStatus[] = ['planned', 'live', 'finished']
@@ -912,18 +913,11 @@ function GameEditor({
           {game.kind === 'team-skins' && (
             <div className="field">
               <span className="field-label">{t('admin.gamePerSkin')}</span>
-              <input
-                className="input sm num"
-                inputMode="decimal"
+              <DecimalInput
+                label={t('admin.gamePerSkin')}
                 value={game.teamPoints.perSkin ?? 0}
-                onChange={(e) =>
-                  onChange({
-                    ...game,
-                    teamPoints: {
-                      ...game.teamPoints,
-                      perSkin: Number(e.target.value) || 0,
-                    },
-                  })
+                onCommit={(perSkin) =>
+                  onChange({ ...game, teamPoints: { ...game.teamPoints, perSkin } })
                 }
               />
             </div>
@@ -955,29 +949,21 @@ function GameEditor({
           )}
           <div className="field">
             <span className="field-label">{t('admin.gameWin')}</span>
-            <input
-              className="input sm num"
-              inputMode="decimal"
+            <DecimalInput
+              label={t('admin.gameWin')}
               value={game.teamPoints.win ?? 0}
-              onChange={(e) =>
-                onChange({
-                  ...game,
-                  teamPoints: { ...game.teamPoints, win: Number(e.target.value) || 0 },
-                })
+              onCommit={(win) =>
+                onChange({ ...game, teamPoints: { ...game.teamPoints, win } })
               }
             />
           </div>
           <div className="field">
             <span className="field-label">{t('admin.gameHalve')}</span>
-            <input
-              className="input sm num"
-              inputMode="decimal"
+            <DecimalInput
+              label={t('admin.gameHalve')}
               value={game.teamPoints.halve ?? 0}
-              onChange={(e) =>
-                onChange({
-                  ...game,
-                  teamPoints: { ...game.teamPoints, halve: Number(e.target.value) || 0 },
-                })
+              onCommit={(halve) =>
+                onChange({ ...game, teamPoints: { ...game.teamPoints, halve } })
               }
             />
           </div>
