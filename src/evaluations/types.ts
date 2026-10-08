@@ -58,6 +58,11 @@ export interface DuelResult {
   pending: number
   /** Index pozice 1-4, pokud jde o duel pozic. */
   position?: number
+  /**
+   * Výsledek po jamkách: klíč je index jamky, 0/1 strana, která jamku bere,
+   * `null` dělená. Chybějící klíč = jamka ještě nemá rány obou stran.
+   */
+  holeWinners?: Record<string, 0 | 1 | null>
 }
 
 export interface EvaluationResult {

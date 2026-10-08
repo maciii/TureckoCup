@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { EvaluationResult } from '../evaluations'
 import { bonusAwardsAt, bonusTotal } from '../evaluations/bonuses'
 import { skinsAtStake } from '../evaluations/skins'
+import { stablefordAt } from '../evaluations/stableford'
 import { t } from '../i18n'
 import type { BonusConfig } from '../model/types'
 import { shortName, teamOf } from '../model/round'
@@ -54,9 +55,11 @@ export default function HoleStatus({
       lines.push({
         key: result.game.id,
         name: label,
-        onHole: result.rows
-          .filter((row) => inFlight.has(row.id))
-          .map((row) => `${name(row.id)} ${row.value}`)
+        onHole: flight.players
+          .map((id) => {
+            const points = stablefordAt(round, id, hole, result.game.options)
+            return `${name(id)} ${points === undefined ? t('common.dash') : points}`
+          })
           .join(' · '),
         total: leaders(result, name),
       })
@@ -99,12 +102,17 @@ export default function HoleStatus({
       lines.push({
         key: result.game.id,
         name: label,
-        onHole:
-          outcome && outcome.winners.length > 0
-            ? t('play.status.holeTo', { name: sideLabel(players, outcome.winners) })
-            : outcome?.decided
-              ? t('play.status.halved')
-              : t('play.status.pending'),
+        onHole: (duels.length > 0 ? duels : result.duels)
+          .map((duel) => {
+            const winner = duel.holeWinners?.[String(hole)]
+            if (winner === undefined) return t('play.status.pending')
+            if (winner === null) return t('play.status.halved')
+            const side = duel.sides[winner]
+            return t('play.status.holeTo', {
+              name: side ? sideLabel(players, side.players) : t('common.dash'),
+            })
+          })
+          .join(' · '),
         total: (duels.length > 0 ? duels : result.duels)
           .map((duel) => {
             const lead = duel.leader === null ? null : duel.sides[duel.leader]

@@ -3,6 +3,15 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.15.2] – 2026-10-08
+
+### Opraveno
+
+- Stav her na jamce: Four-ball a duely pozic ukazují, kdo jamku bere nebo
+  že je dělená (dřív pořád „čeká na zápis“), Stableford ukazuje body za
+  jamku místo průběžných součtů. Duely nesou výsledek po jamkách
+  (`holeWinners`).
+
 ## [0.15.1] – 2026-10-08
 
 ### Opraveno

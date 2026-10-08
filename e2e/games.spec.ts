@@ -138,6 +138,11 @@ test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky
   await expect(sheet.getByRole('button', { name: /Nearest/ })).toHaveCount(0)
   await sheet.getByRole('button', { name: 'Zavřít' }).click()
   await enterPar(page, [0, 1, 2, 3])
+  // Stav her na jamce: po zápisu všech čtyř je Stableford i duel rozhodnutý.
+  const stabRow = page.locator('.hole-status-row', { hasText: 'Stableford' })
+  await expect(stabRow).not.toContainText('–')
+  const duelRow = page.locator('.hole-status-row', { hasText: 'Duely pozic' })
+  await expect(duelRow).not.toContainText('čeká na zápis')
   await page
     .getByRole('button', { name: /Další jamka/ })
     .last()

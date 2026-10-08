@@ -134,6 +134,9 @@ function duelOf(
       finished: state.finished,
       pending: state.pending,
       position,
+      holeWinners: Object.fromEntries(
+        state.holes.filter((h) => h.decided).map((h) => [String(h.hole), h.winner]),
+      ),
     }
   }
 
@@ -170,12 +173,27 @@ function duelOf(
   const ca = sum(left)
   const cb = sum(right)
   const higherWins = format === 'stableford'
+  // Po jamkách pro zápis: kdo jamku bere, nebo dělená - jen tam, kde zapsaly obě strany.
+  const holeWinners: Record<string, 0 | 1 | null> = {}
+  for (const hole of common) {
+    const valueOf = (side: GameSide) => {
+      const stroke = countedStroke(context, side.players, hole, net, allowance) ?? 0
+      return format === 'stableford'
+        ? stablefordPoints(stroke - parAt(round, hole))
+        : stroke
+    }
+    const va = valueOf(left)
+    const vb = valueOf(right)
+    holeWinners[String(hole)] =
+      va === vb ? null : (higherWins ? va > vb : va < vb) ? 0 : 1
+  }
   let leader: 0 | 1 | null = null
   if (ca !== cb) leader = (higherWins ? ca > cb : ca < cb) ? 0 : 1
   const diff = Math.abs(ca - cb)
   const finished = common.length === order.length
   return {
     id,
+    holeWinners,
     sides: [describe(left, a), describe(right, b)],
     leader,
     notation: leader === null ? 'AS' : `+${diff}`,

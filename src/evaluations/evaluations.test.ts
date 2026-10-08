@@ -142,6 +142,8 @@ describe('duely pozic', () => {
     expect(duel.pending).toBe(16)
     expect(duel.finished).toBe(false)
     expect(result.teamPoints).toEqual({ A: 0, B: 0 })
+    // Po jamkách pro zápis: jamky 1 a 2 bere Ota, jamka 3 čeká na Pavlose.
+    expect(duel.holeWinners).toEqual({ '0': 0, '1': 0 })
   })
 
   it('jamkovka pozic dává bod za vyhraný duel po dohrání', () => {
@@ -157,6 +159,11 @@ describe('duely pozic', () => {
     // Pozice 2: Mac (13) vs Ferry (9,4 -> 9): Mac dostává víc ran -> vyhrává.
     const duel2 = result.duels!.find((d) => d.position === 2)!
     expect(duel2.leader).toBe(0)
+    // Jamkovka: rozhodnuté jamky mají vítěze nebo jsou dělené (po rozhodnutí
+    // zápasu se už nehrají); Mac bere ty, kde dostává ránu navíc.
+    expect(Object.keys(duel2.holeWinners!).length).toBeGreaterThan(0)
+    expect(Object.values(duel2.holeWinners!)).toContain(0)
+    expect(Object.values(duel1.holeWinners!).every((w) => w === null)).toBe(true)
     // Pozice 3 a 4: hráči bez indexu (0 ran) hrají stejně - remízy.
     expect(result.teamPoints).toEqual({ A: 2.5, B: 1.5 })
   })
