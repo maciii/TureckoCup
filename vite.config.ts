@@ -34,7 +34,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt': nová verze nikdy neobnoví stránku uprostřed zápisu; čeká na
+      // klepnutí v menu nebo na příští spuštění aplikace.
+      registerType: 'prompt',
       includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Turecko Cup 26',

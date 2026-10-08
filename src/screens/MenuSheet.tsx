@@ -5,6 +5,7 @@ import { t } from '../i18n'
 import { navigate } from '../nav'
 import type { Route } from '../nav'
 import { APP_VERSION } from '../version'
+import { useAppUpdate } from '../pwa'
 import { Crest, accountName } from './common'
 
 /** Návody žijí mimo aplikaci (sdílené stránky), ať jdou měnit bez nasazení. */
@@ -35,6 +36,7 @@ function Icon({ children }: { children: ReactNode }) {
 export default function MenuSheet({ onClose, playRoute, current }: Props) {
   const { meta, store, state } = useData()
   const signedIn = meta.account !== null
+  const update = useAppUpdate()
   // SDK přihlášení se načítá dopředu, aby popup šel otevřít hned z klepnutí.
   useEffect(() => {
     if (!signedIn) store.prepareSignIn()
@@ -261,7 +263,15 @@ export default function MenuSheet({ onClose, playRoute, current }: Props) {
               {t(meta.demo === 'preview' ? 'app.resetPreview' : 'app.resetDemo')}
             </button>
           )}
-          <p className="menu-version">{t('common.version', { version: APP_VERSION })}</p>
+          {update.ready && (
+            <button type="button" className="btn primary sm" onClick={update.apply}>
+              {t('app.updateApply')}
+            </button>
+          )}
+          <p className="menu-version">
+            {t('common.version', { version: APP_VERSION })}
+            {update.ready && ` · ${t('app.updateReady')}`}
+          </p>
         </div>
       </nav>
     </div>

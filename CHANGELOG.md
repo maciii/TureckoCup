@@ -3,6 +3,15 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.15.5] – 2026-10-08
+
+### Opraveno
+
+- **Aplikace se už neobnovuje sama** po nasazení nové verze (vypadalo to
+  jako pád po návratu do aplikace uprostřed zápisu). Nová verze čeká:
+  v menu je tlačítko „Obnovit aplikaci“, jinak se použije při příštím
+  spuštění.
+
 ## [0.15.3] – 2026-10-08
 
 ### Opraveno

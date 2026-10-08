@@ -58,6 +58,8 @@ export const cs = {
   'nav.admin': 'Admin',
   'nav.account': 'Účet',
   'nav.guides': 'Návody',
+  'app.updateReady': 'Je připravená nová verze aplikace.',
+  'app.updateApply': 'Obnovit aplikaci',
   'nav.guidePlayers': 'Návod pro hráče',
   'nav.guideAdmin': 'Příručka admina',
   'nav.guideHint': 'Otevře se v prohlížeči',

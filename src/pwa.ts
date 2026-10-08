@@ -106,3 +106,28 @@ export function usePwaInstall(): PwaInstallState {
 
   return { canInstall, isIOS, isMobile, isStandalone, install }
 }
+
+/**
+ * Čekající nová verze service workeru. Aplikace se nikdy neobnoví sama
+ * (uprostřed zápisu na hřišti by to vypadalo jako pád); uživatel ji
+ * potvrdí v menu, jinak se použije při příštím spuštění.
+ */
+type UpdateListener = (ready: boolean) => void
+const updateListeners = new Set<UpdateListener>()
+let applyUpdate: (() => void) | null = null
+
+export function announceUpdate(apply: () => void): void {
+  applyUpdate = apply
+  for (const listener of updateListeners) listener(true)
+}
+
+export function useAppUpdate(): { ready: boolean; apply: () => void } {
+  const [ready, setReady] = useState(applyUpdate !== null)
+  useEffect(() => {
+    updateListeners.add(setReady)
+    return () => {
+      updateListeners.delete(setReady)
+    }
+  }, [])
+  return { ready, apply: () => applyUpdate?.() }
+}
