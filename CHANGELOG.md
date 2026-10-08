@@ -3,6 +3,18 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.20.0] – 2026-10-08
+
+### Přidáno
+
+- **Karta živého kola na úvodní obrazovce.** Jakmile kolo běží, hned pod
+  hlavičkou je, na které jamce oba flighty jsou, stav všech zápasů kola
+  (Four-ball, Best + Součet, singly pozic) a pro přihlášeného hráče nebo
+  admina tlačítko **Zapsat skóre**, které otevře rovnou jeho flight na
+  aktuální jamce. Návštěvník tam má přihlášení Googlem.
+- Program kola (odjezd, tee time) zůstává pod kartou jen do prvního zápisu;
+  pak ukazuje další kolo.
+
 ## [0.19.0] – 2026-10-08
 
 ### Přidáno

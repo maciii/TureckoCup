@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import crestUrl from '../assets/crest.png'
 import type {
+  Flight,
   GameConfig,
   Player,
   PlayerId,
@@ -10,6 +11,7 @@ import type {
 } from '../model/types'
 import { PICKED_UP } from '../model/types'
 import { playerById, shortName } from '../model/round'
+import { flightProgress } from '../model/schedule'
 import type { StandingRow } from '../evaluations'
 import { dynamicKey, t } from '../i18n'
 import { goBack } from '../nav'
@@ -384,4 +386,12 @@ export function Header({
 
 export function StatusChip({ status }: { status: TournamentRound['status'] }) {
   return <span className={`status-chip ${status}`}>{t(`status.${status}`)}</span>
+}
+
+/** Krátký stav flightu: nezačal, na které jamce je, nebo dohrál. */
+export function flightProgressLabel(round: TournamentRound, flight: Flight): string {
+  const progress = flightProgress(round, flight)
+  if (progress.finished) return t('play.otherFinished')
+  if (progress.started === 0) return t('play.otherNotStarted')
+  return t('play.otherAtHole', { number: progress.hole + 1 })
 }

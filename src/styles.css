@@ -2106,6 +2106,32 @@ a.menu-item {
   margin-left: 6px;
 }
 
+/* --- živé kolo na přehledu ------------------------------------------------------ */
+
+.live-now {
+  margin-top: 6px;
+}
+
+.live-enter {
+  padding: 6px var(--pad) 4px;
+}
+
+.live-enter .hint {
+  margin-top: 6px;
+}
+
+.live-game {
+  margin-top: 10px;
+}
+
+.live-game-title {
+  margin: 0 0 2px;
+  padding: 0 var(--pad);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink-2);
+}
+
 /* --- program kola na přehledu ------------------------------------------------ */
 
 .schedule {

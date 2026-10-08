@@ -89,7 +89,7 @@ test('admin zadá program kola, druhý flight dostane čas o 10 minut později',
 
   await open(page)
   const schedule = page.locator('section.schedule')
-  await expect(schedule.locator('.eyebrow')).toContainText('Právě se hraje')
+  await expect(schedule.locator('.eyebrow')).toContainText('Program kola')
   await expect(schedule).toContainText('Kolo 2')
   await expect(schedule).toContainText('07:30')
   await expect(schedule).toContainText('08:45')

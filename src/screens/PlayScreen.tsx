@@ -6,8 +6,8 @@ import type { EvaluationResult } from '../evaluations'
 import { stablefordAt } from '../evaluations/stableford'
 import { t } from '../i18n'
 import { MAX_STROKES, PICKED_UP } from '../model/types'
-import type { Flight, PlayerId, TournamentRound } from '../model/types'
-import { flightProgress, isValidTime } from '../model/schedule'
+import type { PlayerId, TournamentRound } from '../model/types'
+import { isValidTime } from '../model/schedule'
 import { pickupRuleOf } from '../model/pickup'
 import HoleStatus from './HoleStatus'
 import PairStatus from './PairStatus'
@@ -37,7 +37,15 @@ import {
   strokesReceived,
 } from '../model/round'
 import { goBack, navigate } from '../nav'
-import { Header, Pill, ScoreMark, TeamBadge, formatToPar, sideLabel } from './common'
+import {
+  Header,
+  Pill,
+  ScoreMark,
+  TeamBadge,
+  flightProgressLabel,
+  formatToPar,
+  sideLabel,
+} from './common'
 import Scorecard from './Scorecard'
 
 const LONG_PRESS_MS = 500
@@ -314,8 +322,8 @@ export default function PlayScreen({ roundId, flight }: Props) {
                 className="tag other-flight"
                 onClick={() => setOtherFlight(index)}
               >
-                {t('round.flight', { number: index + 1 })} · {progressLabel(round, entry)}{' '}
-                ›
+                {t('round.flight', { number: index + 1 })} ·{' '}
+                {flightProgressLabel(round, entry)} ›
               </button>
             ))}
           </div>
@@ -567,14 +575,6 @@ export default function PlayScreen({ roundId, flight }: Props) {
   )
 }
 
-/** Krátký stav flightu: nezačal, na které jamce je, nebo dohrál. */
-function progressLabel(round: TournamentRound, flight: Flight): string {
-  const progress = flightProgress(round, flight)
-  if (progress.finished) return t('play.otherFinished')
-  if (progress.started === 0) return t('play.otherNotStarted')
-  return t('play.otherAtHole', { number: progress.hole + 1 })
-}
-
 /**
  * Náhled na jiný flight: kde je, jak si hráči vedou (rány proti paru,
  * Stableford) a stav Team Skins. Zavření vrací zpět na vlastní flight
@@ -612,7 +612,7 @@ function OtherFlightSheet({
       >
         <p className="eyebrow" style={{ marginTop: 4 }}>
           {t('round.flight', { number: flightIndex + 1 })} ·{' '}
-          {progressLabel(round, flight)}
+          {flightProgressLabel(round, flight)}
           {isValidTime(flight.teeTime) && ` · ${flight.teeTime}`}
         </p>
         <ul className="list other-flight-list">

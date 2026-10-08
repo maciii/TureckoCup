@@ -32,60 +32,6 @@ export default function GameResults({ round, players, result, teams }: Props) {
   const pendingNote =
     result.pending > 0 ? t('round.pendingHoles', { count: result.pending }) : undefined
 
-  function Duel({ duel }: { duel: DuelResult }) {
-    const [left, right] = duel.sides
-    if (!left || !right) return null
-    const started = duel.sides.some((s) => s.holes > 0)
-    const leaderTeam =
-      duel.leader === null ? null : (duel.sides[duel.leader]?.teamId ?? null)
-    const valueOf = (value: number, holes: number) =>
-      holes === 0 || format === 'match-play' ? '' : String(value)
-    const meta = [
-      duel.position !== undefined
-        ? `${t('overview.positionShort')} ${duel.position}`
-        : '',
-      duel.finished
-        ? t('status.finished')
-        : started
-          ? t('common.holes', { count: left.holes })
-          : '',
-    ]
-      .filter(Boolean)
-      .join(' · ')
-    return (
-      <li className="duel">
-        <span className={`duel-side${duel.finished && duel.leader === 1 ? ' dim' : ''}`}>
-          <span className="nm">
-            <TeamBadge teamId={left.teamId} />
-            <span>{sideLabel(players, left.players)}</span>
-          </span>
-          <span className="sub">{valueOf(left.value, left.holes)}</span>
-        </span>
-        <span className="duel-center">
-          {started ? (
-            leaderTeam ? (
-              <Pill teamId={leaderTeam}>{duel.notation}</Pill>
-            ) : (
-              <span className="v">{duel.notation}</span>
-            )
-          ) : (
-            <span className="v">–</span>
-          )}
-          <div className="m">{meta}</div>
-        </span>
-        <span
-          className={`duel-side right${duel.finished && duel.leader === 0 ? ' dim' : ''}`}
-        >
-          <span className="nm">
-            <span>{sideLabel(players, right.players)}</span>
-            <TeamBadge teamId={right.teamId} />
-          </span>
-          <span className="sub">{valueOf(right.value, right.holes)}</span>
-        </span>
-      </li>
-    )
-  }
-
   return (
     <Section
       title={gameTitle(game)}
@@ -151,10 +97,75 @@ export default function GameResults({ round, players, result, teams }: Props) {
       {isDuel && (
         <ul className="list" style={{ listStyle: 'none', margin: 0 }}>
           {(result.duels ?? []).map((duel) => (
-            <Duel key={duel.id} duel={duel} />
+            <DuelRow key={duel.id} duel={duel} players={players} format={format} />
           ))}
         </ul>
       )}
     </Section>
+  )
+}
+
+/**
+ * Řádek jednoho zápasu (duel pozic, Four-ball, Best + Součet): strany,
+ * stav v notaci a kolik jamek je odehráno. Sdílí ho výsledky hry
+ * a karta „Právě se hraje“ na přehledu.
+ */
+export function DuelRow({
+  duel,
+  players,
+  format,
+}: {
+  duel: DuelResult
+  players: Player[]
+  format: string
+}) {
+  const [left, right] = duel.sides
+  if (!left || !right) return null
+  const started = duel.sides.some((s) => s.holes > 0)
+  const leaderTeam =
+    duel.leader === null ? null : (duel.sides[duel.leader]?.teamId ?? null)
+  const valueOf = (value: number, holes: number) =>
+    holes === 0 || format === 'match-play' ? '' : String(value)
+  const meta = [
+    duel.position !== undefined ? `${t('overview.positionShort')} ${duel.position}` : '',
+    duel.finished
+      ? t('status.finished')
+      : started
+        ? t('common.holes', { count: left.holes })
+        : '',
+  ]
+    .filter(Boolean)
+    .join(' · ')
+  return (
+    <li className="duel">
+      <span className={`duel-side${duel.finished && duel.leader === 1 ? ' dim' : ''}`}>
+        <span className="nm">
+          <TeamBadge teamId={left.teamId} />
+          <span>{sideLabel(players, left.players)}</span>
+        </span>
+        <span className="sub">{valueOf(left.value, left.holes)}</span>
+      </span>
+      <span className="duel-center">
+        {started ? (
+          leaderTeam ? (
+            <Pill teamId={leaderTeam}>{duel.notation}</Pill>
+          ) : (
+            <span className="v">{duel.notation}</span>
+          )
+        ) : (
+          <span className="v">–</span>
+        )}
+        <div className="m">{meta}</div>
+      </span>
+      <span
+        className={`duel-side right${duel.finished && duel.leader === 0 ? ' dim' : ''}`}
+      >
+        <span className="nm">
+          <span>{sideLabel(players, right.players)}</span>
+          <TeamBadge teamId={right.teamId} />
+        </span>
+        <span className="sub">{valueOf(right.value, right.holes)}</span>
+      </span>
+    </li>
   )
 }

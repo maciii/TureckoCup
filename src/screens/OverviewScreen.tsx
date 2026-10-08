@@ -26,6 +26,8 @@ import { pickupRuleOf } from '../model/pickup'
 import { bonusConfigOf } from '../model/bonuses'
 import BonusResults from './BonusResults'
 import MenuSheet from './MenuSheet'
+import LiveNow from './LiveNow'
+import { flightHolesStarted } from '../model/round'
 
 /**
  * Přehled - veřejná domovská obrazovka: týmové skóre, aktuální kolo s živými
@@ -131,7 +133,16 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
           <p className="hint center px">{t('app.noTournamentHint')}</p>
         )}
 
-        {upcoming && <RoundSchedule round={upcoming} today={today} />}
+        {live && currentEvaluation && (
+          <LiveNow round={live} results={currentEvaluation.results} />
+        )}
+        {/* Program (odjezd, tee time) má smysl před startem; jakmile se zapisuje,
+            stačí karta živého kola. */}
+        {upcoming &&
+          (upcoming.status !== 'live' ||
+            upcoming.flights.every((f) => flightHolesStarted(upcoming, f) === 0)) && (
+            <RoundSchedule round={upcoming} today={today} />
+          )}
 
         {state.tournament && (
           <>
@@ -354,7 +365,7 @@ function RoundSchedule({ round, today }: { round: TournamentRound; today: string
   const { state } = useData()
   const label =
     round.status === 'live'
-      ? t('schedule.live')
+      ? t('schedule.program')
       : round.date === today
         ? t('schedule.today')
         : t('schedule.next')
