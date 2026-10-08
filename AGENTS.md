@@ -130,8 +130,10 @@ rules/           testy firestore.rules v emulátoru
   jde po pořadí hraní, ne po číslech jamek - evaluace používají `holeOrder()`.
 - **Číslo jamky v UI je `hole + 1`**, klíč v mapě je `String(hole)`.
 - **Extra body jsou taky jedna buňka** (`setBonuses` v `ops.ts`, hráč ×
-  jamka, seznam id). Centrální pravidlo pro zvednutou jamku bere evaluace
-  z `EvaluationContext.pickup` (`tournament.pickup`), ne z kola.
+  jamka, seznam id) a nejsou hra: hodnoty a pravidla jsou centrálně
+  v `tournament.bonuses` (`bonusConfigOf`), vyhodnocuje je
+  `evaluations/bonuses.ts` v každém kole. Centrální pravidlo pro zvednutou
+  jamku bere evaluace z `EvaluationContext.pickup` (`tournament.pickup`).
 - **Testovací verze (`?demo=4dny`) je jen raw skóre a konfigurace**
   z `src/data/preview.ts` - výsledky počítají stejné evaluace jako ostrý
   turnaj. Nová hra nebo volba hry patří i do některého dne testovací verze,

@@ -3,6 +3,29 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.11.0] – 2026-10-08
+
+### Změněno
+
+- **Extra body jsou obecné, ne samostatná hra** (jako v Golfgames): hodnoty
+  a pravidla se nastaví jednou v Admin → Pravidla turnaje a platí v každém
+  kole a vedle každé hry. Výchozí hodnoty podle Golfgames: longest, nearest,
+  sandie, water, barkie, arnie po 1 bodu; birdie a eagle (z ran) vypnuté.
+  Longest a Nearest platí jen při paru a lepším (Longest osobním parem),
+  ostatní bonusy platí za par a při birdie/eagle se násobí (×2, ×3), při
+  bogey propadají. Volitelně týmové body za extra bod.
+- Scorekarta má sloupec **Extra** se součtem extra bodů hráče a značky
+  u ran ukazují, které bonusy se počítají (přeškrtnuté se nepočítají).
+  Výsledky kola mají tabulku Extra body, přehled turnaje sčítá extra body
+  jednotlivců.
+- Hra „Extra body“ z nastavení kola zmizela; dřív zapsané bonusy zůstávají.
+
+### Přidáno
+
+- Workflow **Live admin** (`scripts/live-admin.mjs`): údržba živých dat
+  servisním účtem s rolí Cloud Datastore User - kontrola, odpaliště podle
+  seedu, odstranění staré hry Extra body, HCP indexy do nedohraných kol.
+
 ## [0.10.0] – 2026-10-08
 
 ### Změněno

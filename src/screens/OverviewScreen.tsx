@@ -23,6 +23,8 @@ import type { TournamentRound } from '../model/types'
 import { shortName } from '../model/round'
 import { hasSchedule, isValidTime, localToday, upcomingRound } from '../model/schedule'
 import { pickupRuleOf } from '../model/pickup'
+import { bonusConfigOf } from '../model/bonuses'
+import BonusResults from './BonusResults'
 import MenuSheet from './MenuSheet'
 
 /**
@@ -34,9 +36,17 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
   const [menuOpen, setMenuOpen] = useState(false)
   const { isStandalone, isMobile } = usePwaInstall()
   const pickup = pickupRuleOf(state.tournament?.pickup)
+  const bonusConfig = bonusConfigOf(state.tournament?.bonuses)
   const summary = useMemo(
-    () => summarizeTournament(state.rounds, state.players, pickup),
-    [state.rounds, state.players, pickup.timesPar, pickup.plus, pickup.addStrokes],
+    () => summarizeTournament(state.rounds, state.players, pickup, bonusConfig),
+    [
+      state.rounds,
+      state.players,
+      pickup.timesPar,
+      pickup.plus,
+      pickup.addStrokes,
+      bonusConfig,
+    ],
   )
   const live = state.rounds.find((r) => r.status === 'live')
   const current =
@@ -223,6 +233,15 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
                 teams={teams}
               />
             ))}
+            {currentEvaluation.bonuses && (
+              <BonusResults
+                round={current}
+                players={state.players}
+                config={bonusConfig}
+                summary={currentEvaluation.bonuses}
+                teams={teams}
+              />
+            )}
           </>
         )}
 
@@ -247,7 +266,8 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
                       <span>{playerLabel(state.players, entry.id)}</span>
                     </span>
                     <span className="row-meta">
-                      {t('common.skins', { count: entry.skins })} ·{' '}
+                      {t('common.skins', { count: entry.skins })}
+                      {entry.bonus > 0 && ` · ${t('bonus.short')} ${entry.bonus}`} ·{' '}
                       {t('common.rounds', { count: entry.rounds })}
                     </span>
                   </span>

@@ -7,8 +7,7 @@ import {
   playerIndexOps,
   seedRoundConfig,
 } from '../data/seed'
-import { dynamicKey, localizedTeeName, t } from '../i18n'
-import { BONUSES, defaultBonusValues } from '../model/bonuses'
+import { localizedTeeName, t } from '../i18n'
 import type {
   DuelFormat,
   GameConfig,
@@ -521,17 +520,6 @@ function withKind(game: GameConfig, round: TournamentRound, kind: GameKind): Gam
   const { name: _name, ...rest } = game
   if (kind === 'team-match' && !game.sides?.length)
     return { ...rest, kind, sides: flightSides(round) }
-  if (kind === 'bonuses' && !game.options.bonusValues)
-    return {
-      ...rest,
-      kind,
-      options: {
-        ...rest.options,
-        net: false,
-        bonusValues: defaultBonusValues(),
-        confirmByPar: true,
-      },
-    }
   return { ...rest, kind }
 }
 
@@ -560,20 +548,6 @@ function newGame(round: TournamentRound): GameConfig {
   const template = defaultGames().find((g) => g.kind === kind)
   const id = `${kind}-${Date.now().toString(36)}`
   if (template) return { ...template, id }
-  if (kind === 'bonuses') {
-    return {
-      id,
-      kind,
-      options: {
-        allowance: 1,
-        net: false,
-        bonusValues: defaultBonusValues(),
-        confirmByPar: true,
-      },
-      countsForTeam: false,
-      teamPoints: { perPoint: 1 },
-    }
-  }
   return {
     id,
     kind,
@@ -906,63 +880,6 @@ function GameEditor({
                     teamPoints: {
                       ...game.teamPoints,
                       perSkin: Number(e.target.value) || 0,
-                    },
-                  })
-                }
-              />
-            </div>
-          )}
-        </>
-      )}
-      {game.kind === 'bonuses' && (
-        <>
-          <div
-            className="field"
-            style={{ flexDirection: 'column', alignItems: 'stretch' }}
-          >
-            <span className="field-label">{t('admin.gameBonuses')}</span>
-            <span className="hint">{t('admin.gameBonusesHint')}</span>
-          </div>
-          {BONUSES.map((bonus) => (
-            <div key={bonus.id} className="field">
-              <span className="field-label">
-                <span className="bonus-mark">{bonus.mark}</span>
-                {t(dynamicKey('bonus', bonus.id, 'name'))}
-              </span>
-              <input
-                className="input sm num"
-                inputMode="decimal"
-                aria-label={t(dynamicKey('bonus', bonus.id, 'name'))}
-                value={options.bonusValues?.[bonus.id] ?? 0}
-                onChange={(e) =>
-                  setOptions({
-                    bonusValues: {
-                      ...(options.bonusValues ?? {}),
-                      [bonus.id]: Math.max(0, Number(e.target.value) || 0),
-                    },
-                  })
-                }
-              />
-            </div>
-          ))}
-          <Switch
-            label={t('admin.gameConfirmByPar')}
-            on={options.confirmByPar ?? false}
-            onChange={(confirmByPar) => setOptions({ confirmByPar })}
-          />
-          {game.countsForTeam && (
-            <div className="field">
-              <span className="field-label">{t('admin.gamePerPoint')}</span>
-              <input
-                className="input sm num"
-                inputMode="decimal"
-                value={game.teamPoints.perPoint ?? 1}
-                onChange={(e) =>
-                  onChange({
-                    ...game,
-                    teamPoints: {
-                      ...game.teamPoints,
-                      perPoint: Number(e.target.value) || 0,
                     },
                   })
                 }

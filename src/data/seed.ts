@@ -12,7 +12,6 @@ import type {
   TournamentState,
 } from '../model/types'
 import type { Op } from './ops'
-import { defaultBonusValues } from '../model/bonuses'
 import aspendos from '../courses/aspendos.json'
 import lykia from '../courses/lykia-links.json'
 import carya from '../courses/belek-carya.json'
@@ -184,20 +183,6 @@ export function defaultGames(): GameConfig[] {
       options: { allowance: 1, net: true, format: 'strokes-net' },
       countsForTeam: false,
       teamPoints: { win: 1, halve: 0.5 },
-    },
-    // Extra body jsou jako v Golfgames zapnuté od začátku: longest, nearest,
-    // birdie a eagle; zapisovatel je hned vidí u jména hráče.
-    {
-      id: 'bonuses',
-      kind: 'bonuses',
-      options: {
-        allowance: 1,
-        net: false,
-        bonusValues: defaultBonusValues(),
-        confirmByPar: true,
-      },
-      countsForTeam: false,
-      teamPoints: { perPoint: 1 },
     },
   ]
 }

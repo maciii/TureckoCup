@@ -3,6 +3,8 @@ import { EMPTY_STATE, PICKED_UP } from '../model/types'
 import type { TournamentRound } from '../model/types'
 import { flightCurrentHole, holeCount, holeOrder, isEntered } from '../model/round'
 import { evaluateRound } from '../evaluations'
+import { bonusSummary } from '../evaluations/bonuses'
+import { bonusConfigOf } from '../model/bonuses'
 import { summarizeTournament } from '../evaluations/tournament'
 import { applyOp, findInvalidValue } from './ops'
 import { PREVIEW_PLAYERS, PREVIEW_SEED, previewRounds, previewState } from './preview'
@@ -76,7 +78,7 @@ describe('testovací verze turnaje', () => {
     expect(rounds[3]!.courseHandicapOverride).toEqual({ p8: 30 })
     // Všechny druhy her se aspoň jednou objeví.
     const kinds = new Set(played.flatMap((r) => r.games.map((g) => g.kind)))
-    expect(kinds.size).toBe(6)
+    expect(kinds.size).toBe(5)
   })
 
   it('flighty odpovídají pozicím kola a každý hráč hraje právě jednou', () => {
@@ -126,8 +128,8 @@ describe('testovací verze turnaje', () => {
     expect(summary.positions.map((p) => p.rounds)).toEqual([4, 4, 3, 3])
   })
 
-  it('extra body: longest a nearest drží jediný hráč, jen na svém paru', () => {
-    for (const round of [rounds[0]!, rounds[3]!]) {
+  it('extra body: v každém hraném kole, longest a nearest drží jediný hráč na svém paru', () => {
+    for (const round of rounds.slice(0, 4)) {
       let longest = 0
       let nearest = 0
       for (let hole = 0; hole < 18; hole++) {
@@ -144,19 +146,22 @@ describe('testovací verze turnaje', () => {
       expect(nearest).toBeGreaterThan(0)
     }
     expect(
-      rounds[1]!.playerIds.every(
-        (id) => Object.keys(rounds[1]!.bonuses[id]!).length === 0,
+      rounds[4]!.playerIds.every(
+        (id) => Object.keys(rounds[4]!.bonuses[id]!).length === 0,
       ),
     ).toBe(true)
-    const result = evaluateRound(rounds[0]!, PREVIEW_PLAYERS).find(
-      (r) => r.game.kind === 'bonuses',
+    const state = previewState()
+    const summary = bonusSummary(
+      rounds[0]!,
+      PREVIEW_PLAYERS,
+      bonusConfigOf(state.tournament.bonuses),
     )!
-    expect(result.rows.some((r) => r.value > 0)).toBe(true)
-    expect(previewState().tournament.pickup).toEqual({
-      timesPar: 2,
-      plus: 0,
-      addStrokes: false,
-    })
+    expect(summary.rows.some((r) => r.value > 0)).toBe(true)
+    expect(summary.teamPoints.A + summary.teamPoints.B).toBeGreaterThan(0)
+    expect(state.tournament.pickup).toEqual({ timesPar: 2, plus: 0, addStrokes: false })
+    expect(
+      rounds.every((r) => r.games.every((g) => (g.kind as string) !== 'bonuses')),
+    ).toBe(true)
   })
 
   it('projde stejnou kontrolou dat jako Firestore a založí se operací init', () => {

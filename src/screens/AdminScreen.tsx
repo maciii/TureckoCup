@@ -11,9 +11,16 @@ import {
   rosterSnapshot,
   seedRounds,
 } from '../data/seed'
-import { t } from '../i18n'
+import { dynamicKey, t } from '../i18n'
 import { POSITIONS, TEAM_IDS } from '../model/types'
-import type { HandicapMode, PickupRule, Player, TeamId } from '../model/types'
+import type {
+  BonusConfig,
+  HandicapMode,
+  PickupRule,
+  Player,
+  TeamId,
+} from '../model/types'
+import { BONUSES, bonusConfigOf } from '../model/bonuses'
 import {
   PICKUP_PRESETS,
   pickupFormula,
@@ -362,8 +369,101 @@ function RulesEditor() {
           on={rule.addStrokes}
           onChange={(addStrokes) => save({ ...rule, addStrokes })}
         />
+        <BonusSettings />
       </div>
     </Section>
+  )
+}
+
+/** Extra body jednou pro celý turnaj (vzor `GameSettingsScreen` v Golfgames). */
+function BonusSettings() {
+  const { state, store } = useData()
+  const config = bonusConfigOf(state.tournament?.bonuses)
+  function save(patch: Partial<BonusConfig>) {
+    store.dispatch({
+      kind: 'updateTournament',
+      patch: { bonuses: { ...config, ...patch } },
+    })
+  }
+  const number = (value: string) => Math.max(0, Number(value.replace(',', '.')) || 0)
+  return (
+    <>
+      <div className="field" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+        <span className="field-label">{t('admin.bonuses')}</span>
+        <span className="hint">{t('admin.bonusesHint')}</span>
+      </div>
+      {BONUSES.map((bonus) => (
+        <div key={bonus.id} className="field">
+          <span className="field-label">
+            <span className="bonus-mark">{bonus.mark}</span>
+            {t(dynamicKey('bonus', bonus.id, 'name'))}
+            {bonus.auto && <span className="hint">{t('admin.bonusAuto')}</span>}
+          </span>
+          <input
+            className="input sm num"
+            inputMode="decimal"
+            aria-label={t(dynamicKey('bonus', bonus.id, 'name'))}
+            value={String(config.values[bonus.id] ?? 0).replace('.', ',')}
+            onChange={(e) =>
+              save({ values: { ...config.values, [bonus.id]: number(e.target.value) } })
+            }
+          />
+        </div>
+      ))}
+      <Switch
+        label={t('admin.bonusConfirmLongest')}
+        on={config.confirmLongest}
+        onChange={(confirmLongest) => save({ confirmLongest })}
+      />
+      <Switch
+        label={t('admin.bonusPersonalPar')}
+        on={config.longestByPersonalPar}
+        onChange={(longestByPersonalPar) => save({ longestByPersonalPar })}
+      />
+      <Switch
+        label={t('admin.bonusConfirmNearest')}
+        on={config.confirmNearest}
+        onChange={(confirmNearest) => save({ confirmNearest })}
+      />
+      <div className="field">
+        <span className="field-label">{t('admin.bonusMultiplierBirdie')}</span>
+        <input
+          className="input sm num"
+          inputMode="decimal"
+          aria-label={t('admin.bonusMultiplierBirdie')}
+          value={String(config.multipliers.birdie).replace('.', ',')}
+          onChange={(e) =>
+            save({
+              multipliers: { ...config.multipliers, birdie: number(e.target.value) },
+            })
+          }
+        />
+      </div>
+      <div className="field">
+        <span className="field-label">{t('admin.bonusMultiplierEagle')}</span>
+        <input
+          className="input sm num"
+          inputMode="decimal"
+          aria-label={t('admin.bonusMultiplierEagle')}
+          value={String(config.multipliers.eagle).replace('.', ',')}
+          onChange={(e) =>
+            save({
+              multipliers: { ...config.multipliers, eagle: number(e.target.value) },
+            })
+          }
+        />
+      </div>
+      <div className="field">
+        <span className="field-label">{t('admin.bonusTeamPerPoint')}</span>
+        <input
+          className="input sm num"
+          inputMode="decimal"
+          aria-label={t('admin.bonusTeamPerPoint')}
+          value={String(config.teamPerPoint).replace('.', ',')}
+          onChange={(e) => save({ teamPerPoint: number(e.target.value) })}
+        />
+      </div>
+    </>
   )
 }
 

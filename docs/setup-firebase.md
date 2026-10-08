@@ -61,8 +61,9 @@ a pravidla databáze (data samotná ne).
 2. https://console.cloud.google.com/iam-admin/serviceaccounts → nahoře
    vybrat projekt Firebase → **Create service account** → název
    `github-deploy` → Create and continue.
-3. Role přidat čtyři: **Firebase Hosting Admin**, **API Keys Viewer**,
-   **Firebase Rules Admin** a **Service Usage Consumer** → Continue → Done.
+3. Role přidat pět: **Firebase Hosting Admin**, **API Keys Viewer**,
+   **Firebase Rules Admin**, **Service Usage Consumer** a **Cloud Datastore
+   User** (údržba živých dat workflow `Live admin`) → Continue → Done.
    Účtu, který už existuje, se role přidají na
    https://console.cloud.google.com/iam-admin/iam → tužka u
    `github-deploy@…` → Add another role.
@@ -116,6 +117,15 @@ Pravidla ze souboru [`firestore.rules`](../firestore.rules) nasazuje od verze
 0.5.0 workflow sám, vždy před aplikací. Servisní účet k tomu potřebuje role
 z kroku 5.3. Když chybí, nasazení skončí hláškou „Nasazení pravidel
 selhalo“ a na webu zůstane předchozí verze aplikace.
+
+### Údržba živých dat (workflow Live admin)
+
+GitHub → Actions → **Live admin** → Run workflow → vybrat úlohu:
+`check` jen vypíše stav (soupiska, kola, odpaliště, hry, snímek HCP),
+`tees` nastaví výchozí odpaliště podle seedu, `games` odstraní z kol
+starou hru Extra body, `index` zapíše HCP indexy hráčů do nedohraných kol.
+Úlohy jsou v `scripts/live-admin.mjs`; zápis jde Admin SDK mimo security
+rules, proto tam nejsou volné úpravy, jen pojmenované kroky s výpisem.
 
 ### Přihlášení na iPhonu (když popup nefunguje)
 

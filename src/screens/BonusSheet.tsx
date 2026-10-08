@@ -1,4 +1,4 @@
-import type { GameConfig, PlayerId, TournamentRound } from '../model/types'
+import type { BonusConfig, PlayerId, TournamentRound } from '../model/types'
 import type { BonusDefinition } from '../model/bonuses'
 import { availableBonuses, bonusValue, bonusesAt, holdersOf } from '../model/bonuses'
 import { shortName } from '../model/round'
@@ -7,7 +7,7 @@ import { useData } from '../data'
 
 interface Props {
   round: TournamentRound
-  game: GameConfig
+  config: BonusConfig
   playerId: PlayerId
   hole: number
   onToggle: (bonus: BonusDefinition) => void
@@ -21,14 +21,14 @@ interface Props {
  */
 export default function BonusSheet({
   round,
-  game,
+  config,
   playerId,
   hole,
   onToggle,
   onClose,
 }: Props) {
   const { state } = useData()
-  const available = availableBonuses(game, round, hole)
+  const available = availableBonuses(config, round, hole)
   const selected = bonusesAt(round, playerId, hole)
   return (
     <div className="sheet-backdrop" onClick={onClose} role="presentation">
@@ -70,7 +70,7 @@ export default function BonusSheet({
                         : t(dynamicKey('bonus', bonus.id, 'description'))}
                     </span>
                   </span>
-                  <span className="bonus-value">+{bonusValue(game, bonus.id)}</span>
+                  <span className="bonus-value">+{bonusValue(config, bonus.id)}</span>
                 </button>
               </li>
             )
@@ -78,7 +78,9 @@ export default function BonusSheet({
         </ul>
         <p className="hint px" style={{ paddingTop: 10 }}>
           {available.some((b) => b.exclusive) && t('bonus.exclusiveHint')}
-          {game.options.confirmByPar && ` ${t('bonus.confirmHint')}`}
+          {(config.confirmLongest || config.confirmNearest) &&
+            ` ${t('bonus.confirmHint')}`}
+          {available.some((b) => !b.exclusive) && ` ${t('bonus.multiplierHint')}`}
         </p>
         <div className="px" style={{ paddingTop: 14 }}>
           <button type="button" className="btn primary" onClick={onClose}>

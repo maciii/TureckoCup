@@ -69,30 +69,44 @@ zápas 2. Admin je nastaví v editoru hry (výchozí „Dvojice z flightů“: p
 dvojice flightu proti druhé, tedy A1+A2 vs B1+B2 a A3+A4 vs B3+B4). Body
 `win`/`halve` do týmového skóre, výchozí `countsForTeam: true`.
 
-## Extra body (`bonuses`)
+## Extra body (centrální, v každém kole)
 
-Vedlejší sázka podle Golfgames (`sideBets.ts`, `BONUSES`): hra určuje
-hodnotu každého bonusu (`options.bonusValues`, 0 = nehraje se).
+Vedlejší sázka podle Golfgames (`sideBets.ts`, `BONUSES`): hraje se vedle
+her v **každém kole** a nastavuje se **jednou pro celý turnaj**
+(`tournament.bonuses`, Admin → Pravidla turnaje), ne u hry ani u kola.
 
-| Bonus     | Značka | Kdy                                            |
-| --------- | ------ | ---------------------------------------------- |
-| `longest` | L      | jen par 5, na jamce jediný hráč, zaškrtává se  |
-| `nearest` | N      | jen par 3, na jamce jediný hráč, zaškrtává se  |
-| `birdie`  | B      | automaticky z ran (brutto, nebo netto s `net`) |
-| `eagle`   | E      | automaticky, eagle a lepší (bez birdie navíc)  |
-| `sandie`  | S      | zaškrtává se (bunker a přesto dobrý výsledek)  |
-| `water`   | W      | zaškrtává se                                   |
-| `barkie`  | T      | zaškrtává se (strom)                           |
-| `arnie`   | A      | zaškrtává se (mimo fairway)                    |
+| Bonus     | Značka | Výchozí | Kdy                                           |
+| --------- | ------ | ------- | --------------------------------------------- |
+| `longest` | L      | 1       | jen par 5, na jamce jediný hráč, zaškrtává se |
+| `nearest` | N      | 1       | jen par 3, na jamce jediný hráč, zaškrtává se |
+| `sandie`  | S      | 1       | zaškrtává se (bunker a přesto dobrý výsledek) |
+| `water`   | W      | 1       | zaškrtává se                                  |
+| `barkie`  | T      | 1       | zaškrtává se (strom)                          |
+| `arnie`   | A      | 1       | zaškrtává se (mimo fairway)                   |
+| `birdie`  | B      | 0       | navíc proti Golfgames: automaticky z ran      |
+| `eagle`   | E      | 0       | automaticky, eagle a lepší (bez birdie navíc) |
 
-Zaškrtává se v zápisu tlačítkem u jména (nabízí jen bonusy zapnuté ve hře
-a odpovídající paru jamky); značky jsou vidět u jména i ve scorekartě.
-S `confirmByPar` platí ručně zapsaný bonus jen při paru a lepším (netto
-podle `net`), jinak propadá - stejné „potvrzení parem“ jako v Golfgames.
-Zvednutá jamka bonus nedává. Longest a Nearest drží jediný hráč:
-zaškrtnutí u dalšího hráče ho předchozímu odebere; mají-li ho omylem dva
-(zápis bez signálu ze dvou telefonů), nedostane bod nikdo. Do týmového
-skóre (`countsForTeam`) jde součet bodů hráčů týmu × `teamPoints.perPoint`.
+Hodnota 0 = bonus se nehraje a v zápisu se nenabízí. Zaškrtává se v zápisu
+tlačítkem u jména hráče (nabízí jen zapnuté bonusy odpovídající paru);
+značky jsou u jména i ve scorekartě, scorekarta má sloupec **Extra** se
+součtem bodů a výsledky kola tabulku **Extra body** s rozpisem. Přehled
+turnaje sčítá extra body jednotlivců přes kola.
+
+Pravidla jako v Golfgames:
+
+- Hodnota ostatních bonusů platí za **brutto** par; birdie a lepší ji
+  násobí (`multipliers`, výchozí ×2 a ×3), bogey a horší bonus nepřizná.
+  Rozdané rány mění, kdo jamku vyhrál, ne to, jak se zahrála.
+- Longest a Nearest se nenásobí. S potvrzením (`confirmLongest`,
+  `confirmNearest`, výchozí zapnuto) platí jen při paru a lepším: Longest
+  osobním parem (par + rány z HCP, `longestByPersonalPar`), Nearest vždy
+  brutto parem. Nepotvrzený bod propadá (vedlejší sázka nemá soupeřovu
+  stranu). Dokud hráč jamku nezapsal, značka je tlumená - není jasno.
+- Longest a Nearest drží jediný hráč: zaškrtnutí u dalšího hráče ho
+  předchozímu odebere; mají-li ho omylem dva (zápis bez signálu ze dvou
+  telefonů), nedostane bod nikdo. Zvednutá jamka bonus nedává.
+- Do týmového skóre jdou extra body jen s `teamPerPoint > 0` (součet bodů
+  hráčů týmu × hodnota), jinak jsou jen vedlejší sázkou.
 
 ## Zvednutá jamka ve hře na rány (centrální pravidlo)
 

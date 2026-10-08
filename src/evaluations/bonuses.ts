@@ -1,163 +1,196 @@
-import type { GameConfig, PlayerId, TeamId } from '../model/types'
+import type {
+  BonusConfig,
+  Player,
+  PlayerId,
+  TeamId,
+  TournamentRound,
+} from '../model/types'
 import { PICKED_UP } from '../model/types'
 import {
-  gameHoles,
+  holeCount,
   holesPlayed,
-  netScoreAt,
   parAt,
   scoreAt,
+  strokesReceived,
   teamOf,
 } from '../model/round'
 import type { BonusDefinition } from '../model/bonuses'
-import { BONUSES, bonusValue, bonusesAt, holdersOf } from '../model/bonuses'
-import type { Evaluate, EvaluationContext, EvaluationResult, HoleOutcome } from './types'
+import { BONUSES, bonusValue, bonusesAt, hasBonuses, holdersOf } from '../model/bonuses'
+import type { StandingRow } from './types'
 import { rankRows } from './types'
 
 /**
- * Extra body (vedlejší sázka podle Golfgames): longest, nearest, sandie…
- * si hráč zaškrtne u jamky, birdie a eagle se počítají z ran. Hodnotu
- * každého bonusu určuje hra; bonus s nulovou hodnotou se nenabízí ani
- * nepočítá. Longest a Nearest drží na jamce jediný hráč - když ho omylem
- * mají dva (zápis bez signálu ze dvou telefonů), nedostane bod nikdo.
+ * Extra body jako vedlejší sázka podle Golfgames (`sideBets.ts`): hrají se
+ * vedle her v každém kole, s jedním centrálním nastavením turnaje.
  *
- * S `confirmByPar` platí ručně zapsaný bonus jen při paru a lepším (netto
- * podle `net`), jinak propadá - stejné „potvrzení parem“ jako v Golfgames.
+ *   - Hodnota bonusu platí za **brutto** par; birdie a lepší ji násobí
+ *     (`multipliers`), bogey a horší bonus nepřizná. Rozdané rány mění, kdo
+ *     jamku vyhrál, ne to, jak se zahrála.
+ *   - Longest a Nearest drží na jamce jediný hráč a hodnota se nenásobí.
+ *     S potvrzením musí hráč jamku zahrát na par nebo líp: Longest osobním
+ *     parem (par + rány z handicapu, volitelně), Nearest vždy brutto parem.
+ *     Nepotvrzený bod propadá (vedlejší sázka nemá soupeřovu stranu).
+ *   - Mají-li exkluzivní bonus omylem dva (zápis bez signálu ze dvou
+ *     telefonů), nedostane bod nikdo. Zvednutá jamka bonus nedává.
+ *   - Birdie a eagle (navíc proti Golfgames) se počítají z ran, pokud mají
+ *     hodnotu; eagle a lepší dostane jen eagle, ne birdie navíc.
  */
 
 export interface BonusAward {
   bonus: BonusDefinition
   points: number
-  /** Zapsaný, ale nepočítá se (nepotvrzený parem, dva držitelé, zvednuto). */
+  /** Zapsaný, ale nepočítá se (nepotvrzený, dva držitelé, zvednuto, bogey). */
   void: boolean
+  /** Jamka ještě není zapsaná - není jasno. */
+  pending: boolean
 }
 
-/** Rozdíl proti paru pro potvrzení a birdie: netto podle hry, jinak brutto. */
-function diffToPar(
-  context: EvaluationContext,
-  game: GameConfig,
-  playerId: PlayerId,
-  hole: number,
-): number | undefined {
-  const score = scoreAt(context.round, playerId, hole)
-  if (score === undefined || score === PICKED_UP) return undefined
-  const value = game.options.net
-    ? netScoreAt(context.round, playerId, hole, {
-        net: true,
-        allowance: game.options.allowance,
-      })
-    : score
-  if (value === undefined || !Number.isFinite(value)) return undefined
-  return (value as number) - parAt(context.round, hole)
+export interface BonusSummary {
+  rows: StandingRow[]
+  teamPoints: Record<TeamId, number>
+  /** Jamky, na kterých ještě nezapsali všichni. */
+  pending: number
 }
 
-/** Bonusy hráče na jamce i s tím, jestli se počítají. */
+function resultMultiplier(config: BonusConfig, diff: number): number {
+  if (diff > 0) return 0
+  if (diff === 0) return 1
+  if (diff === -1) return config.multipliers.birdie
+  return config.multipliers.eagle
+}
+
+/** Bonusy hráče na jamce i s tím, jestli a za kolik se počítají. */
 export function bonusAwardsAt(
-  context: EvaluationContext,
-  game: GameConfig,
+  round: TournamentRound,
+  config: BonusConfig,
   playerId: PlayerId,
   hole: number,
 ): BonusAward[] {
-  const { round } = context
-  const diff = diffToPar(context, game, playerId, hole)
+  const score = scoreAt(round, playerId, hole)
+  const par = parAt(round, hole)
+  const picked = score === PICKED_UP
+  const diff = score === undefined || picked ? undefined : score - par
   const awards: BonusAward[] = []
   for (const bonus of BONUSES) {
-    const value = bonusValue(game, bonus.id)
+    const value = bonusValue(config, bonus.id)
     if (value <= 0) continue
     if (bonus.auto) {
       if (diff === undefined) continue
-      const hit = bonus.id === 'birdie' ? diff === -1 : bonus.id === 'eagle' && diff <= -2
-      if (hit) awards.push({ bonus, points: value, void: false })
+      const hit = bonus.id === 'birdie' ? diff === -1 : diff <= -2
+      if (hit) awards.push({ bonus, points: value, void: false, pending: false })
       continue
     }
     if (!bonusesAt(round, playerId, hole).includes(bonus.id)) continue
-    const picked = scoreAt(round, playerId, hole) === PICKED_UP
-    const unconfirmed =
-      (game.options.confirmByPar ?? false) && (diff === undefined || diff > 0)
-    const shared =
-      (bonus.exclusive ?? false) && holdersOf(round, hole, bonus.id).length > 1
-    const isVoid = picked || unconfirmed || shared
-    awards.push({ bonus, points: isVoid ? 0 : value, void: isVoid })
+    const pending = score === undefined
+    if (bonus.exclusive) {
+      const shared = holdersOf(round, hole, bonus.id).length > 1
+      const confirm =
+        bonus.id === 'longest' ? config.confirmLongest : config.confirmNearest
+      const personal =
+        bonus.id === 'longest' && config.longestByPersonalPar
+          ? strokesReceived(round, playerId, hole)
+          : 0
+      const confirmed = !confirm || (diff !== undefined && diff - personal <= 0)
+      const isVoid = picked || shared || (!pending && !confirmed)
+      awards.push({
+        bonus,
+        points: isVoid || pending ? 0 : value,
+        void: isVoid,
+        pending: pending && !isVoid,
+      })
+      continue
+    }
+    const multiplier = diff === undefined ? 0 : resultMultiplier(config, diff)
+    const isVoid = picked || (!pending && multiplier === 0)
+    awards.push({
+      bonus,
+      points: isVoid || pending ? 0 : value * multiplier,
+      void: isVoid,
+      pending: pending && !isVoid,
+    })
   }
   return awards
 }
 
 export function bonusPointsAt(
-  context: EvaluationContext,
-  game: GameConfig,
+  round: TournamentRound,
+  config: BonusConfig,
   playerId: PlayerId,
   hole: number,
 ): number {
-  return bonusAwardsAt(context, game, playerId, hole).reduce(
+  return bonusAwardsAt(round, config, playerId, hole).reduce(
     (sum, a) => sum + a.points,
     0,
   )
 }
 
+/** Extra body hráče za celé kolo. */
+export function bonusTotal(
+  round: TournamentRound,
+  config: BonusConfig,
+  playerId: PlayerId,
+) {
+  let points = 0
+  for (let hole = 0; hole < holeCount(round); hole++) {
+    points += bonusPointsAt(round, config, playerId, hole)
+  }
+  return points
+}
+
 /** Součet bodů hráče podle bonusu za celé kolo - do popisku ve výsledcích. */
 export function bonusBreakdown(
-  context: EvaluationContext,
-  game: GameConfig,
+  round: TournamentRound,
+  config: BonusConfig,
   playerId: PlayerId,
-): { bonus: BonusDefinition; count: number }[] {
-  const counts = new Map<string, number>()
-  for (const hole of gameHoles(context.round, game)) {
-    for (const award of bonusAwardsAt(context, game, playerId, hole)) {
-      if (award.void) continue
-      counts.set(award.bonus.id, (counts.get(award.bonus.id) ?? 0) + 1)
+): { bonus: BonusDefinition; count: number; points: number }[] {
+  const counts = new Map<string, { count: number; points: number }>()
+  for (let hole = 0; hole < holeCount(round); hole++) {
+    for (const award of bonusAwardsAt(round, config, playerId, hole)) {
+      if (award.void || award.pending) continue
+      const entry = counts.get(award.bonus.id) ?? { count: 0, points: 0 }
+      entry.count += 1
+      entry.points += award.points
+      counts.set(award.bonus.id, entry)
     }
   }
   return BONUSES.filter((b) => counts.has(b.id)).map((bonus) => ({
     bonus,
-    count: counts.get(bonus.id) ?? 0,
+    ...counts.get(bonus.id)!,
   }))
 }
 
-export const bonusGame: Evaluate = (context, game): EvaluationResult => {
-  const { round, players } = context
-  const holes = gameHoles(round, game)
-  const outcomes: HoleOutcome[] = holes.map((hole) => {
-    const winners = round.playerIds.filter(
-      (id) => bonusPointsAt(context, game, id, hole) > 0,
-    )
-    return {
-      hole,
-      decided: round.playerIds.every((id) => scoreAt(round, id, hole) !== undefined),
-      winners,
-      value: winners.reduce((sum, id) => sum + bonusPointsAt(context, game, id, hole), 0),
-    }
-  })
-
+/** Tabulka extra bodů kola; `null`, když se o ně nehraje. */
+export function bonusSummary(
+  round: TournamentRound,
+  players: Player[],
+  config: BonusConfig,
+): BonusSummary | null {
+  if (!hasBonuses(config)) return null
   const rows = round.playerIds.map((id) => {
-    let points = 0
     let count = 0
-    for (const hole of holes) {
-      for (const award of bonusAwardsAt(context, game, id, hole)) {
-        if (award.void) continue
-        points += award.points
-        count += 1
-      }
+    for (let hole = 0; hole < holeCount(round); hole++) {
+      count += bonusAwardsAt(round, config, id, hole).filter(
+        (a) => !a.void && !a.pending,
+      ).length
     }
     return {
       id,
       players: [id],
-      value: points,
+      value: bonusTotal(round, config, id),
       secondary: count,
       holes: holesPlayed(round, id),
       teamId: teamOf(players, id),
     }
   })
-
   const teamPoints: Record<TeamId, number> = { A: 0, B: 0 }
-  if (game.countsForTeam) {
-    const perPoint = game.teamPoints.perPoint ?? 1
-    for (const row of rows) if (row.teamId) teamPoints[row.teamId] += row.value * perPoint
+  if (config.teamPerPoint > 0) {
+    for (const row of rows)
+      if (row.teamId) teamPoints[row.teamId] += row.value * config.teamPerPoint
   }
-
-  return {
-    game,
-    rows: rankRows(rows, 'highest', 'highest'),
-    holes: outcomes,
-    teamPoints,
-    pending: outcomes.filter((o) => !o.decided).length,
+  let pending = 0
+  for (let hole = 0; hole < holeCount(round); hole++) {
+    if (!round.playerIds.every((id) => scoreAt(round, id, hole) !== undefined))
+      pending += 1
   }
+  return { rows: rankRows(rows, 'highest', 'highest'), teamPoints, pending }
 }

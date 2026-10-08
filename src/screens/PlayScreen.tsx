@@ -13,7 +13,7 @@ import { pickupRuleOf } from '../model/pickup'
 import type { BonusDefinition } from '../model/bonuses'
 import {
   availableBonuses,
-  bonusGameOf,
+  bonusConfigOf,
   bonusesAt,
   holdersOf,
   toggleBonus as toggleBonusList,
@@ -136,8 +136,8 @@ export default function PlayScreen({ roundId, flight }: Props) {
   const si = strokeIndexRanked(round)[hole]
   const entryEnabled = canWrite && !locked && !notLive
   const stablefordGame = round.games.find((g) => g.kind === 'individual-stableford')
-  const bonusGame = bonusGameOf(round)
-  const bonusChoices = availableBonuses(bonusGame, round, hole)
+  const bonusConfig = bonusConfigOf(state.tournament?.bonuses)
+  const bonusChoices = availableBonuses(bonusConfig, round, hole)
   const skinsResult = results.find((r) => r.game.kind === 'individual-skins')
   const teamSkinsResult = results.find((r) => r.game.kind === 'team-skins')
   const holeComplete = flightEntry.players.every(
@@ -344,14 +344,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
                 : undefined
             const player = state.players.find((p) => p.id === playerId)
             const name = shortName(state.players, playerId)
-            const awards = bonusGame
-              ? bonusAwardsAt(
-                  { round, players: state.players, pickup },
-                  bonusGame,
-                  playerId,
-                  hole,
-                )
-              : []
+            const awards = bonusAwardsAt(round, bonusConfig, playerId, hole)
             return (
               <li key={playerId} className="player-row">
                 <div className="player-info">
@@ -383,7 +376,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
                         {t('play.pointsShort', { count: points })}
                       </span>
                     )}
-                    {bonusGame && (bonusChoices.length > 0 || awards.length > 0) && (
+                    {(bonusChoices.length > 0 || awards.length > 0) && (
                       <button
                         type="button"
                         className={`bonus-button${awards.length > 0 ? ' active' : ''}`}
@@ -395,7 +388,13 @@ export default function PlayScreen({ roundId, flight }: Props) {
                           ? awards.map((award) => (
                               <span
                                 key={award.bonus.id}
-                                className={award.void ? 'void' : undefined}
+                                className={
+                                  award.void
+                                    ? 'void'
+                                    : award.pending
+                                      ? 'pending'
+                                      : undefined
+                                }
                                 title={award.void ? t('play.bonusesVoid') : undefined}
                               >
                                 {award.bonus.mark}
@@ -477,10 +476,10 @@ export default function PlayScreen({ roundId, flight }: Props) {
         </div>
       </footer>
 
-      {bonusFor !== null && bonusGame && (
+      {bonusFor !== null && (
         <BonusSheet
           round={round}
-          game={bonusGame}
+          config={bonusConfig}
           playerId={bonusFor}
           hole={hole}
           onToggle={(bonus) => toggleBonus(bonusFor, bonus)}

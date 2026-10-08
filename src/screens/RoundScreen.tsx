@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react'
 import { useData } from '../data'
 import { evaluateRound, roundTeamPoints } from '../evaluations'
 import { pickupRuleOf } from '../model/pickup'
+import { bonusConfigOf } from '../model/bonuses'
+import { bonusSummary } from '../evaluations/bonuses'
+import BonusResults from './BonusResults'
 import { t } from '../i18n'
 import { navigate } from '../nav'
 import { Header, Pill, SCORE_CATEGORIES, ScoreMark, Section, formatDate } from './common'
@@ -14,9 +17,14 @@ export default function RoundScreen({ roundId }: { roundId: string }) {
   const [tab, setTab] = useState<'results' | 'scorecard'>('results')
   const round = state.rounds.find((r) => r.id === roundId)
   const pickup = pickupRuleOf(state.tournament?.pickup)
+  const bonusConfig = bonusConfigOf(state.tournament?.bonuses)
   const results = useMemo(
     () => (round ? evaluateRound(round, state.players, pickup) : []),
     [round, state.players, pickup.timesPar, pickup.plus, pickup.addStrokes],
+  )
+  const bonuses = useMemo(
+    () => (round ? bonusSummary(round, state.players, bonusConfig) : null),
+    [round, state.players, bonusConfig],
   )
 
   if (!round) {
@@ -32,7 +40,7 @@ export default function RoundScreen({ roundId }: { roundId: string }) {
     )
   }
 
-  const teamPoints = roundTeamPoints(results)
+  const teamPoints = roundTeamPoints(results, bonuses)
   const teamSkins = results.find((r) => r.game.kind === 'team-skins')
   const skins = results.find((r) => r.game.kind === 'individual-skins')
   const canEnter = round.status === 'live' || meta.role === 'admin'
@@ -80,22 +88,34 @@ export default function RoundScreen({ roundId }: { roundId: string }) {
         </div>
         <p className="hint center px">{t('round.teamPoints')}</p>
 
-        {tab === 'results' &&
-          (results.length === 0 ? (
-            <p className="hint center px" style={{ paddingTop: 16 }}>
-              {t('round.noGames')}
-            </p>
-          ) : (
-            results.map((result) => (
-              <GameResults
-                key={result.game.id}
+        {tab === 'results' && (
+          <>
+            {results.length === 0 ? (
+              <p className="hint center px" style={{ paddingTop: 16 }}>
+                {t('round.noGames')}
+              </p>
+            ) : (
+              results.map((result) => (
+                <GameResults
+                  key={result.game.id}
+                  round={round}
+                  players={state.players}
+                  result={result}
+                  teams={state.tournament?.teams}
+                />
+              ))
+            )}
+            {bonuses && (
+              <BonusResults
                 round={round}
                 players={state.players}
-                result={result}
+                config={bonusConfig}
+                summary={bonuses}
                 teams={state.tournament?.teams}
               />
-            ))
-          ))}
+            )}
+          </>
+        )}
 
         {tab === 'scorecard' && (
           <Section

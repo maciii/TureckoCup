@@ -34,7 +34,6 @@ export const cs = {
   'preview.game.skinsGross': 'Skins brutto všech osm',
   'preview.game.teamSkinsBack': 'Team Skins zadní devítka',
   'preview.game.duelsGross': 'Duely pozic brutto',
-  'preview.game.bonusesTeam': 'Extra body do týmu',
   'app.noTournament': 'Turnaj ještě není založený.',
   'app.noTournamentHint': 'Administrátor ho založí v Admin → Inicializovat turnaj.',
 
@@ -78,8 +77,6 @@ export const cs = {
   'games.position-duel.description': 'A1 proti B1, A2 proti B2 …',
   'games.team-match.name': 'Four-ball',
   'games.team-match.description': 'Dvojice proti dvojici, lepší míč',
-  'games.bonuses.name': 'Extra body',
-  'games.bonuses.description': 'Longest, nearest, birdie a další',
   'games.holes': 'jamky {from}–{to}',
   'games.allHoles': 'celé kolo',
 
@@ -154,12 +151,18 @@ export const cs = {
   'play.nextHole': 'Další jamka',
   'play.bonusesFor': 'Extra body: {name}',
   'play.bonusesVoid': 'nepočítá se',
+  'bonus.title': 'Extra body',
+  'bonus.short': 'Extra',
+  'bonus.description':
+    'Vedlejší sázka: longest, nearest, sandie a další, stejně v každém kole',
+  'bonus.multiplierHint':
+    'Ostatní bonusy platí za par; birdie a lepší je násobí, bogey a horší je nepřizná.',
   'bonus.sheetTitle': 'Extra body',
   'bonus.sheetSubtitle': '{name} · jamka {hole}',
   'bonus.heldBy': 'Teď má {name}; zaškrtnutím ho převezmeš.',
   'bonus.exclusiveHint':
     'Longest a Nearest může mít na jamce jen jeden hráč; zaškrtnutí ho vezme tomu, kdo ho měl.',
-  'bonus.confirmHint': 'Bonus platí jen při paru a lepším.',
+  'bonus.confirmHint': 'Longest a Nearest platí jen při paru a lepším.',
   'bonus.longest.name': 'Longest',
   'bonus.longest.description':
     'Nejdelší odpal; jen na pětiparových jamkách, pro jednoho hráče.',
@@ -277,15 +280,20 @@ export const cs = {
   'admin.gamePerSkin': 'Bodů za skin',
   'admin.gameWin': 'Bodů za výhru',
   'admin.gameHalve': 'Bodů za remízu',
-  'admin.gamePerPoint': 'Týmových bodů za bod',
   'admin.gameSides': 'Dvojice',
   'admin.gameSidesHint': 'Zápas {number}',
   'admin.pairsFromFlights': 'Dvojice z flightů',
-  'admin.gameBonuses': 'Hodnota bonusů (0 = nehraje se)',
-  'admin.gameBonusesHint':
-    'Longest jen na pětiparových, Nearest na tříparových jamkách; birdie a eagle se počítají z ran.',
-  'admin.gameConfirmByPar': 'Bonus platí jen při paru a lepším',
   'admin.rules': 'Pravidla turnaje',
+  'admin.bonuses': 'Extra body',
+  'admin.bonusesHint':
+    'Platí ve všech kolech a hrách. Hodnota je za bod při paru; 0 = bonus se nehraje a v zápisu se nenabízí. Longest jen na pětiparových, Nearest na tříparových jamkách.',
+  'admin.bonusAuto': 'z ran',
+  'admin.bonusConfirmLongest': 'Longest platí jen při paru a lepším',
+  'admin.bonusConfirmNearest': 'Nearest platí jen při paru a lepším',
+  'admin.bonusPersonalPar': 'Longest se potvrzuje osobním parem (par + rány z HCP)',
+  'admin.bonusMultiplierBirdie': 'Násobič při birdie',
+  'admin.bonusMultiplierEagle': 'Násobič při eagle a lepším',
+  'admin.bonusTeamPerPoint': 'Týmových bodů za extra bod (0 = do týmu nejdou)',
   'admin.rulesHint': 'Platí pro všechna kola. Dohraná kola si nechají, s čím se hrála.',
   'admin.handicapMode': 'Hrací handicap',
   'handicapMode.course': 'Podle hřiště (WHS)',

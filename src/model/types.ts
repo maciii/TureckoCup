@@ -50,9 +50,31 @@ export interface Tournament {
    * (`TournamentRound.handicapMode`), admin ho do kol promítá z adminu.
    */
   handicapMode?: HandicapMode
+  /**
+   * Extra body (longest, nearest, sandie …) centrálně pro celý turnaj:
+   * hodnoty a pravidla jednou, platí v každém kole. Chybí = výchozí
+   * (`DEFAULT_BONUS_CONFIG` v `src/model/bonuses.ts`).
+   */
+  bonuses?: Partial<BonusConfig>
 }
 
 export type HandicapMode = 'course' | 'fixed'
+
+/** Nastavení extra bodů podle Golfgames (`GameOptions.bonusValues` a spol.). */
+export interface BonusConfig {
+  /** Hodnota každého bonusu za par; 0 = nehraje se, nenabízí se. */
+  values: Record<string, number>
+  /** Longest platí jen při paru a lepším (osobním parem, viz `longestByPersonalPar`). */
+  confirmLongest: boolean
+  /** Nearest platí jen při brutto paru a lepším. */
+  confirmNearest: boolean
+  /** Longest se potvrzuje parem + ranami z handicapu na jamce, ne brutto parem. */
+  longestByPersonalPar: boolean
+  /** Násobič hodnoty ostatních bonusů podle brutto výsledku; par ×1, bogey a horší 0. */
+  multipliers: { birdie: number; eagle: number }
+  /** Týmové body za každý extra bod; 0 = extra body do týmového skóre nejdou. */
+  teamPerPoint: number
+}
 
 /**
  * Kolik ran se počítá za zvednutou jamku ve hře na rány:
@@ -113,7 +135,6 @@ export type GameKind =
   | 'team-skins'
   | 'position-duel'
   | 'team-match'
-  | 'bonuses'
 
 /** Formát duelu pozic a hlavní týmové hry. */
 export type DuelFormat = 'strokes-gross' | 'strokes-net' | 'stableford' | 'match-play'
@@ -135,10 +156,6 @@ export interface GameOptions {
   carry?: boolean
   /** Formát duelů (pozice, hlavní hra). */
   format?: DuelFormat
-  /** Extra body: hodnota každého bonusu (`src/model/bonuses.ts`); 0 nebo chybí = vypnuto. */
-  bonusValues?: Record<string, number>
-  /** Extra body: ručně zapsaný bonus platí jen při paru a lepším (netto podle `net`). */
-  confirmByPar?: boolean
 }
 
 /** Kolik týmových bodů hra přináší. */
@@ -149,8 +166,6 @@ export interface TeamPointsRule {
   win?: number
   /** Za remízu duelu/zápasu. */
   halve?: number
-  /** Za každý bod extra bodů (Extra body). */
-  perPoint?: number
 }
 
 /**

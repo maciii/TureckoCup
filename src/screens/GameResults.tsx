@@ -1,9 +1,6 @@
 import type { Player, TeamId, TournamentRound } from '../model/types'
 import type { DuelResult, EvaluationResult } from '../evaluations'
-import { dynamicKey, t } from '../i18n'
-import { bonusBreakdown } from '../evaluations/bonuses'
-import { pickupRuleOf } from '../model/pickup'
-import { useData } from '../data'
+import { t } from '../i18n'
 import {
   Pill,
   Section,
@@ -25,7 +22,6 @@ interface Props {
 /** Výsledky jedné hry kola - tabulka podle druhu hry, ve stylu seznamů s děliči. */
 export default function GameResults({ round, players, result, teams }: Props) {
   const { game } = result
-  const pickup = pickupRuleOf(useData().state.tournament?.pickup)
   const format = game.options.format ?? 'strokes-net'
   const isDuel = game.kind === 'position-duel' || game.kind === 'team-match'
   const note = isDuel ? t(`format.${format}`) : gameDescription(game)
@@ -103,21 +99,6 @@ export default function GameResults({ round, players, result, teams }: Props) {
               ? `${t('common.holes', { count: row.holes })} · ${t('common.strokes', { count: row.secondary ?? 0 })}`
               : undefined
           }
-        />
-      )}
-
-      {game.kind === 'bonuses' && (
-        <Standings
-          rows={result.rows}
-          players={players}
-          value={(row) => String(row.value)}
-          meta={(row) => {
-            const parts = bonusBreakdown({ round, players, pickup }, game, row.id).map(
-              ({ bonus, count }) =>
-                `${t(dynamicKey('bonus', bonus.id, 'name'))}${count > 1 ? ` ×${count}` : ''}`,
-            )
-            return parts.length > 0 ? parts.join(' · ') : undefined
-          }}
         />
       )}
 

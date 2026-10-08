@@ -7,7 +7,6 @@ import type {
   TournamentRound,
 } from '../model/types'
 import { DEFAULT_PICKUP } from '../model/pickup'
-import { bonusGame } from './bonuses'
 import { positionDuel, teamMatch } from './duels'
 import { individualSkins, teamSkins } from './skins'
 import { individualStableford } from './stableford'
@@ -22,7 +21,6 @@ const EVALUATIONS: Record<GameKind, Evaluate> = {
   'team-skins': teamSkins,
   'position-duel': positionDuel,
   'team-match': teamMatch,
-  bonuses: bonusGame,
 }
 
 export const GAME_KINDS: GameKind[] = [
@@ -31,7 +29,6 @@ export const GAME_KINDS: GameKind[] = [
   'team-skins',
   'position-duel',
   'team-match',
-  'bonuses',
 ]
 
 export function evaluateGame(
@@ -52,13 +49,20 @@ export function evaluateRound(
   return round.games.map((game) => evaluateGame(round, players, game, pickup))
 }
 
-/** Týmové body kola ze her, které do týmového skóre vstupují. */
-export function roundTeamPoints(results: EvaluationResult[]): Record<TeamId, number> {
+/** Týmové body kola ze her, které do týmového skóre vstupují, plus extra body, jsou-li zapnuté. */
+export function roundTeamPoints(
+  results: EvaluationResult[],
+  bonuses?: { teamPoints: Record<TeamId, number> } | null,
+): Record<TeamId, number> {
   const points: Record<TeamId, number> = { A: 0, B: 0 }
   for (const result of results) {
     if (!result.game.countsForTeam) continue
     points.A += result.teamPoints.A
     points.B += result.teamPoints.B
+  }
+  if (bonuses) {
+    points.A += bonuses.teamPoints.A
+    points.B += bonuses.teamPoints.B
   }
   return points
 }

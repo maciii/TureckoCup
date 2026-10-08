@@ -2079,3 +2079,22 @@ a.menu-item {
   color: var(--fairway-deep);
   font-variant-numeric: tabular-nums;
 }
+
+.bonus-button .pending,
+.cell-marks .pending {
+  opacity: 0.45;
+}
+
+.cell-marks .void {
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
+.scorecard td.bonus-sum {
+  color: var(--fairway-deep);
+}
+
+.field-label .hint {
+  margin-left: 6px;
+  font-weight: 600;
+}

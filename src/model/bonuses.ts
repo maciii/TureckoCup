@@ -1,19 +1,20 @@
-import type { GameConfig, PlayerId, TournamentRound } from './types'
+import type { BonusConfig, PlayerId, TournamentRound } from './types'
 import { holeKey, parAt } from './round'
 
 /**
- * Extra body - longest, nearest, birdie a spol. Definice jsou převzaté
+ * Extra body - longest, nearest, sandie a spol. Definice jsou převzaté
  * z Golfgames (`BONUSES`): texty podle id (`bonus.<id>.name`), Longest jen
  * na pětiparových, Nearest na tříparových jamkách, oba drží na jamce jediný
- * hráč. Birdie a eagle se na rozdíl od Golfgames nezaškrtávají - spočítají
- * se ze zapsaných ran.
+ * hráč. Birdie a eagle jsou navíc proti Golfgames: nezaškrtávají se, spočítají
+ * se ze zapsaných ran, a ve výchozím nastavení jsou vypnuté.
  *
- * Zapsané bonusy žijí v `round.bonuses[hráč][jamka]` (seznam id); která
- * jsou ve hře a za kolik, říká hra „Extra body“ (`options.bonusValues`).
+ * Zapsané bonusy žijí v `round.bonuses[hráč][jamka]` (seznam id); která se
+ * hrají a za kolik, říká centrální nastavení turnaje (`tournament.bonuses`),
+ * stejné pro všechna kola a všechny hry - jako `bonusValues` v Golfgames.
  */
 
 export type BonusId =
-  'longest' | 'nearest' | 'birdie' | 'eagle' | 'sandie' | 'water' | 'barkie' | 'arnie'
+  'longest' | 'nearest' | 'sandie' | 'water' | 'barkie' | 'arnie' | 'birdie' | 'eagle'
 
 export interface BonusDefinition {
   id: BonusId
@@ -24,19 +25,19 @@ export interface BonusDefinition {
   auto?: boolean
   /** Nabízí se jen na jamkách s tímhle parem. */
   onlyPar?: number
-  /** Na jamce ho může mít jen jeden hráč. */
+  /** Na jamce ho může mít jen jeden hráč; hodnota se nenásobí výsledkem. */
   exclusive?: boolean
 }
 
 export const BONUSES: BonusDefinition[] = [
   { id: 'longest', mark: 'L', defaultValue: 1, onlyPar: 5, exclusive: true },
   { id: 'nearest', mark: 'N', defaultValue: 1, onlyPar: 3, exclusive: true },
-  { id: 'birdie', mark: 'B', defaultValue: 1, auto: true },
-  { id: 'eagle', mark: 'E', defaultValue: 2, auto: true },
   { id: 'sandie', mark: 'S', defaultValue: 1 },
   { id: 'water', mark: 'W', defaultValue: 1 },
   { id: 'barkie', mark: 'T', defaultValue: 1 },
   { id: 'arnie', mark: 'A', defaultValue: 1 },
+  { id: 'birdie', mark: 'B', defaultValue: 0, auto: true },
+  { id: 'eagle', mark: 'E', defaultValue: 0, auto: true },
 ]
 
 export const BONUS_IDS: BonusId[] = BONUSES.map((b) => b.id)
@@ -45,13 +46,33 @@ export function getBonus(id: string): BonusDefinition | undefined {
   return BONUSES.find((b) => b.id === id)
 }
 
-/** Výchozí hodnoty hry Extra body: longest, nearest, birdie a eagle. */
-export function defaultBonusValues(): Record<string, number> {
-  return { longest: 1, nearest: 1, birdie: 1, eagle: 2 }
+/** Výchozí nastavení = výchozí hodnoty Golfgames: bonusy za 1 bod, birdie ×2, eagle ×3. */
+export const DEFAULT_BONUS_CONFIG: BonusConfig = {
+  values: Object.fromEntries(BONUSES.map((b) => [b.id, b.defaultValue])),
+  confirmLongest: true,
+  confirmNearest: true,
+  longestByPersonalPar: true,
+  multipliers: { birdie: 2, eagle: 3 },
+  teamPerPoint: 0,
 }
 
-export function bonusValue(game: GameConfig, id: string): number {
-  return game.options.bonusValues?.[id] ?? 0
+/** Nastavení turnaje doplněné o výchozí hodnoty (starší data nemusí mít všechno). */
+export function bonusConfigOf(config: Partial<BonusConfig> | undefined): BonusConfig {
+  return {
+    ...DEFAULT_BONUS_CONFIG,
+    ...(config ?? {}),
+    values: { ...DEFAULT_BONUS_CONFIG.values, ...(config?.values ?? {}) },
+    multipliers: { ...DEFAULT_BONUS_CONFIG.multipliers, ...(config?.multipliers ?? {}) },
+  }
+}
+
+export function bonusValue(config: BonusConfig, id: string): number {
+  return config.values[id] ?? 0
+}
+
+/** Hraje se o extra body vůbec? */
+export function hasBonuses(config: BonusConfig): boolean {
+  return BONUSES.some((b) => bonusValue(config, b.id) > 0)
 }
 
 /** Ručně zapsané bonusy hráče na jamce (id). */
@@ -64,23 +85,17 @@ export function bonusesAt(
   return Array.isArray(list) ? list : []
 }
 
-/** Hra Extra body v kole, pokud je. */
-export function bonusGameOf(round: TournamentRound): GameConfig | undefined {
-  return round.games.find((game) => game.kind === 'bonuses')
-}
-
-/** Bonusy, které jde na jamce zaškrtnout: zapnuté ve hře a odpovídající paru. */
+/** Bonusy, které jde na jamce zaškrtnout: zapnuté a odpovídající paru. */
 export function availableBonuses(
-  game: GameConfig | undefined,
+  config: BonusConfig,
   round: TournamentRound,
   hole: number,
 ): BonusDefinition[] {
-  if (!game) return []
   const par = parAt(round, hole)
   return BONUSES.filter(
     (bonus) =>
       !bonus.auto &&
-      bonusValue(game, bonus.id) > 0 &&
+      bonusValue(config, bonus.id) > 0 &&
       (bonus.onlyPar === undefined || bonus.onlyPar === par),
   )
 }

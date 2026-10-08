@@ -1,6 +1,6 @@
 {
   "name": "turecko-cup",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Turecko Cup 26 - turnajová golfová aplikace pro 8 hráčů: živý zápis skóre, týmové i individuální vyhodnocení, veřejný leaderboard",
   "private": true,
   "type": "module",
@@ -41,6 +41,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.0.5",
+    "firebase-admin": "^14.5.0",
     "firebase-tools": "^15.32.1",
     "prettier": "^3.9.6",
     "typescript": "^7.0.2",

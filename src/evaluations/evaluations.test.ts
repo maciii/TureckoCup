@@ -4,6 +4,9 @@ import { SEED_PLAYERS, seedRounds } from '../data/seed'
 import { courseHandicapOf, strokesReceived } from '../model/round'
 import { evaluateGame, evaluateRound, roundTeamPoints } from './index'
 import { summarizeTournament } from './tournament'
+import type { BonusConfig } from '../model/types'
+import { DEFAULT_BONUS_CONFIG, availableBonuses } from '../model/bonuses'
+import { bonusAwardsAt, bonusPointsAt, bonusSummary } from './bonuses'
 
 /**
  * Evaluace nad reálnými daty prvního kola (Aspendos, bílá odpaliště)
@@ -253,78 +256,94 @@ describe('zvednutá jamka ve hře na rány', () => {
   })
 })
 
-describe('extra body', () => {
-  function bonusRound() {
-    const round = round1()
-    round.games.push({
-      id: 'bonuses',
-      kind: 'bonuses',
-      options: {
-        allowance: 1,
-        net: false,
-        bonusValues: { longest: 1, nearest: 2, birdie: 1, eagle: 3, sandie: 1 },
-        confirmByPar: true,
-      },
-      countsForTeam: true,
-      teamPoints: { perPoint: 0.5 },
-    })
-    return round
-  }
-  const bonusGame = (round: TournamentRound) => round.games[round.games.length - 1]!
+describe('extra body (centrální nastavení, vedlejší sázka v každém kole)', () => {
+  const config = (): BonusConfig => ({
+    ...DEFAULT_BONUS_CONFIG,
+    values: { ...DEFAULT_BONUS_CONFIG.values, nearest: 2, birdie: 1, eagle: 3 },
+    teamPerPoint: 0.5,
+  })
 
-  it('nearest na tříparové jamce, birdie z ran, potvrzení parem', () => {
-    const round = bonusRound()
-    // Jamka 3 (index 2) je par 3: Mac nearest a birdie (2 rány), Ota nearest nemá.
+  it('nearest na tříparové jamce, birdie z ran, potvrzení parem, násobič při birdie', () => {
+    const round = round1()
+    // Jamka 3 (index 2) je par 3: Mac birdie (2 rány) + nearest -> 2 + 1.
     round.scores.p1!['2'] = 2
     round.bonuses.p1!['2'] = ['nearest']
-    // Jamka 1 (par 4): Pavlos sandie, ale bogey - s potvrzením parem propadá.
+    // Jamka 1 (par 4): Pavlos sandie, ale bogey - bonus propadá.
     round.scores.p2!['0'] = 5
     round.bonuses.p2!['0'] = ['sandie']
-    // Jamka 5 (index 4, par 5): Ferry eagle (3 rány) = jen eagle, ne birdie.
+    // Jamka 5 (index 4, par 5): Ferry eagle (3 rány) = jen eagle, ne birdie; sandie ×3.
     round.scores.p6!['4'] = 3
-    const result = evaluateGame(round, SEED_PLAYERS, bonusGame(round))
-    const row = (id: string) => result.rows.find((r) => r.id === id)!
+    round.bonuses.p6!['4'] = ['sandie']
+    const summary = bonusSummary(round, SEED_PLAYERS, config())!
+    const row = (id: string) => summary.rows.find((r) => r.id === id)!
     expect(row('p1').value).toBe(3)
     expect(row('p1').secondary).toBe(2)
     expect(row('p2').value).toBe(0)
-    expect(row('p6').value).toBe(3)
-    expect(result.rows[0]!.id).toBe('p1')
-    // Týmové body: A (Mac 3 + Ferry? ne, Ferry je B) -> A 1,5, B 1,5.
-    expect(result.teamPoints).toEqual({ A: 1.5, B: 1.5 })
-
-    bonusGame(round).options.confirmByPar = false
-    expect(
-      evaluateGame(round, SEED_PLAYERS, bonusGame(round)).rows.find((r) => r.id === 'p2')!
-        .value,
-    ).toBe(1)
+    expect(row('p6').value).toBe(3 + 3)
+    expect(summary.rows[0]!.id).toBe('p6')
+    // Týmové body: A (Mac 3) × 0,5; B (Ferry 6) × 0,5.
+    expect(summary.teamPoints).toEqual({ A: 1.5, B: 3 })
+    expect(bonusAwardsAt(round, config(), 'p2', 0)[0]).toMatchObject({
+      void: true,
+      points: 0,
+    })
+    // Sandie na par (jamka 2) platí jedenkrát.
+    round.scores.p2!['1'] = 4
+    round.bonuses.p2!['1'] = ['sandie']
+    expect(bonusPointsAt(round, config(), 'p2', 1)).toBe(1)
   })
 
-  it('longest drží jediný hráč; dva držitelé = nikdo, zvednutá jamka = nic', () => {
-    const round = bonusRound()
-    round.scores.p1!['4'] = 5
+  it('longest drží jediný hráč; dva držitelé = nikdo, zvednutá jamka = nic, osobní par', () => {
+    const round = round1()
+    // Jamka 5 (index 4, par 5, SI 10): Mac (13 ran) má ránu -> bogey je osobní par.
+    round.scores.p1!['4'] = 6
     round.scores.p3!['4'] = 5
     round.bonuses.p1!['4'] = ['longest']
     round.bonuses.p3!['4'] = ['longest']
-    let result = evaluateGame(round, SEED_PLAYERS, bonusGame(round))
-    expect(result.rows.find((r) => r.id === 'p1')!.value).toBe(0)
+    expect(bonusPointsAt(round, config(), 'p1', 4)).toBe(0)
     delete round.bonuses.p3!['4']
-    result = evaluateGame(round, SEED_PLAYERS, bonusGame(round))
-    expect(result.rows.find((r) => r.id === 'p1')!.value).toBe(1)
+    expect(strokesReceived(round, 'p1', 4)).toBe(1)
+    expect(bonusPointsAt(round, config(), 'p1', 4)).toBe(1)
+    // Bez osobního paru je bogey nepotvrzený.
+    expect(
+      bonusPointsAt(round, { ...config(), longestByPersonalPar: false }, 'p1', 4),
+    ).toBe(0)
+    // Bez potvrzování platí i při dvojbogey.
+    round.scores.p1!['4'] = 7
+    expect(bonusPointsAt(round, { ...config(), confirmLongest: false }, 'p1', 4)).toBe(1)
     round.scores.p1!['4'] = 0
-    result = evaluateGame(round, SEED_PLAYERS, bonusGame(round))
-    expect(result.rows.find((r) => r.id === 'p1')!.value).toBe(0)
+    expect(bonusPointsAt(round, { ...config(), confirmLongest: false }, 'p1', 4)).toBe(0)
+    // Nezapsaná jamka: bonus čeká, nepočítá se.
+    delete round.scores.p1!['4']
+    expect(bonusAwardsAt(round, config(), 'p1', 4)[0]).toMatchObject({
+      pending: true,
+      points: 0,
+    })
   })
 
-  it('bonus s nulovou hodnotou se nepočítá a netto hra potvrzuje osobním parem', () => {
-    const round = bonusRound()
-    bonusGame(round).options.bonusValues = { sandie: 0, birdie: 1 }
-    bonusGame(round).options.net = true
-    // Jamka 15 (index 14, SI 1): Mac má ránu, 4 = netto birdie.
-    round.scores.p1!['14'] = 4
-    round.bonuses.p1!['14'] = ['sandie']
-    const result = evaluateGame(round, SEED_PLAYERS, bonusGame(round))
-    expect(result.rows.find((r) => r.id === 'p1')!.value).toBe(1)
-    expect(result.rows.find((r) => r.id === 'p1')!.secondary).toBe(1)
+  it('bonus s nulovou hodnotou se nenabízí ani nepočítá; bez bonusů žádná tabulka', () => {
+    const round = round1()
+    round.scores.p1!['0'] = 4
+    round.bonuses.p1!['0'] = ['sandie']
+    const off = { ...config(), values: { ...config().values, sandie: 0 } }
+    expect(bonusPointsAt(round, off, 'p1', 0)).toBe(0)
+    expect(availableBonuses(off, round, 0).map((b) => b.id)).toEqual([
+      'water',
+      'barkie',
+      'arnie',
+    ])
+    expect(availableBonuses(config(), round, 4).map((b) => b.id)[0]).toBe('longest')
+    const none = { ...config(), values: {} }
+    expect(bonusSummary(round, SEED_PLAYERS, none)).toBeNull()
+  })
+
+  it('agregace: extra body do součtů jednotlivců a týmové body kola', () => {
+    const round = round1()
+    round.scores.p1!['2'] = 2
+    const summary = summarizeTournament([round], SEED_PLAYERS, undefined, config())
+    expect(summary.individuals.find((i) => i.id === 'p1')?.bonus).toBe(1)
+    expect(summary.rounds[0]!.teamPoints.A).toBe(0.5)
+    expect(roundTeamPoints([], summary.rounds[0]!.bonuses)).toEqual({ A: 0.5, B: 0 })
   })
 })
 

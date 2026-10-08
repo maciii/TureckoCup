@@ -51,7 +51,7 @@ const DAYS: { round: string; games: string[]; team: boolean }[] = [
       'Skins brutto všech osm',
       'Team Skins zadní devítka',
       'Duely pozic brutto',
-      'Extra body do týmu',
+      'Extra body',
     ],
     team: true,
   },

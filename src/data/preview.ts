@@ -1,5 +1,6 @@
 import type {
   Access,
+  BonusConfig,
   GameConfig,
   Player,
   PlayerId,
@@ -9,7 +10,14 @@ import type {
 } from '../model/types'
 import { MAX_STROKES, PICKED_UP } from '../model/types'
 import { holeKey, holeOrder, isEntered, parAt, strokesReceived } from '../model/round'
-import { BONUSES } from '../model/bonuses'
+import { BONUSES, DEFAULT_BONUS_CONFIG } from '../model/bonuses'
+
+/** Extra body testovací verze: výchozí Golfgames hodnoty, navíc birdie za bod a do týmu půl bodu. */
+const PREVIEW_BONUSES: BonusConfig = {
+  ...DEFAULT_BONUS_CONFIG,
+  values: { ...DEFAULT_BONUS_CONFIG.values, birdie: 1 },
+  teamPerPoint: 0.5,
+}
 import { t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import {
@@ -135,12 +143,6 @@ function gamesForDay(day: number, positions: Record<TeamId, PlayerId[]>): GameCo
           { win: 1, halve: 0.5 },
           { countsForTeam: true },
         ),
-        game('bonuses', 'bonuses', null, {
-          allowance: 1,
-          net: false,
-          bonusValues: { longest: 1, nearest: 1, birdie: 1, eagle: 2, sandie: 1 },
-          confirmByPar: true,
-        }),
       ]
     case 2:
       return [
@@ -240,19 +242,6 @@ function gamesForDay(day: number, positions: Record<TeamId, PlayerId[]>): GameCo
           'preview.game.duelsGross',
           { allowance: 1, net: false, format: 'strokes-gross' },
           { win: 2, halve: 1 },
-          { countsForTeam: true },
-        ),
-        game(
-          'bonuses-team',
-          'bonuses',
-          'preview.game.bonusesTeam',
-          {
-            allowance: 1,
-            net: true,
-            bonusValues: { longest: 2, nearest: 2, birdie: 1 },
-            confirmByPar: false,
-          },
-          { perPoint: 0.5 },
           { countsForTeam: true },
         ),
       ]
@@ -373,7 +362,8 @@ export function previewRounds(seed = PREVIEW_SEED): TournamentRound[] {
     }
     if (plan.status === 'planned') return round
 
-    const bonusGame = round.games.find((g) => g.kind === 'bonuses')
+    // Extra body jsou centrální (tournament.bonuses) - hrají se v každém kole.
+    const bonusConfig = PREVIEW_BONUSES
     round.flights.forEach((flight, flightIndex) => {
       const holes = plan.played?.[flightIndex] ?? round.course.holeCount
       const order = holeOrder(round, flight)
@@ -388,22 +378,18 @@ export function previewRounds(seed = PREVIEW_SEED): TournamentRound[] {
             strokesReceived(round, id, hole),
           )
           // Sandie občas, ať je ve scorekartě vidět i obyčejný bonus.
-          if (
-            bonusGame &&
-            (bonusGame.options.bonusValues?.sandie ?? 0) > 0 &&
-            random() < 0.06
-          )
+          if ((bonusConfig.values.sandie ?? 0) > 0 && random() < 0.06)
             round.bonuses[id]![holeKey(hole)] = ['sandie']
         })
       })
     })
     // Longest (par 5) a Nearest (par 3) drží na jamce jediný hráč - losuje se
     // z těch, kdo jamku zapsali.
-    if (bonusGame) {
+    {
       for (let hole = 0; hole < round.course.holeCount; hole++) {
         for (const bonus of BONUSES) {
           if (!bonus.exclusive || bonus.onlyPar !== parAt(round, hole)) continue
-          if ((bonusGame.options.bonusValues?.[bonus.id] ?? 0) <= 0) continue
+          if ((bonusConfig.values[bonus.id] ?? 0) <= 0) continue
           const entered = round.playerIds.filter((id) => isEntered(round, id, hole))
           const holder = entered[Math.floor(random() * entered.length)]
           if (!holder) continue
@@ -422,6 +408,7 @@ export function previewState(seed = PREVIEW_SEED) {
     tournament: {
       ...SEED_TOURNAMENT,
       pickup: { timesPar: 2, plus: 0, addStrokes: false },
+      bonuses: PREVIEW_BONUSES,
     },
     players: PREVIEW_PLAYERS.map((p) => ({ ...p })),
     rounds: previewRounds(seed),

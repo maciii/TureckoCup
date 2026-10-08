@@ -13,7 +13,9 @@ import {
   teamOf,
 } from '../model/round'
 import type { EvaluationResult } from '../evaluations'
-import { bonusesAt, getBonus } from '../model/bonuses'
+import { bonusConfigOf, hasBonuses } from '../model/bonuses'
+import { bonusAwardsAt, bonusTotal } from '../evaluations/bonuses'
+import { useData } from '../data'
 import { t } from '../i18n'
 import { ScoreMark, formatToPar } from './common'
 
@@ -42,6 +44,8 @@ export default function Scorecard({
   currentHole,
   flightIndex,
 }: Props) {
+  const bonusConfig = bonusConfigOf(useData().state.tournament?.bonuses)
+  const withBonuses = hasBonuses(bonusConfig)
   const flights =
     flightIndex === undefined
       ? round.flights
@@ -149,11 +153,18 @@ export default function Scorecard({
                       score={scoreAt(round, id, hole)}
                       par={parAt(round, hole)}
                     />
-                    {bonusesAt(round, id, hole).length > 0 && (
+                    {bonusAwardsAt(round, bonusConfig, id, hole).length > 0 && (
                       <span className="cell-marks">
-                        {bonusesAt(round, id, hole)
-                          .map((bonusId) => getBonus(bonusId)?.mark ?? '')
-                          .join('')}
+                        {bonusAwardsAt(round, bonusConfig, id, hole).map((award) => (
+                          <span
+                            key={award.bonus.id}
+                            className={
+                              award.void ? 'void' : award.pending ? 'pending' : ''
+                            }
+                          >
+                            {award.bonus.mark}
+                          </span>
+                        ))}
                       </span>
                     )}
                   </td>
@@ -176,6 +187,7 @@ export default function Scorecard({
           <col />
           <col style={{ width: 70 }} />
           <col style={{ width: 54 }} />
+          {withBonuses && <col style={{ width: 48 }} />}
         </colgroup>
         <tbody>
           <tr className="row-par">
@@ -187,6 +199,11 @@ export default function Scorecard({
             <th className="row-label" style={{ textAlign: 'right' }}>
               {t('round.net')}
             </th>
+            {withBonuses && (
+              <th className="row-label" style={{ textAlign: 'right' }}>
+                {t('bonus.short')}
+              </th>
+            )}
           </tr>
           {flights.flatMap((flight) =>
             flight.players.map((id) => {
@@ -208,6 +225,11 @@ export default function Scorecard({
                       ? gross - hcp
                       : t('common.dash')}
                   </td>
+                  {withBonuses && (
+                    <td className="sum bonus-sum" style={{ textAlign: 'right' }}>
+                      {bonusTotal(round, bonusConfig, id)}
+                    </td>
+                  )}
                 </tr>
               )
             }),

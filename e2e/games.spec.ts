@@ -79,7 +79,7 @@ test('four-ball: přidání hry, dvojice z flightů a jejich úprava', async ({ 
   await startRound(page)
   await open(page, '#/admin/round/r1')
   await page.getByRole('button', { name: '+ Přidat hru' }).click()
-  const card = page.locator('.game-card').nth(5)
+  const card = page.locator('.game-card').nth(4)
   await expect(card.getByLabel('Hry kola')).toHaveValue('team-match')
   await expect(card.getByLabel('Zápas 1 A 1')).toHaveValue('p3')
   await expect(card.getByLabel('Zápas 1 A 2')).toHaveValue('p1')
@@ -107,16 +107,23 @@ test('four-ball: přidání hry, dvojice z flightů a jejich úprava', async ({ 
   expect(errors()).toEqual([])
 })
 
-test('extra body: nastavení, zápis u jamky, scorekarta a výsledky', async ({ page }) => {
+test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky', async ({
+  page,
+}) => {
   const errors = collectErrors(page)
   await startRound(page)
+  // Extra body se nastavují jednou pro celý turnaj v Pravidlech turnaje.
+  await open(page, '#/admin')
+  await expect(page.getByLabel('Nearest')).toHaveValue('1')
+  await expect(page.getByLabel('Sandie')).toHaveValue('1')
+  await expect(page.getByLabel('Birdie', { exact: true })).toHaveValue('0')
+  await page.getByLabel('Nearest').fill('2')
+  await expect(
+    page.getByRole('switch', { name: 'Nearest platí jen při paru a lepším' }),
+  ).toHaveAttribute('aria-checked', 'true')
+  // V nastavení kola žádná hra Extra body není - jsou obecné.
   await open(page, '#/admin/round/r1')
-  // Extra body jsou výchozí pátá hra kola.
-  const card = page.locator('.game-card').nth(4)
-  await expect(card.getByLabel('Hry kola')).toHaveValue('bonuses')
-  await expect(card.getByLabel('Nearest')).toHaveValue('1')
-  await expect(card.getByLabel('Sandie')).toHaveValue('0')
-  await card.getByLabel('Sandie').fill('1')
+  await expect(page.locator('.game-card')).toHaveCount(4)
   await expectNoHorizontalOverflow(page)
 
   await setIdentity(page, 'writer')
@@ -124,8 +131,13 @@ test('extra body: nastavení, zápis u jamky, scorekarta a výsledky', async ({ 
   const rows = page.locator('.player-row')
   const mac = rows.nth(1)
   const pavlos = rows.nth(2)
-  // Jamka 1 a 2 (par 4): hvězdička nabízí jen sandie, ne nearest.
+  // Jamka 1 a 2 (par 4): hvězdička nabízí sandie, water, barkie, arnie - ne nearest.
   await expect(mac.getByRole('button', { name: 'Extra body: Mac' })).toHaveText('★')
+  await mac.getByRole('button', { name: 'Extra body: Mac' }).click()
+  const sheet = page.getByRole('dialog', { name: 'Extra body' })
+  await expect(sheet.locator('.bonus-option')).toHaveCount(4)
+  await expect(sheet.getByRole('button', { name: /Nearest/ })).toHaveCount(0)
+  await sheet.getByRole('button', { name: 'Zavřít' }).click()
   await enterPar(page, [0, 1, 2, 3])
   await page
     .getByRole('button', { name: /Další jamka/ })
@@ -138,21 +150,22 @@ test('extra body: nastavení, zápis u jamky, scorekarta a výsledky', async ({ 
     .click()
   await expect(page.locator('.hole-info')).toContainText('Jamka 3 z 18')
 
-  // Jamka 3 (par 3): Mac birdie (2) + nearest.
+  // Jamka 3 (par 3): Mac birdie (2) + nearest (za 2 body) + sandie (×2 při birdie).
   await mac.locator('.score-value').click()
   await mac.locator('.step-button').first().click()
   await expect(mac.locator('.mark')).toHaveText('2')
   await mac.getByRole('button', { name: 'Extra body: Mac' }).click()
-  const sheet = page.getByRole('dialog', { name: 'Extra body' })
-  await expect(sheet.locator('.bonus-option')).toHaveCount(2)
+  await expect(sheet.locator('.bonus-option')).toHaveCount(5)
   await expect(sheet.getByRole('button', { name: /Longest/ })).toHaveCount(0)
+  await expect(sheet.getByRole('button', { name: /Nearest/ })).toContainText('+2')
   await sheet.getByRole('button', { name: /Nearest/ }).click()
+  await sheet.getByRole('button', { name: /Sandie/ }).click()
   await expect(sheet.getByRole('button', { name: /Nearest/ })).toHaveAttribute(
     'aria-pressed',
     'true',
   )
   await sheet.getByRole('button', { name: 'Zavřít' }).click()
-  await expect(mac.getByRole('button', { name: 'Extra body: Mac' })).toHaveText('NB')
+  await expect(mac.getByRole('button', { name: 'Extra body: Mac' })).toHaveText('NS')
 
   // Pavlos par a nearest: Macovi nearest zmizí, jen jeden hráč ho může mít.
   await pavlos.locator('.score-value').click()
@@ -160,11 +173,16 @@ test('extra body: nastavení, zápis u jamky, scorekarta a výsledky', async ({ 
   await sheet.getByRole('button', { name: /Nearest/ }).click()
   await sheet.getByRole('button', { name: 'Zavřít' }).click()
   await expect(pavlos.getByRole('button', { name: 'Extra body: Pavlos' })).toHaveText('N')
-  await expect(mac.getByRole('button', { name: 'Extra body: Mac' })).toHaveText('B')
+  await expect(mac.getByRole('button', { name: 'Extra body: Mac' })).toHaveText('S')
 
-  // Scorekarta ukazuje značku u rány.
+  // Scorekarta ukazuje značku u rány a sloupec Extra se součtem bodů.
   await page.getByRole('button', { name: 'Scorekarta' }).click()
   await expect(page.locator('.scorecard .cell-marks', { hasText: 'N' })).toHaveCount(1)
+  await expect(page.locator('.scorecard .cell-marks', { hasText: 'S' })).toHaveCount(1)
+  const extra = page.locator('.scorecard td.bonus-sum')
+  await expect(extra).toHaveCount(4)
+  await expect(extra.nth(1)).toHaveText('2')
+  await expect(extra.nth(2)).toHaveText('2')
   await expectNoHorizontalOverflow(page)
   await page.locator('.sheet').getByRole('button', { name: 'Zavřít' }).click()
 
@@ -173,9 +191,10 @@ test('extra body: nastavení, zápis u jamky, scorekarta a výsledky', async ({ 
     has: page.getByRole('heading', { name: 'Extra body' }),
   })
   const row = (name: string) => section.locator('li.row', { hasText: name })
-  await expect(row('Mac').locator('.pill')).toHaveText('1')
-  await expect(row('Mac').locator('.row-meta')).toContainText('Birdie')
-  await expect(row('Pavel').locator('.pill')).toHaveText('1')
+  // Mac: sandie při birdie ×2 = 2; Pavel: nearest za 2; Ota nic.
+  await expect(row('Mac').locator('.pill')).toHaveText('2')
+  await expect(row('Mac').locator('.row-meta')).toContainText('Sandie')
+  await expect(row('Pavel').locator('.pill')).toHaveText('2')
   await expect(row('Pavel').locator('.row-meta')).toContainText('Nearest')
   await expect(row('Ota').locator('.pill')).toHaveText('0')
   expect(errors()).toEqual([])

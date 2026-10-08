@@ -1,4 +1,5 @@
 import type {
+  BonusConfig,
   GameKind,
   PickupRule,
   Player,
@@ -8,6 +9,9 @@ import type {
 } from '../model/types'
 import { POSITIONS } from '../model/types'
 import { DEFAULT_PICKUP } from '../model/pickup'
+import { DEFAULT_BONUS_CONFIG } from '../model/bonuses'
+import { bonusSummary } from './bonuses'
+import type { BonusSummary } from './bonuses'
 import { evaluateRound, roundTeamPoints } from './index'
 import type { EvaluationResult } from './types'
 import { rankRows } from './types'
@@ -20,6 +24,9 @@ import { rankRows } from './types'
 export interface RoundEvaluation {
   round: TournamentRound
   results: EvaluationResult[]
+  /** Extra body kola; `null`, když se o ně nehraje. */
+  bonuses: BonusSummary | null
+  /** Včetně extra bodů do týmu, jsou-li zapnuté. */
   teamPoints: Record<TeamId, number>
 }
 
@@ -28,6 +35,8 @@ export interface IndividualTotal {
   teamId?: TeamId
   stableford: number
   skins: number
+  /** Extra body přes odehraná kola. */
+  bonus: number
   rounds: number
   position: number
 }
@@ -62,10 +71,12 @@ export function summarizeTournament(
   rounds: TournamentRound[],
   players: Player[],
   pickup: PickupRule = DEFAULT_PICKUP,
+  bonusConfig: BonusConfig = DEFAULT_BONUS_CONFIG,
 ): TournamentSummary {
   const evaluated: RoundEvaluation[] = playedRounds(rounds).map((round) => {
     const results = evaluateRound(round, players, pickup)
-    return { round, results, teamPoints: roundTeamPoints(results) }
+    const bonuses = bonusSummary(round, players, bonusConfig)
+    return { round, results, bonuses, teamPoints: roundTeamPoints(results, bonuses) }
   })
 
   const teamPoints: Record<TeamId, number> = { A: 0, B: 0 }
@@ -81,6 +92,7 @@ export function summarizeTournament(
       teamId: player.teamId,
       stableford: 0,
       skins: 0,
+      bonus: 0,
       rounds: 0,
       position: 0,
     })
@@ -101,6 +113,10 @@ export function summarizeTournament(
   for (const entry of evaluated) {
     sumKind(entry, 'individual-stableford', 'stableford')
     sumKind(entry, 'individual-skins', 'skins')
+    for (const row of entry.bonuses?.rows ?? []) {
+      const total = totals.get(row.id)
+      if (total) total.bonus += row.value
+    }
     for (const id of entry.round.playerIds) {
       const total = totals.get(id)
       if (total && Object.keys(entry.round.scores[id] ?? {}).length > 0) total.rounds += 1
