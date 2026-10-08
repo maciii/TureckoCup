@@ -2099,6 +2099,7 @@ a.menu-item {
 
 /* Přepínač hráčů v panelu extra bodů: na 320 px se čtyři jména nevejdou, posouvají se. */
 .bonus-players {
+  flex: none; /* panel je flex sloupec s rolováním; řádek se nesmí smrsknout */
   padding-top: 0;
   overflow-x: auto;
   scrollbar-width: none;
