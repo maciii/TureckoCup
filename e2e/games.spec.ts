@@ -131,9 +131,9 @@ test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky
   const rows = page.locator('.player-row')
   const mac = rows.nth(1)
   const pavlos = rows.nth(2)
-  // Jamka 1 a 2 (par 4): hvězdička nabízí sandie, water, barkie, arnie - ne nearest.
-  await expect(mac.getByRole('button', { name: 'Extra body: Mac' })).toHaveText('★')
-  await mac.getByRole('button', { name: 'Extra body: Mac' }).click()
+  // Jamka 1 a 2 (par 4): tlačítko jamky nabízí sandie, water, barkie, arnie - ne nearest.
+  const entry = page.getByRole('button', { name: '★ Extra body' })
+  await entry.click()
   const sheet = page.getByRole('dialog', { name: 'Extra body' })
   await expect(sheet.locator('.bonus-option')).toHaveCount(4)
   await expect(sheet.getByRole('button', { name: /Nearest/ })).toHaveCount(0)
@@ -154,7 +154,10 @@ test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky
   await mac.locator('.score-value').click()
   await mac.locator('.step-button').first().click()
   await expect(mac.locator('.mark')).toHaveText('2')
-  await mac.getByRole('button', { name: 'Extra body: Mac' }).click()
+  await pavlos.locator('.score-value').click()
+  await entry.click()
+  await sheet.getByRole('button', { name: 'Mac', exact: true }).click()
+  await expect(sheet).toContainText('Mac · jamka 3')
   await expect(sheet.locator('.bonus-option')).toHaveCount(5)
   await expect(sheet.getByRole('button', { name: /Longest/ })).toHaveCount(0)
   await expect(sheet.getByRole('button', { name: /Nearest/ })).toContainText('+2')
@@ -164,16 +167,12 @@ test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky
     'aria-pressed',
     'true',
   )
-  await sheet.getByRole('button', { name: 'Zavřít' }).click()
-  await expect(mac.getByRole('button', { name: 'Extra body: Mac' })).toHaveText('NS')
-
-  // Pavlos par a nearest: Macovi nearest zmizí, jen jeden hráč ho může mít.
-  await pavlos.locator('.score-value').click()
-  await pavlos.getByRole('button', { name: 'Extra body: Pavlos' }).click()
+  // Přepnutí na Pavlose v panelu: nearest přebere, Macovi zmizí.
+  await sheet.getByRole('button', { name: /^Pavlos/ }).click()
   await sheet.getByRole('button', { name: /Nearest/ }).click()
   await sheet.getByRole('button', { name: 'Zavřít' }).click()
-  await expect(pavlos.getByRole('button', { name: 'Extra body: Pavlos' })).toHaveText('N')
-  await expect(mac.getByRole('button', { name: 'Extra body: Mac' })).toHaveText('S')
+  await expect(mac.locator('.bonus-marks')).toHaveText('S')
+  await expect(pavlos.locator('.bonus-marks')).toHaveText('N')
 
   // Scorekarta ukazuje značku u rány a sloupec Extra se součtem bodů.
   await page.getByRole('button', { name: 'Scorekarta' }).click()

@@ -1931,29 +1931,27 @@ a.menu-item {
 
 /* --- extra body ----------------------------------------------------------- */
 
-/* Značky bonusů u jména v zápisu; klikací, otevírá výběr. */
-.bonus-button {
+/* Značky extra bodů u jména v zápisu; tlačítko je jedno pro celou jamku. */
+.bonus-marks {
   display: inline-flex;
   align-items: center;
   gap: 3px;
   margin-left: 6px;
-  min-height: 22px;
-  padding: 0 7px;
+  padding: 1px 6px;
   border-radius: 6px;
-  background: var(--track);
-  color: var(--ink-2);
+  background: var(--green-soft);
+  color: var(--fairway-deep);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.04em;
 }
 
-.bonus-button.active {
-  background: var(--green-soft);
-  color: var(--fairway-deep);
-}
-
-.bonus-button:disabled {
-  opacity: 0.5;
+.tag.bonus-entry {
+  min-height: 38px;
+  padding: 0 14px;
+  background: var(--gold-soft);
+  color: var(--team-a-text);
+  cursor: pointer;
 }
 
 .bonus-mark {
@@ -2080,7 +2078,7 @@ a.menu-item {
   font-variant-numeric: tabular-nums;
 }
 
-.bonus-button .pending,
+.bonus-marks .pending,
 .cell-marks .pending {
   opacity: 0.45;
 }
@@ -2097,4 +2095,17 @@ a.menu-item {
 .field-label .hint {
   margin-left: 6px;
   font-weight: 600;
+}
+
+/* Přepínač hráčů v panelu extra bodů: na 320 px se čtyři jména nevejdou, posouvají se. */
+.bonus-players {
+  padding-top: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.bonus-players .tab {
+  flex: 0 0 auto;
+  padding-left: 14px;
+  padding-right: 14px;
 }

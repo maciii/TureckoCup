@@ -8,21 +8,26 @@ import { useData } from '../data'
 interface Props {
   round: TournamentRound
   config: BonusConfig
+  /** Hráči flightu - přepínají se nahoře v panelu. */
+  playerIds: PlayerId[]
   playerId: PlayerId
+  onSelect: (playerId: PlayerId) => void
   hole: number
   onToggle: (bonus: BonusDefinition) => void
   onClose: () => void
 }
 
 /**
- * Výběr extra bodů pro jednoho hráče na jedné jamce (vzor Golfgames
- * `BonusSheet`). Nabízí jen bonusy zapnuté ve hře a odpovídající paru;
- * birdie a eagle se nezaškrtávají, počítají se z ran.
+ * Výběr extra bodů na jedné jamce (vzor Golfgames `BonusSheet`), s přepínačem
+ * hráče flightu nahoře. Nabízí jen bonusy zapnuté v turnaji a odpovídající
+ * paru; birdie a eagle se nezaškrtávají, počítají se z ran.
  */
 export default function BonusSheet({
   round,
   config,
+  playerIds,
   playerId,
+  onSelect,
   hole,
   onToggle,
   onClose,
@@ -44,6 +49,20 @@ export default function BonusSheet({
             hole: hole + 1,
           })}
         </p>
+        <div className="tabs compact px bonus-players">
+          {playerIds.map((id) => (
+            <button
+              key={id}
+              type="button"
+              className={`tab${id === playerId ? ' selected' : ''}`}
+              aria-pressed={id === playerId}
+              onClick={() => onSelect(id)}
+            >
+              {shortName(state.players, id)}
+              {bonusesAt(round, id, hole).length > 0 && ' ·'}
+            </button>
+          ))}
+        </div>
         <ul className="bonus-list px">
           {available.map((bonus) => {
             const active = selected.includes(bonus.id)

@@ -301,8 +301,23 @@ export default function PlayScreen({ roundId, flight }: Props) {
           <span className="sep">·</span>
           {t('play.holeOf', { index: orderIndex + 1, count })}
         </div>
-        {(skinsResult || teamSkinsResult || meta.pending > 0 || others.length > 0) && (
+        {(skinsResult ||
+          teamSkinsResult ||
+          meta.pending > 0 ||
+          others.length > 0 ||
+          bonusChoices.length > 0) && (
           <div className="stakes">
+            {/* Extra body jednou pro celou jamku - u jmen by se na úzkém displeji
+                tlačítko nevešlo a čtyři hráči by se museli rolovat. */}
+            {bonusChoices.length > 0 && entryEnabled && (
+              <button
+                type="button"
+                className="tag bonus-entry"
+                onClick={() => setBonusFor(flightEntry.players[0] ?? null)}
+              >
+                ★ {t('bonus.title')}
+              </button>
+            )}
             {skinsResult && (
               <span className={`tag${flightSkins > 1 ? ' hot' : ''}`}>
                 {t('games.individual-skins.name')} · {flightSkins}
@@ -376,32 +391,23 @@ export default function PlayScreen({ roundId, flight }: Props) {
                         {t('play.pointsShort', { count: points })}
                       </span>
                     )}
-                    {(bonusChoices.length > 0 || awards.length > 0) && (
-                      <button
-                        type="button"
-                        className={`bonus-button${awards.length > 0 ? ' active' : ''}`}
-                        disabled={!entryEnabled || bonusChoices.length === 0}
-                        onClick={() => setBonusFor(playerId)}
+                    {awards.length > 0 && (
+                      <span
+                        className="bonus-marks"
                         aria-label={t('play.bonusesFor', { name })}
                       >
-                        {awards.length > 0
-                          ? awards.map((award) => (
-                              <span
-                                key={award.bonus.id}
-                                className={
-                                  award.void
-                                    ? 'void'
-                                    : award.pending
-                                      ? 'pending'
-                                      : undefined
-                                }
-                                title={award.void ? t('play.bonusesVoid') : undefined}
-                              >
-                                {award.bonus.mark}
-                              </span>
-                            ))
-                          : '★'}
-                      </button>
+                        {awards.map((award) => (
+                          <span
+                            key={award.bonus.id}
+                            className={
+                              award.void ? 'void' : award.pending ? 'pending' : undefined
+                            }
+                            title={award.void ? t('play.bonusesVoid') : undefined}
+                          >
+                            {award.bonus.mark}
+                          </span>
+                        ))}
+                      </span>
                     )}
                   </span>
                 </div>
@@ -480,7 +486,9 @@ export default function PlayScreen({ roundId, flight }: Props) {
         <BonusSheet
           round={round}
           config={bonusConfig}
+          playerIds={flightEntry.players}
           playerId={bonusFor}
+          onSelect={setBonusFor}
           hole={hole}
           onToggle={(bonus) => toggleBonus(bonusFor, bonus)}
           onClose={() => setBonusFor(null)}
