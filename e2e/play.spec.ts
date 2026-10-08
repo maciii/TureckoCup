@@ -84,6 +84,28 @@ test('zápis přežije obnovení stránky', async ({ page }) => {
   await expect(page.locator('.player-row').nth(0).locator('.mark')).toHaveText('5')
 })
 
+test('na poslední jamce je místo Další jamka tlačítko Ukončit hru na vyhodnocení', async ({
+  page,
+}) => {
+  // Zapisovatel skočí na uloženou jamku flightu: 18. jamka (index 17).
+  await page.evaluate(() => localStorage.setItem('tc26.playHole.v1:r1:0', '17'))
+  // Stejná adresa by jen přepnula hash bez načtení - uložená jamka se čte při startu.
+  await page.reload()
+  await page.waitForSelector('.player-row')
+  await expect(page.locator('.hole-info')).toContainText('Jamka 18 z 18')
+  // Šipka u čísla jamky zůstává (neaktivní), v patičce je místo ní Ukončit hru.
+  const footer = page.locator('.footer-row')
+  await expect(footer.getByRole('button', { name: /Další jamka/ })).toHaveCount(0)
+  const finish = footer.getByRole('button', { name: /Ukončit hru/ })
+  await expect(finish).toBeEnabled()
+  const rows = page.locator('.player-row')
+  for (let i = 0; i < 4; i += 1) await rows.nth(i).locator('.score-value').click()
+  await expect(finish).toHaveClass(/primary/)
+  await finish.click()
+  await expect(page).toHaveURL(/#\/round\/r1$/)
+  await expect(page.getByRole('heading', { level: 1, name: /Kolo 1/ })).toBeVisible()
+})
+
 test('scorekarta v zápisu ukazuje zapsané rány', async ({ page }) => {
   const rows = page.locator('.player-row')
   await rows.nth(0).locator('.score-value').click()

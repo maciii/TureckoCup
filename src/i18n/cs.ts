@@ -159,6 +159,7 @@ export const cs = {
   'play.previousHole': 'Předchozí jamka',
   'play.holeOf': 'Jamka {index} z {count}',
   'play.nextHole': 'Další jamka',
+  'play.finish': 'Ukončit hru',
   'play.bonusesFor': 'Extra body: {name}',
   'play.status.title': 'Stav her na jamce',
   'play.status.pending': 'čeká na zápis',

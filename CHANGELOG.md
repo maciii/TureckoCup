@@ -3,6 +3,13 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.15.6] – 2026-10-08
+
+### Změněno
+
+- Na poslední jamce flightu je místo neaktivního „Další jamka“ tlačítko
+  **Ukončit hru**, které otevře vyhodnocení kola.
+
 ## [0.15.5] – 2026-10-08
 
 ### Opraveno

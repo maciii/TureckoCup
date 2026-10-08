@@ -480,14 +480,24 @@ export default function PlayScreen({ roundId, flight }: Props) {
           <button type="button" className="btn sm" onClick={() => setShowCard(true)}>
             {t('play.showScorecard')}
           </button>
-          <button
-            type="button"
-            className={`btn sm${holeComplete && canGoNext ? ' primary' : ''}`}
-            onClick={() => goTo(1)}
-            disabled={!canGoNext}
-          >
-            {t('play.nextHole')} ›
-          </button>
+          {canGoNext ? (
+            <button
+              type="button"
+              className={`btn sm${holeComplete ? ' primary' : ''}`}
+              onClick={() => goTo(1)}
+            >
+              {t('play.nextHole')} ›
+            </button>
+          ) : (
+            // Poslední jamka flightu: místo neaktivní šipky rovnou na vyhodnocení kola.
+            <button
+              type="button"
+              className={`btn sm${holeComplete ? ' primary' : ''}`}
+              onClick={() => navigate({ view: 'round', roundId })}
+            >
+              {t('play.finish')} ›
+            </button>
+          )}
         </div>
       </footer>
 
