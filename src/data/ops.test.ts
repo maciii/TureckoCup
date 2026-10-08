@@ -274,6 +274,9 @@ describe('snímek soupisky do kola', () => {
       ],
     }
     expect(rosterOutdated(round, state.players)).toBe(false)
+    // Firestore vrací klíče mapy v libovolném pořadí - pořadí týmů není rozdíl.
+    const swapped = { B: round.positions.B, A: round.positions.A }
+    expect(rosterOutdated({ ...round, positions: swapped }, state.players)).toBe(false)
     // Soldík dostane index a přejde do týmu A na pozici 1, Ota jde na trojku.
     const players = state.players.map((p) =>
       p.id === 'p4'

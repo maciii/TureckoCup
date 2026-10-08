@@ -11,6 +11,7 @@ import type {
   TournamentRound,
   TournamentState,
 } from '../model/types'
+import { TEAM_IDS } from '../model/types'
 import type { Op } from './ops'
 import aspendos from '../courses/aspendos.json'
 import lykia from '../courses/lykia-links.json'
@@ -346,7 +347,13 @@ export function rosterOutdated(
   const mode = (round.handicapMode ?? 'course') !== handicapMode
   const index =
     mode || players.some((p) => (round.playerIndex[p.id] ?? null) !== p.handicapIndex)
-  const positions = JSON.stringify(fresh.positions) !== JSON.stringify(round.positions)
+  // Po týmech, ne přes celý objekt: Firestore vrací klíče mapy v libovolném
+  // pořadí a `{B, A}` by se jinak lišilo od `{A, B}` navždy.
+  const positions = TEAM_IDS.some(
+    (team) =>
+      JSON.stringify(fresh.positions[team]) !==
+      JSON.stringify(round.positions[team] ?? []),
+  )
   const flights =
     JSON.stringify(fresh.flights.map((f) => f.players)) !==
     JSON.stringify(round.flights.map((f) => f.players))

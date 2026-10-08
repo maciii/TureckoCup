@@ -3,6 +3,15 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.11.1] – 2026-10-08
+
+### Opraveno
+
+- Admin hlásil „plánovaná kola mají starší HCP, týmy nebo pozice než
+  soupiska“ i po klepnutí na „Promítnout soupisku“: Firestore vrací klíče
+  mapy pozic v libovolném pořadí a porovnání snímku bralo `{B, A}` jako jiný
+  obsah než `{A, B}`. Pozice se teď porovnávají po týmech.
+
 ## [0.11.0] – 2026-10-08
 
 ### Změněno
