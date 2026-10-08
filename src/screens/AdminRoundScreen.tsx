@@ -540,8 +540,20 @@ function matchPairs(sides: GameSide[]): GameSide[][] {
  */
 function withKind(game: GameConfig, round: TournamentRound, kind: GameKind): GameConfig {
   const { name: _name, ...rest } = game
-  if (hasSides(kind) && !game.sides?.length)
-    return { ...rest, kind, sides: flightSides(round) }
+  if (hasSides(kind)) {
+    // Týmová hra bez bodů týmu by zápas hrála zbytečně: výchozí 1 / 0,5 a počítá se.
+    const teamPoints =
+      game.teamPoints.win || game.teamPoints.halve
+        ? game.teamPoints
+        : { win: 1, halve: 0.5 }
+    return {
+      ...rest,
+      kind,
+      countsForTeam: true,
+      teamPoints,
+      ...(game.sides?.length ? {} : { sides: flightSides(round) }),
+    }
+  }
   return { ...rest, kind }
 }
 
@@ -768,6 +780,8 @@ function GameEditor({
   const setOptions = (next: Partial<GameConfig['options']>) =>
     onChange({ ...game, options: { ...options, ...next } })
   const isDuel = game.kind === 'position-duel' || hasSides(game.kind)
+  // Best + Součet má vlastní bodování - formát duelu u něj nemá co dělat.
+  const hasFormat = isDuel && game.kind !== 'best-aggregate'
   const isSkins = game.kind === 'individual-skins' || game.kind === 'team-skins'
   const holeNumbers = Array.from({ length: round.course.holeCount }, (_, i) => i)
   const holes = game.holes ?? { from: 0, to: round.course.holeCount - 1 }
@@ -849,11 +863,17 @@ function GameEditor({
         on={game.countsForTeam}
         onChange={(countsForTeam) => onChange({ ...game, countsForTeam })}
       />
-      <Switch
-        label={t('admin.gameNet')}
-        on={options.net}
-        onChange={(net) => setOptions({ net })}
-      />
+      {/* U duelů rozhoduje netto/brutto formát (Rány, Stableford); přepínač
+          Netto má smysl jen u jamkovky, Best + Součet a her jednotlivců. */}
+      {(!isDuel ||
+        hasFormat === false ||
+        (options.format ?? 'strokes-net') === 'match-play') && (
+        <Switch
+          label={t('admin.gameNet')}
+          on={options.net}
+          onChange={(net) => setOptions({ net })}
+        />
+      )}
       <div className="field">
         <span className="field-label">{t('admin.gameAllowance')}</span>
         <input
@@ -912,21 +932,27 @@ function GameEditor({
       )}
       {isDuel && (
         <>
-          <div className="field">
-            <div className="tabs compact" style={{ width: '100%' }}>
-              {FORMATS.map((format) => (
-                <button
-                  key={format}
-                  type="button"
-                  className={`tab${(options.format ?? 'strokes-net') === format ? ' selected' : ''}`}
-                  aria-pressed={(options.format ?? 'strokes-net') === format}
-                  onClick={() => setOptions({ format })}
-                >
-                  {t(`format.${format}`)}
-                </button>
-              ))}
+          {hasFormat && (
+            <div
+              className="field"
+              style={{ flexDirection: 'column', alignItems: 'stretch' }}
+            >
+              <div className="tabs compact" style={{ width: '100%' }}>
+                {FORMATS.map((format) => (
+                  <button
+                    key={format}
+                    type="button"
+                    className={`tab${(options.format ?? 'strokes-net') === format ? ' selected' : ''}`}
+                    aria-pressed={(options.format ?? 'strokes-net') === format}
+                    onClick={() => setOptions({ format })}
+                  >
+                    {t(`format.${format}`)}
+                  </button>
+                ))}
+              </div>
+              <p className="hint">{t('admin.gameFormatHint')}</p>
             </div>
-          </div>
+          )}
           <div className="field">
             <span className="field-label">{t('admin.gameWin')}</span>
             <input

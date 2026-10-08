@@ -310,6 +310,8 @@ export const cs = {
   'admin.gameHolesTo': 'Do jamky',
   'admin.gameCountsForTeam': 'Počítá se do týmového skóre',
   'admin.gameNet': 'Netto',
+  'admin.gameFormatHint':
+    'Rány a Stableford určují netto nebo brutto samy; u Jamkovky rozhoduje přepínač Netto.',
   'admin.gameAllowance': 'Allowance (%)',
   'admin.gameScopeFlight': 'Ve flightu',
   'admin.gameScopeAll': 'Všech 8',

@@ -3,6 +3,15 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.17.1] – 2026-10-08
+
+### Změněno
+
+- Editor hry: Best + Součet nemá záložky formátu duelu (má vlastní
+  bodování). U duelů a Four-ballu se přepínač Netto ukáže jen u Jamkovky,
+  Rány a Stableford mají netto/brutto ve formátu; pod záložkami je nápověda.
+  Přepnutí druhu hry na týmovou hru zapne body týmu (1 / 0,5).
+
 ## [0.17.0] – 2026-10-08
 
 ### Přidáno

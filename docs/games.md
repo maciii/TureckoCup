@@ -46,12 +46,16 @@ hra má výchozí `countsForTeam: true`.
 Samostatná výsledková vrstva (spec §7, §8): A1 proti B1, A2 proti B2, A3
 proti B3, A4 proti B4 podle snímku pozic v kole. Formát je konfigurovatelný:
 
-| `format`        | Pravidlo                                    |
-| --------------- | ------------------------------------------- |
-| `strokes-gross` | součet brutto ran, nižší vyhrává            |
-| `strokes-net`   | součet netto ran, nižší vyhrává (výchozí)   |
-| `stableford`    | součet Stablefordových bodů, vyšší vyhrává  |
-| `match-play`    | jamkovka na netto rány, `2 UP`, `3&2`, `AS` |
+| `format`        | Pravidlo                                  |
+| --------------- | ----------------------------------------- |
+| `strokes-gross` | součet brutto ran, nižší vyhrává          |
+| `strokes-net`   | součet netto ran, nižší vyhrává (výchozí) |
+
+Přepínač **Netto** hry u duelů platí jen pro jamkovku (netto, nebo brutto
+lepší míč); Rány a Stableford mají netto/brutto ve formátu. Best + Součet
+formát nemá, tam platí jen Netto a allowance.
+| `stableford` | součet Stablefordových bodů, vyšší vyhrává |
+| `match-play` | jamkovka na netto rány, `2 UP`, `3&2`, `AS` |
 
 V součtových formátech se porovnává jen přes jamky, které mají obě strany
 zapsané (strana o jamku napřed „nevede“ jen proto, že má víc zapsáno), a
