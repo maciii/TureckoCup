@@ -73,6 +73,8 @@ export interface SidePoints {
   best: number
   aggregate: number
   bonus: number
+  /** Double Best: oba míče dvojice porazily oba míče soupeře. */
+  doubleBest: number
   /** Extra body partnerů, pokud je hra počítá (`options.bonuses`). */
   extra: number
   total: number

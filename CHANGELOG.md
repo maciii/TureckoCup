@@ -3,6 +3,13 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.19.0] – 2026-10-08
+
+### Přidáno
+
+- Best + Součet: volitelný **Double Best** (bodů za jamku, 0 = nehraje se):
+  bod navíc, když oba míče dvojice porazí oba míče soupeře.
+
 ## [0.18.0] – 2026-10-08
 
 ### Změněno

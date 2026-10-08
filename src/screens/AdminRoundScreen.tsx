@@ -853,6 +853,19 @@ function GameEditor({
       />
       {/* Extra body jdou do týmu přes konkrétní hru: Best + Součet je dává do bodů
           dvojice na jamce, ostatní týmové hry k bodům týmu sazbou z Pravidel turnaje. */}
+      {game.kind === 'best-aggregate' && (
+        <div className="field">
+          <span className="field-label">{t('admin.gameDoubleBest')}</span>
+          <DecimalInput
+            label={t('admin.gameDoubleBest')}
+            value={options.doubleBest ?? 0}
+            onCommit={(doubleBest) => setOptions({ doubleBest })}
+          />
+        </div>
+      )}
+      {game.kind === 'best-aggregate' && (
+        <p className="hint">{t('admin.gameDoubleBestHint')}</p>
+      )}
       {(game.countsForTeam || game.kind === 'best-aggregate') && (
         <>
           <Switch

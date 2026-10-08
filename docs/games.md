@@ -135,8 +135,10 @@ Pravidla jako v Golfgames:
 Vzor Golfgames: dvě dvojice (strany jako u Four-ballu), na každé jamce
 dvojici body: **1 za Best** (nižší lepší míč), **1 za součet** (nižší
 součet ran obou partnerů), **1 za každé birdie** a **3 za každý eagle**
-partnerů (brutto, ze skutečných ran). Při shodě lepšího míče nebo součtu bod
-nedostane nikdo. Jamka se počítá, až zapíší všichni čtyři. Lepší míč
+partnerů (brutto, ze skutečných ran). Volitelně **Double Best**
+(`options.doubleBest`, bodů; 0 = nehraje se): bod navíc, když oba míče
+dvojice porazí oba míče soupeře (vzdaný míč je nejhorší). Při shodě lepšího
+míče nebo součtu bod nedostane nikdo. Jamka se počítá, až zapíší všichni čtyři. Lepší míč
 a součet jsou netto podle přepínače Netto (s `allowance`); zvednutý míč je
 v lepším míči vzdaný, v součtu má rány podle centrálního pravidla zvednuté
 jamky. Vyhrává dvojice s víc body, body do týmu jako u Four-ballu (výhra /

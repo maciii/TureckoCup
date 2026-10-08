@@ -101,6 +101,28 @@ describe('Best + Součet', () => {
     expect(b.total).toBe(0)
   })
 
+  it('Double Best: oba míče lepší než oba soupeřovy dají bod navíc, vzdaný míč ho zruší', () => {
+    const round = round1()
+    // A 3+4 proti B 5+6: A má best, součet i double best.
+    enter(round, { p3: [3, 3], p1: [4, PICKED_UP], p2: [5, 5], p6: [6, 6] })
+    const withDouble = { ...game(), options: { ...game().options, doubleBest: 1 } }
+    const hp = evaluateGame(round, SEED_PLAYERS, withDouble).duels![0]!.holePoints!
+    expect(hp['0']![0]).toMatchObject({
+      best: 1,
+      aggregate: 1,
+      doubleBest: 1,
+      bonus: 1,
+      total: 4,
+    })
+    expect(hp['0']![1]!.total).toBe(0)
+    // Jamka 2: Mac zvedl, A má jen lepší míč - Double Best ne.
+    expect(hp['1']![0]!.doubleBest).toBe(0)
+    expect(
+      evaluateGame(round, SEED_PLAYERS, game()).duels![0]!.holePoints!['0']![0]!
+        .doubleBest,
+    ).toBe(0)
+  })
+
   it('po dohrání dává vítězná dvojice bod týmu, remíza půl', () => {
     const round = round1()
     // Všichni par na každé jamce (pary hřiště, ne pořád 4 - na par 5 by to bylo birdie).

@@ -43,6 +43,8 @@ export const BEST_POINTS = { best: 1, aggregate: 1, birdie: 1, eagle: 3 } as con
 interface SideScore {
   best: number
   sum: number
+  /** Horší míč dvojice (pro Double Best); zvednutý = vzdaný. */
+  worst: number
 }
 
 function sideScore(
@@ -53,11 +55,13 @@ function sideScore(
 ): SideScore | undefined {
   const { round, pickup } = context
   let best = CONCEDED
+  let worst = 0
   let sum = 0
   for (const id of players) {
     const net = netScoreAt(round, id, hole, options)
     if (net === undefined) return undefined
     if (net < best) best = net
+    if (net > worst) worst = net
     if (net === CONCEDED) {
       // Zvednutá jamka má v součtu rány podle pravidla turnaje, ne nekonečno.
       const strokes = strokesReceived(round, id, hole, options.allowance)
@@ -67,7 +71,7 @@ function sideScore(
       sum += net
     }
   }
-  return { best, sum }
+  return { best, sum, worst }
 }
 
 function lowerWins(a: number, b: number): 0 | 1 | null {
@@ -100,16 +104,21 @@ export function holePoints(
   hole: number,
   options: { net: boolean; allowance: number },
   withExtra = false,
+  doubleBestValue = 0,
 ): [SidePoints, SidePoints] | undefined {
   const a = sideScore(context, left.players, hole, options)
   const b = sideScore(context, right.players, hole, options)
   if (!a || !b) return undefined
   const bestWinner = lowerWins(a.best, b.best)
   const aggWinner = lowerWins(a.sum, b.sum)
+  // Double Best: oba míče dvojice lepší než oba míče soupeře (vzdaný míč je nejhorší).
+  const doubleWinner: 0 | 1 | null =
+    doubleBestValue > 0 ? (a.worst < b.best ? 0 : b.worst < a.best ? 1 : null) : null
   const build = (index: 0 | 1, score: SideScore, side: GameSide): SidePoints => {
     const best = bestWinner === index ? BEST_POINTS.best : 0
     const aggregate = aggWinner === index ? BEST_POINTS.aggregate : 0
     const bonus = bonusPoints(context, side.players, hole)
+    const doubleBest = doubleWinner === index ? doubleBestValue : 0
     // Extra body (longest, sandie…) partnerů do bodů dvojice jako v Golfgames,
     // když to má hra zapnuté.
     const extra = withExtra
@@ -122,8 +131,9 @@ export function holePoints(
       best,
       aggregate,
       bonus,
+      doubleBest,
       extra,
-      total: best + aggregate + bonus + extra,
+      total: best + aggregate + doubleBest + bonus + extra,
       bestBall: score.best,
       sum: score.sum,
     }

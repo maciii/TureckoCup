@@ -162,6 +162,8 @@ export interface GameOptions {
    * týmových her do bodů týmu z této hry (sazba `tournament.bonuses.teamPerPoint`).
    */
   bonuses?: boolean
+  /** Best + Součet: body za Double Best (oba míče dvojice lepší než oba soupeřovy); 0 = nehraje se. */
+  doubleBest?: number
 }
 
 /** Kolik týmových bodů hra přináší. */

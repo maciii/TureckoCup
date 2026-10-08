@@ -101,6 +101,10 @@ export const cs = {
   'best.bonus': 'Birdie',
   'best.points': '{count} b.',
   'best.conceded': 'X',
+  'best.doubleBest': 'Double',
+  'admin.gameDoubleBest': 'Double Best (bodů)',
+  'admin.gameDoubleBestHint':
+    'Bod navíc, když oba míče dvojice porazí oba míče soupeře; 0 = nehraje se.',
   'games.holes': 'jamky {from}–{to}',
   'games.allHoles': 'celé kolo',
 
