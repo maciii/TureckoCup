@@ -28,7 +28,7 @@ test('zvednutá jamka ve hře na rány podle pravidla turnaje', async ({ page })
   const errors = collectErrors(page)
   await startRound(page)
   await open(page, '#/admin/round/r1')
-  // Duely pozic na brutto rány, ať je počet ran vidět přímo.
+  // Singly pozic na brutto rány, ať je počet ran vidět přímo.
   await page
     .locator('.game-card')
     .nth(3)
@@ -49,7 +49,7 @@ test('zvednutá jamka ve hře na rány podle pravidla turnaje', async ({ page })
 
   await open(page, '#/round/r1')
   const duel = page
-    .locator('section', { has: page.getByRole('heading', { name: 'Duely pozic' }) })
+    .locator('section', { has: page.getByRole('heading', { name: 'Singly pozic' }) })
     .locator('.duel')
     .first()
   await expect(duel.locator('.duel-side .sub').first()).toHaveText('8')
@@ -141,7 +141,7 @@ test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky
   // Stav her na jamce: po zápisu všech čtyř je Stableford i duel rozhodnutý.
   const stabRow = page.locator('.hole-status-row', { hasText: 'Stableford' })
   await expect(stabRow).not.toContainText('–')
-  const duelRow = page.locator('.hole-status-row', { hasText: 'Duely pozic' })
+  const duelRow = page.locator('.hole-status-row', { hasText: 'Singly pozic' })
   await expect(duelRow).not.toContainText('čeká na zápis')
   await page
     .getByRole('button', { name: /Další jamka/ })

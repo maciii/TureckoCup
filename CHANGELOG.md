@@ -3,6 +3,13 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.17.3] – 2026-10-08
+
+### Změněno
+
+- „Duely pozic“ se jmenují **Singly pozic**: jeden na jednoho, A1 proti B1
+  až A4 proti B4. Jamkovka dvojic je Four-ball.
+
 ## [0.17.2] – 2026-10-08
 
 ### Opraveno

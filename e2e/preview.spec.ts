@@ -18,7 +18,7 @@ const DAYS: { round: string; games: string[]; team: boolean }[] = [
       'Stableford',
       'Skins ve flightu',
       'Team Skins',
-      'Duely pozic netto',
+      'Singly pozic netto',
       'Extra body',
     ],
     team: true,
@@ -30,7 +30,7 @@ const DAYS: { round: string; games: string[]; team: boolean }[] = [
       'Skins všech osm',
       'Skins přední devítka',
       'Team Skins bez přenosu',
-      'Duely pozic jamkovkou',
+      'Singly pozic jamkovkou',
     ],
     team: true,
   },
@@ -40,7 +40,7 @@ const DAYS: { round: string; games: string[]; team: boolean }[] = [
       'Stableford 90 %',
       'Skins bez přenosu 90 %',
       'Four-ball dvojic',
-      'Duely pozic na body',
+      'Singly pozic na body',
     ],
     team: true,
   },
@@ -50,7 +50,7 @@ const DAYS: { round: string; games: string[]; team: boolean }[] = [
       'Stableford',
       'Skins brutto všech osm',
       'Team Skins zadní devítka',
-      'Duely pozic brutto',
+      'Singly pozic brutto',
       'Extra body',
     ],
     team: true,
@@ -106,7 +106,7 @@ test('přehled ukazuje stav po čtyřech dnech a je označený jako test', async
   await expect(page.getByText('Odehráno 3 z 5 kol')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Jednotlivci v turnaji' })).toBeVisible()
   await expect(
-    page.getByRole('heading', { name: 'Duely pozic', exact: true }),
+    page.getByRole('heading', { name: 'Singly pozic', exact: true }),
   ).toBeVisible()
   await expectNoHorizontalOverflow(page)
   expect(errors()).toEqual([])
@@ -159,7 +159,7 @@ test('zapisovatel dohraje rozehrané čtvrté kolo', async ({ page }) => {
   await setPreviewIdentity(page, 'writer')
   await openPreview(page, '#/round/r4')
   const duels = page.locator('section', {
-    has: page.getByRole('heading', { name: 'Duely pozic brutto' }),
+    has: page.getByRole('heading', { name: 'Singly pozic brutto' }),
   })
   await expect(duels.locator('.section-note')).toContainText('čeká na zápis')
 

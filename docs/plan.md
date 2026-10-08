@@ -82,7 +82,7 @@ Podrobně v [`architecture.md`](architecture.md). Ve zkratce:
 | Team Skins       | lepší netto míč týmu, přenos banku, 1 bod za skin `[P]`      | Admin → kolo → Hry          |
 | Individual Skins | ve flightu `[P]`, přenos banku                               | Admin → kolo → Hry          |
 | Allowance        | 100 % `[P]`                                                  | Admin → kolo → Hry          |
-| Duely pozic      | netto rány `[P]`, nevstupují do týmového skóre               | Admin → kolo → Hry          |
+| Singly pozic     | netto rány `[P]`, nevstupují do týmového skóre               | Admin → kolo → Hry          |
 | Týmy a pozice    | zástupné rozdělení ze seedu `[P]`                            | Admin → Hráči, Admin → kolo |
 | Flighty          | A1 A2 B1 B2 / A3 A4 B3 B4 `[P]`, start z jedničky            | Admin → kolo → Flighty      |
 | Lykia Links CR   | 74,7 (slope tabulka) `[P]`                                   | ruční přepis hracího HCP    |

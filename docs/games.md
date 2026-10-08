@@ -41,10 +41,11 @@ hrají s odstupem a pozdější flight nesmí platit za vzdaný. Přenos banku j
 u Skins. `teamPoints.perSkin` (výchozí 1) říká, kolik týmových bodů skin nese;
 hra má výchozí `countsForTeam: true`.
 
-## Duely pozic (`position-duel`)
+## Singly pozic (`position-duel`)
 
-Samostatná výsledková vrstva (spec §7, §8): A1 proti B1, A2 proti B2, A3
-proti B3, A4 proti B4 podle snímku pozic v kole. Formát je konfigurovatelný:
+V aplikaci „Singly pozic“ (dřív „Duely pozic“): jeden na jednoho, A1 proti
+B1, A2 proti B2, A3 proti B3, A4 proti B4 podle snímku pozic v kole. Není to
+jamkovka dvojic - ta je Four-ball. Formát je konfigurovatelný:
 
 | `format`        | Pravidlo                                  |
 | --------------- | ----------------------------------------- |
