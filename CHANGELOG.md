@@ -3,6 +3,20 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.12.0] – 2026-10-08
+
+### Přidáno
+
+- **Karta programu na úvodní obrazovce je vždy vidět** pro kolo, které je na
+  řadě: dnes rozehrané, jinak nejbližší plánované. Odehrané kolo (všichni
+  zapsali všechny jamky) i rozehrané kolo z minulého dne ustoupí dalšímu
+  dni. Bez zadaných časů karta ukáže, že odjezd a tee time doplní admin.
+- Neověřený Google e-mail dostane při přihlášení vlastní hlášku místo
+  „není mezi hráči“ - rules ho nepustí, i když v soupisce je.
+- Workflow Live admin: `check` vypíše i e-maily hráčů a účty, které se
+  zkusily přihlásit (ověření e-mailu, zda jsou v soupisce), a program kol;
+  nová úloha `schedule` doplní chybějící odjezd a tee time podle seedu.
+
 ## [0.11.1] – 2026-10-08
 
 ### Opraveno

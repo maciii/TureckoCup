@@ -145,6 +145,7 @@ export function createLocalStore(
             uid: `demo-${role}`,
             name: t(role === 'admin' ? 'admin.demoAdminName' : 'admin.demoWriterName'),
             email,
+            emailVerified: true,
             playerId: playerIdByEmail(state.access, email),
           }
     return {

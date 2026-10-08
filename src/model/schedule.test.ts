@@ -8,6 +8,7 @@ import {
   isValidTime,
   localToday,
   normalizeTime,
+  roundPlayed,
   upcomingRound,
 } from './schedule'
 
@@ -54,7 +55,24 @@ describe('program kola', () => {
     expect(upcomingRound(list, '2026-10-11')?.id).toBe('r4')
     expect(upcomingRound(list, '2026-10-14')).toBeUndefined()
     const live = list.map((r) => (r.id === 'r2' ? { ...r, status: 'live' as const } : r))
-    expect(upcomingRound(live, '2026-10-14')?.id).toBe('r2')
+    expect(upcomingRound(live, '2026-10-09')?.id).toBe('r2')
+    // Rozehrané kolo ze včerejška, které admin nezavřel: další den.
+    expect(upcomingRound(live, '2026-10-10')?.id).toBe('r3')
+    expect(upcomingRound(live, '2026-10-14')).toBeUndefined()
+    // Odehrané kolo (všichni zapsali vše) ustoupí dalšímu dni i týž den.
+    const played = live.map((r) => {
+      if (r.id !== 'r2') return r
+      const scores = { ...r.scores }
+      for (const id of r.playerIds) {
+        scores[id] = Object.fromEntries(
+          Array.from({ length: 18 }, (_, hole) => [String(hole), 5]),
+        )
+      }
+      return { ...r, scores }
+    })
+    expect(roundPlayed(played[1]!)).toBe(true)
+    expect(roundPlayed(live[1]!)).toBe(false)
+    expect(upcomingRound(played, '2026-10-09')?.id).toBe('r3')
     const done = list.map((r) =>
       r.id === 'r1' ? { ...r, status: 'finished' as const } : r,
     )

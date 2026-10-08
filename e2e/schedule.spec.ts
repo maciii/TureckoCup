@@ -44,6 +44,24 @@ test('úvodní obrazovka ukazuje odjezd a tee time nejbližšího kola', async (
   expect(errors()).toEqual([])
 })
 
+test('po odehraném dni ukáže úvodní obrazovka další kolo i bez zadaných časů', async ({
+  page,
+}) => {
+  const errors = collectErrors(page)
+  // Den po prvním kole: kolo 1 je pryč, kolo 2 ještě nemá program.
+  await page.clock.setFixedTime(new Date('2026-10-09T08:00:00'))
+  await page.reload()
+  await page.waitForSelector('.screen')
+  const schedule = page.locator('section.schedule')
+  await expect(schedule.locator('.eyebrow')).toContainText('Dnes')
+  await expect(schedule).toContainText('Kolo 2')
+  await expect(schedule).toContainText('ještě nejsou zadané')
+  await expect(schedule.locator('li.row')).toHaveCount(2)
+  await expect(schedule.locator('li.row').first()).toContainText('–')
+  await expectNoHorizontalOverflow(page)
+  expect(errors()).toEqual([])
+})
+
 test('admin zadá program kola, druhý flight dostane čas o 10 minut později', async ({
   page,
 }) => {

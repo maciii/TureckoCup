@@ -121,9 +121,11 @@ selhalo“ a na webu zůstane předchozí verze aplikace.
 ### Údržba živých dat (workflow Live admin)
 
 GitHub → Actions → **Live admin** → Run workflow → vybrat úlohu:
-`check` jen vypíše stav (soupiska, kola, odpaliště, hry, snímek HCP),
+`check` jen vypíše stav (soupiska, kola, odpaliště, program, hry, snímek
+HCP, e-maily hráčů a účty, které se zkusily přihlásit - s ověřením e-mailu),
 `tees` nastaví výchozí odpaliště podle seedu, `games` odstraní z kol
-starou hru Extra body, `index` zapíše HCP indexy hráčů do nedohraných kol.
+starou hru Extra body, `index` zapíše HCP indexy hráčů do nedohraných kol,
+`schedule` doplní chybějící odjezd a tee time podle seedu (jen kolo 1).
 Úlohy jsou v `scripts/live-admin.mjs`; zápis jde Admin SDK mimo security
 rules, proto tam nejsou volné úpravy, jen pojmenované kroky s výpisem.
 

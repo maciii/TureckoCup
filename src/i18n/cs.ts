@@ -98,6 +98,7 @@ export const cs = {
   'schedule.today': 'Dnes',
   'schedule.next': 'Další kolo',
   'schedule.live': 'Právě se hraje',
+  'schedule.missing': 'Odjezd a tee time ještě nejsou zadané - doplní je admin u kola.',
   'overview.teamScore': 'Týmové skóre',
   'overview.provisional': 'předběžné, zatím jen Team Skins',
   'overview.played': 'Odehráno {played} z {total} kol',
@@ -353,6 +354,8 @@ export const cs = {
   'error.loadAccess': 'Oprávnění se nepodařilo načíst: {reason}',
   'error.notMember':
     'Účet {email} není mezi hráči turnaje, aplikace ho odhlásila. Přihlas se e-mailem, který má admin u tvého jména.',
+  'error.notVerified':
+    'Google účet {email} nemá ověřený e-mail, bez toho ho pravidla nepustí. Přihlas se účtem Google s ověřeným e-mailem (třeba Gmail) a dej ho adminovi.',
   'error.notConfigured': 'Firebase není v tomhle buildu nastavená.',
   'error.unnamedAccount': 'Hráč',
   'admin.sync.synced': 'Připojeno',

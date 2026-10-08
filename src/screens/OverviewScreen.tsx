@@ -133,9 +133,7 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
           <p className="hint center px">{t('app.noTournamentHint')}</p>
         )}
 
-        {upcoming && hasSchedule(upcoming) && (
-          <RoundSchedule round={upcoming} today={today} />
-        )}
+        {upcoming && <RoundSchedule round={upcoming} today={today} />}
 
         {state.tournament && (
           <>
@@ -375,6 +373,9 @@ function RoundSchedule({ round, today }: { round: TournamentRound; today: string
         {t('round.title', { number: round.number })} · {round.course.name}
         <span className="chev">›</span>
       </button>
+      {/* Bez časů karta zůstává: hráči mají vidět, které kolo je další, a admin,
+          že má program doplnit (u kola v administraci). */}
+      {!hasSchedule(round) && <p className="hint center px">{t('schedule.missing')}</p>}
       <ul className="list schedule-list">
         {isValidTime(round.departure) && (
           <li className="row">

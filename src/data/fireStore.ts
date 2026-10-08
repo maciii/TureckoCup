@@ -289,10 +289,14 @@ export function createFireStore(tournamentId: string): Store {
     )
   }
 
-  /** Účet, který není hráčem ani adminem: hláška a odhlášení. */
+  /**
+   * Účet, který není hráčem ani adminem: hláška a odhlášení. Neověřený
+   * e-mail dostane vlastní hlášku - rules ho nepustí, i když v soupisce je.
+   */
   function rejectAccount(signedIn: Account): void {
     role = 'visitor'
-    fail(t('error.notMember', { email: signedIn.email || signedIn.name }))
+    const email = signedIn.email || signedIn.name
+    fail(t(signedIn.emailVerified ? 'error.notMember' : 'error.notVerified', { email }))
     void signOutAccount()
   }
 

@@ -41,15 +41,27 @@ export function hasSchedule(round: TournamentRound): boolean {
   return isValidTime(round.departure) || round.flights.some((f) => isValidTime(f.teeTime))
 }
 
+/** Všechny flighty kola zapsaly všechny jamky - kolo je odehrané. */
+export function roundPlayed(round: TournamentRound): boolean {
+  return (
+    round.flights.length > 0 &&
+    round.flights.every((flight) => flightProgress(round, flight).finished)
+  )
+}
+
 /**
- * Kolo, které hráče zajímá teď: rozehrané, jinak nejbližší plánované od
- * dneška (plánované kolo z minulosti, které admin zapomněl přepnout, už ne).
+ * Kolo, jehož program hráče zajímá teď: rozehrané (dokud není odehrané
+ * a není z minulého dne), jinak nejbližší plánované od dneška. Odehrané
+ * kolo, které admin ještě nepřepnul na Dohráno, i plánované kolo
+ * z minulosti už neukazujeme - zajímá nás další den a odjezd na něj.
  */
 export function upcomingRound(
   rounds: TournamentRound[],
   today: string,
 ): TournamentRound | undefined {
-  const live = rounds.find((r) => r.status === 'live')
+  const live = rounds.find(
+    (r) => r.status === 'live' && r.date >= today && !roundPlayed(r),
+  )
   if (live) return live
   return [...rounds]
     .filter((r) => r.status === 'planned' && r.date >= today)

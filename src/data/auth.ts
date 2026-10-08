@@ -73,11 +73,13 @@ function toAccount(user: {
   uid: string
   displayName: string | null
   email: string | null
+  emailVerified: boolean
 }): Account {
   return {
     uid: user.uid,
     name: user.displayName ?? user.email ?? t('error.unnamedAccount'),
     email: (user.email ?? '').toLowerCase(),
+    emailVerified: user.emailVerified,
     // Hráče k účtu přiřadí datová vrstva podle private/access.
     playerId: null,
   }

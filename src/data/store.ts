@@ -18,6 +18,8 @@ export interface Account {
   /** Jméno z Google účtu; obrazovky ukazují raději jméno hráče (`playerId`). */
   name: string
   email: string
+  /** Rules pouštějí jen ověřený e-mail; neověřený Google účet jinak vypadá jako cizí. */
+  emailVerified: boolean
   /** Hráč soupisky přiřazený k e-mailu, `null` u admina, který nehraje. */
   playerId: string | null
 }
