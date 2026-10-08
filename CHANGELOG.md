@@ -3,6 +3,14 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.15.3] – 2026-10-08
+
+### Opraveno
+
+- Jamkovka (Four-ball, duely pozic) respektuje přepínač **Netto** hry:
+  vypnutý počítá brutto lepší míč. Dřív jamkovka počítala vždy netto bez
+  ohledu na přepínač, takže nastavení kola a výsledek nesouhlasily.
+
 ## [0.15.2] – 2026-10-08
 
 ### Opraveno

@@ -167,6 +167,17 @@ describe('duely pozic', () => {
     // Pozice 3 a 4: hráči bez indexu (0 ran) hrají stejně - remízy.
     expect(result.teamPoints).toEqual({ A: 2.5, B: 1.5 })
   })
+
+  it('jamkovka s vypnutým Netto hraje brutto - stejné rány jsou remíza', () => {
+    const round = round1()
+    round.games[3]!.options.format = 'match-play'
+    round.games[3]!.options.net = false
+    const full = Array<number>(18).fill(4)
+    for (const id of round.playerIds) enter(round, id, full)
+    const result = evaluateGame(round, SEED_PLAYERS, round.games[3]!)
+    expect(result.duels!.every((d) => d.leader === null && d.finished)).toBe(true)
+    expect(result.teamPoints).toEqual({ A: 2, B: 2 })
+  })
 })
 
 describe('agregace turnaje', () => {

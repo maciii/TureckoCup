@@ -63,7 +63,10 @@ po rozhodnutí administrátora; pak `win` a `halve` bodů za duel.
 ## Four-ball (`team-match`)
 
 Dvojice proti dvojici, rána strany = lepší míč, formát jako u duelů
-(výchozí jamkovka), `allowance` typicky 85-90 %. Strany (`sides`) jsou
+(výchozí jamkovka). Přepínač **Netto** hry rozhoduje, zda se lepší míč bere
+z netto ran (s `allowance`, typicky 85-90 %) nebo brutto; v jamkovce se
+plné rány všech hráčů na stejné jamce vykrátí, takže netto se 100 %
+odpovídá hře „od nejnižšího“. Strany (`sides`) jsou
 čtyři dvojice po dvou zápasech: strany 1 a 2 hrají zápas 1, strany 3 a 4
 zápas 2. Admin je nastaví v editoru hry (výchozí „Dvojice z flightů“: první
 dvojice flightu proti druhé, tedy A1+A2 vs B1+B2 a A3+A4 vs B3+B4). Body

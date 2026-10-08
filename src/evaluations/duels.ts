@@ -81,6 +81,7 @@ function duelOf(
   holes: number[],
   format: DuelFormat,
   allowance: number,
+  netOption: boolean,
   position?: number,
 ): DuelResult {
   const { round, players } = context
@@ -111,10 +112,17 @@ function duelOf(
   })
 
   if (format === 'match-play') {
+    // Jamkovka podle přepínače Netto hry: vypnutý = brutto lepší míč.
     const state = computeMatch({
       holeOrder: order,
       scoreOf: (side, hole) =>
-        strokeOf(context, (side === 0 ? left : right).players, hole, true, allowance),
+        strokeOf(
+          context,
+          (side === 0 ? left : right).players,
+          hole,
+          netOption,
+          allowance,
+        ),
     })
     return {
       id,
@@ -255,6 +263,7 @@ export const positionDuel: Evaluate = (context, game): EvaluationResult => {
       holes,
       format,
       game.options.allowance,
+      game.options.net ?? true,
       position,
     )
   })
@@ -277,6 +286,7 @@ export const teamMatch: Evaluate = (context, game): EvaluationResult => {
         holes,
         format,
         game.options.allowance,
+        game.options.net ?? true,
       ),
     )
   }
