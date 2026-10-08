@@ -54,9 +54,10 @@ Invarianty:
 - **Raw skóre je jediný zdroj.** Nic odvozeného se neukládá.
 - **Žádné pole v poli** - Firestore ho odmítne. Proto flighty a strany jsou
   objekty a skóre mapa map.
-- **Kolo si nese snímek** hřiště, indexů, odpališť a pozic. Změna u hráče se
-  promítne do dalších kol (seed i „Obnovit konfiguraci kola“), odehraná se
-  nepřepočítají.
+- **Kolo si nese snímek** hřiště, indexů, odpališť a pozic. Změna indexu
+  nebo týmu u hráče se promítne do dalších kol (seed i „Obnovit konfiguraci
+  kola“), odehraná se nepřepočítají. Složení flightů a pozice jsou nastavení
+  kola na každý den - soupiska je nepřepisuje.
 - **Prázdné mapy pro všech osm** (`scores.p8 = {}`) existují od založení -
   rules sahají na `resource.data.scores[p]`.
 

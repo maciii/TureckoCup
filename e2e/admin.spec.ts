@@ -151,11 +151,11 @@ test('HCP index patří hráči: kola si ho berou samy a změna v kole ho vrát�
   await open(page, '#/admin/round/r5')
   await expect(soldikIndex).toHaveValue('19.1')
 
-  // Změna týmu se promítá tlačítkem (složení flightů a pozice).
+  // Změna týmu se promítá tlačítkem (pozice v kolech; flighty zůstávají).
   await open(page, '#/admin')
   await page.getByLabel('Tým').nth(3).selectOption('A')
   await expect(
-    page.locator('.notice.info', { hasText: 'plánovaných kol má starší HCP' }),
+    page.locator('.notice.info', { hasText: 'plánovaných kol má starší HCP nebo týmy' }),
   ).toBeVisible()
   await page
     .getByRole('button', { name: 'Promítnout soupisku do plánovaných kol' })

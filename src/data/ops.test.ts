@@ -290,6 +290,17 @@ describe('snímek soupisky do kola', () => {
     // Firestore vrací klíče mapy v libovolném pořadí - pořadí týmů není rozdíl.
     const swapped = { B: round.positions.B, A: round.positions.A }
     expect(rosterOutdated({ ...round, positions: swapped }, state.players)).toBe(false)
+    // Flighty a pořadí pozic patří kolu: jiné složení flightů ani prohozené
+    // pozice v týmu nejsou „starší soupiska“.
+    const custom: TournamentRound = {
+      ...round,
+      flights: [
+        { ...round.flights[0]!, players: ['p1', 'p3', 'p5', 'p7'] },
+        { ...round.flights[1]!, players: ['p2', 'p4', 'p6', 'p8'] },
+      ],
+      positions: { A: [...round.positions.A].reverse(), B: round.positions.B },
+    }
+    expect(rosterOutdated(custom, state.players)).toBe(false)
     // Soldík dostane index a přejde do týmu A na pozici 1, Ota jde na trojku.
     const players = state.players.map((p) =>
       p.id === 'p4'
@@ -302,23 +313,19 @@ describe('snímek soupisky do kola', () => {
     const patch = rosterSnapshot(round, players)
     expect(patch.playerIndex.p4).toBe(18.8)
     expect(patch.positions.A[0]).toBe('p4')
-    expect(patch.flights[0]!.players).toContain('p4')
-    expect(patch.flights[0]!.startHole).toBe(9)
-    expect(patch.flights[0]!.teeTime).toBe('15:50')
-    expect(patch.flights[1]!.teeTime).toBe('16:00')
-    expect(Object.keys(patch)).toEqual([
-      'handicapMode',
-      'playerIndex',
-      'positions',
-      'flights',
-    ])
+    // Flighty snímek nikdy nepřepisuje - zůstávají, jak je admin u kola nastavil.
+    expect(Object.keys(patch)).toEqual(['handicapMode', 'playerIndex', 'positions'])
+    // Jen index bez změny týmu: pozice kola zůstanou, i když jsou jiné než soupiska.
+    const indexOnly = rosterSnapshot(
+      custom,
+      state.players.map((p) => (p.id === 'p4' ? { ...p, handicapIndex: 18.8 } : p)),
+    )
+    expect(indexOnly.positions).toEqual(custom.positions)
     // Režim hracího HCP je taky součást snímku.
     expect(rosterOutdated(round, state.players, 'fixed')).toBe(true)
     expect(rosterSnapshot(round, state.players, 'fixed').handicapMode).toBe('fixed')
     const synced = applyOp(state, { kind: 'updateRound', roundId: 'r1', patch })
-    expect(
-      rosterOutdated({ ...synced.rounds[0]!, flights: patch.flights }, players),
-    ).toBe(false)
+    expect(rosterOutdated(synced.rounds[0]!, players)).toBe(false)
     expect(
       findInvalidWrite(
         opToWrites({ kind: 'updateRound', roundId: 'r1', patch }, meta, state),

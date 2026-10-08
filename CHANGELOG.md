@@ -3,6 +3,16 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.20.1] – 2026-10-08
+
+### Opraveno
+
+- **„Promítnout soupisku do plánovaných kol“ už nepřepisuje flighty ani
+  pozice.** Složení flightů a pozice jsou nastavení každého kola; soupiska
+  do kol zapisuje jen HCP indexy a změnu týmu (pozice se z ní berou jen
+  tehdy). Varování nad seznamem kol se podle flightů a pořadí pozic
+  neukazuje.
+
 ## [0.20.0] – 2026-10-08
 
 ### Přidáno

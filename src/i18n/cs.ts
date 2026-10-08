@@ -281,15 +281,15 @@ export const cs = {
   'admin.reseedRound': 'Obnovit konfiguraci kola ze seedu (skóre zůstane)',
   'admin.players': 'Hráči',
   'admin.playersHint':
-    'HCP index, tým a pozice. Index se zapíše do všech nedohraných kol; změnu týmu nebo pozice promítneš tlačítkem u kol. Dohraná kola si nesou svůj snímek.',
+    'HCP index, tým a pozice. Index se zapíše do všech nedohraných kol; změnu týmu promítneš tlačítkem u kol. Flighty a pozice na každý den nastavíš u kola. Dohraná kola si nesou svůj snímek.',
   'admin.rosterOutdated': {
-    one: '{count} plánované kolo má starší HCP, týmy nebo pozice než soupiska.',
-    few: '{count} plánovaná kola mají starší HCP, týmy nebo pozice než soupiska.',
-    other: '{count} plánovaných kol má starší HCP, týmy nebo pozice než soupiska.',
+    one: '{count} plánované kolo má starší HCP nebo týmy než soupiska.',
+    few: '{count} plánovaná kola mají starší HCP nebo týmy než soupiska.',
+    other: '{count} plánovaných kol má starší HCP nebo týmy než soupiska.',
   },
   'admin.rosterSync': 'Promítnout soupisku do plánovaných kol',
   'admin.rosterSyncHint':
-    'Srovná pozice 1–4 v soupisce a přepíše pozice a složení flightů v kolech podle ní. Odpaliště, hry, časy, ruční HCP i rozehraná kola zůstanou.',
+    'Zapíše do plánovaných kol HCP indexy a změnu týmu. Složení flightů se nemění nikdy, pozice jen při změně týmu; odpaliště, hry, časy, ruční HCP i rozehraná kola zůstanou.',
   'admin.handicapIndex': 'HCP index',
   'admin.handicapIndexShort': 'Index',
   'admin.courseHandicapShort': 'HCP',

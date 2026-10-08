@@ -69,8 +69,9 @@ npm run test:e2e:live # kouřový test živé aplikace https://turecko-cup.web.a
    týká (flight u Skins, všech osm u Team Skins).
 5. **Kolo si nese snímek**: hřiště, HCP indexy, odpaliště, pozice. HCP
    index se zadává u hráče a admin ho zapisuje do všech nedohraných kol
-   (`playerIndexOps`), tým a pozice tlačítkem (`rosterSnapshot`); dohraná
-   kola se nepřepočítají.
+   (`playerIndexOps`), změnu týmu tlačítkem (`rosterSnapshot`); dohraná
+   kola se nepřepočítají. **Flighty a pozice jsou nastavení kola** - admin
+   je skládá na každý den zvlášť a soupiska je nikdy nepřepisuje.
 6. **Žádné pole v poli** v datech - Firestore ho odmítne. Flighty a strany
    jsou seznamy objektů, skóre je mapa map.
 7. **Zápisy se neawaitují.** Offline promise nedoběhne; stav dává

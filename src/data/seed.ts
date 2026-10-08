@@ -254,26 +254,33 @@ export function seedRoundConfig(
 }
 
 /**
- * Snímek soupisky do kola: HCP indexy, pozice a složení flightů podle
- * aktuálních hráčů. Startovní jamky a tee time flightů zůstávají, stejně
- * jako odpaliště, hry a ruční přepisy - na rozdíl od „Obnovit ze seedu“
- * se mění jen to, co opravdu plyne ze soupisky.
+ * Snímek soupisky do kola: HCP indexy a týmy podle aktuálních hráčů.
+ * Složení flightů se nemění nikdy a pozice jen při změně týmu - obojí je
+ * nastavení kola na každý den. Odpaliště, hry, časy a ruční přepisy
+ * zůstávají; na rozdíl od „Obnovit ze seedu“ se mění jen to, co opravdu
+ * plyne ze soupisky.
  */
 export function rosterSnapshot(
   round: TournamentRound,
   players: Player[],
   handicapMode: HandicapMode = 'course',
-): Pick<TournamentRound, 'playerIndex' | 'positions' | 'flights' | 'handicapMode'> {
-  const fresh = flightsOf(players)
+): Pick<TournamentRound, 'playerIndex' | 'positions' | 'handicapMode'> {
   return {
     handicapMode,
     playerIndex: Object.fromEntries(players.map((p) => [p.id, p.handicapIndex])),
-    positions: positionsOf(players),
-    flights: fresh.map((flight, index) => {
-      const current = round.flights[index]
-      return current ? { ...current, players: flight.players } : flight
-    }),
+    // Pozice jsou nastavení kola (každý den jiné); ze soupisky se berou
+    // jen při změně týmu, kdy by hráč v kole seděl ve špatném týmu.
+    positions: sameTeams(round, players) ? round.positions : positionsOf(players),
   }
+}
+
+/** Mají týmy v kole stejné hráče jako soupiska (bez ohledu na pozice)? */
+function sameTeams(round: TournamentRound, players: Player[]): boolean {
+  const roster = positionsOf(players)
+  return TEAM_IDS.every((team) => {
+    const inRound = (round.positions[team] ?? []).filter(Boolean).sort()
+    return JSON.stringify(inRound) === JSON.stringify([...roster[team]].sort())
+  })
 }
 
 /**
@@ -343,21 +350,12 @@ export function rosterOutdated(
   players: Player[],
   handicapMode: HandicapMode = 'course',
 ): boolean {
-  const fresh = rosterSnapshot(round, players, handicapMode)
   const mode = (round.handicapMode ?? 'course') !== handicapMode
   const index =
     mode || players.some((p) => (round.playerIndex[p.id] ?? null) !== p.handicapIndex)
-  // Po týmech, ne přes celý objekt: Firestore vrací klíče mapy v libovolném
-  // pořadí a `{B, A}` by se jinak lišilo od `{A, B}` navždy.
-  const positions = TEAM_IDS.some(
-    (team) =>
-      JSON.stringify(fresh.positions[team]) !==
-      JSON.stringify(round.positions[team] ?? []),
-  )
-  const flights =
-    JSON.stringify(fresh.flights.map((f) => f.players)) !==
-    JSON.stringify(round.flights.map((f) => f.players))
-  return index || positions || flights
+  // Flighty a pořadí pozic patří kolu - admin je nastavuje na každý den
+  // zvlášť a soupiska je nikdy nepřepisuje.
+  return index || !sameTeams(round, players)
 }
 
 export function seedRounds(players: Player[] = SEED_PLAYERS): TournamentRound[] {
