@@ -293,7 +293,7 @@ export const teamMatch: Evaluate = (context, game): EvaluationResult => {
   return finishDuels(game, duels, holes)
 }
 
-function finishDuels(
+export function finishDuels(
   game: Parameters<Evaluate>[1],
   duels: DuelResult[],
   holes: number[],

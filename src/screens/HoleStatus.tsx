@@ -49,6 +49,7 @@ export default function HoleStatus({
 
   for (const result of results) {
     const kind = result.game.kind
+    if (kind === 'best-aggregate') continue
     const label = result.game.name ?? t(`games.${kind}.name`)
     const outcome = result.holes.find((h) => h.hole === hole)
     if (kind === 'individual-stableford') {
@@ -105,7 +106,8 @@ export default function HoleStatus({
         onHole: (duels.length > 0 ? duels : result.duels)
           .map((duel) => {
             const winner = duel.holeWinners?.[String(hole)]
-            if (winner === undefined) return t('play.status.pending')
+            if (winner === undefined)
+              return duel.finished ? t('play.status.decided') : t('play.status.pending')
             if (winner === null) return t('play.status.halved')
             const side = duel.sides[winner]
             return t('play.status.holeTo', {

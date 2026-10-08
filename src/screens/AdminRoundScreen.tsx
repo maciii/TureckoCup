@@ -27,7 +27,7 @@ import {
   shortName,
   teamOf,
 } from '../model/round'
-import { GAME_KINDS } from '../evaluations'
+import { GAME_KINDS, hasSides } from '../evaluations'
 import {
   TEE_INTERVAL_MINUTES,
   addMinutes,
@@ -540,7 +540,7 @@ function matchPairs(sides: GameSide[]): GameSide[][] {
  */
 function withKind(game: GameConfig, round: TournamentRound, kind: GameKind): GameConfig {
   const { name: _name, ...rest } = game
-  if (kind === 'team-match' && !game.sides?.length)
+  if (hasSides(kind) && !game.sides?.length)
     return { ...rest, kind, sides: flightSides(round) }
   return { ...rest, kind }
 }
@@ -574,9 +574,9 @@ function newGame(round: TournamentRound): GameConfig {
     id,
     kind,
     options: { allowance: 1, net: true, format: 'match-play' },
-    countsForTeam: kind === 'team-match',
+    countsForTeam: hasSides(kind),
     teamPoints: { win: 1, halve: 0.5 },
-    ...(kind === 'team-match' ? { sides: flightSides(round) } : {}),
+    ...(hasSides(kind) ? { sides: flightSides(round) } : {}),
   }
 }
 
@@ -767,7 +767,7 @@ function GameEditor({
   const options = game.options
   const setOptions = (next: Partial<GameConfig['options']>) =>
     onChange({ ...game, options: { ...options, ...next } })
-  const isDuel = game.kind === 'position-duel' || game.kind === 'team-match'
+  const isDuel = game.kind === 'position-duel' || hasSides(game.kind)
   const isSkins = game.kind === 'individual-skins' || game.kind === 'team-skins'
   const holeNumbers = Array.from({ length: round.course.holeCount }, (_, i) => i)
   const holes = game.holes ?? { from: 0, to: round.course.holeCount - 1 }
@@ -955,7 +955,7 @@ function GameEditor({
               }
             />
           </div>
-          {game.kind === 'team-match' && (
+          {hasSides(game.kind) && (
             <div
               className="field"
               style={{ flexDirection: 'column', alignItems: 'stretch' }}

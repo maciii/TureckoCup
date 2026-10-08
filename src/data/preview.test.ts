@@ -78,7 +78,7 @@ describe('testovací verze turnaje', () => {
     expect(rounds[3]!.courseHandicapOverride).toEqual({ p8: 30 })
     // Všechny druhy her se aspoň jednou objeví.
     const kinds = new Set(played.flatMap((r) => r.games.map((g) => g.kind)))
-    expect(kinds.size).toBe(5)
+    expect(kinds.size).toBe(6)
   })
 
   it('flighty odpovídají pozicím kola a každý hráč hraje právě jednou', () => {

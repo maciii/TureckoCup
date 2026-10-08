@@ -1,6 +1,7 @@
 import type { Player, TeamId, TournamentRound } from '../model/types'
 import type { DuelResult, EvaluationResult } from '../evaluations'
 import { t } from '../i18n'
+import { hasSides } from '../evaluations'
 import {
   Pill,
   Section,
@@ -23,8 +24,11 @@ interface Props {
 export default function GameResults({ round, players, result, teams }: Props) {
   const { game } = result
   const format = game.options.format ?? 'strokes-net'
-  const isDuel = game.kind === 'position-duel' || game.kind === 'team-match'
-  const note = isDuel ? t(`format.${format}`) : gameDescription(game)
+  const isDuel = game.kind === 'position-duel' || hasSides(game.kind)
+  const note =
+    isDuel && game.kind !== 'best-aggregate'
+      ? t(`format.${format}`)
+      : gameDescription(game)
   const pendingNote =
     result.pending > 0 ? t('round.pendingHoles', { count: result.pending }) : undefined
 

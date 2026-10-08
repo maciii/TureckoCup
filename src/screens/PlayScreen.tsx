@@ -10,6 +10,7 @@ import type { Flight, PlayerId, TournamentRound } from '../model/types'
 import { flightProgress, isValidTime } from '../model/schedule'
 import { pickupRuleOf } from '../model/pickup'
 import HoleStatus from './HoleStatus'
+import PairStatus from './PairStatus'
 import type { BonusDefinition } from '../model/bonuses'
 import {
   availableBonuses,
@@ -329,6 +330,18 @@ export default function PlayScreen({ roundId, flight }: Props) {
           hole={hole}
           bonusConfig={bonusConfig}
         />
+
+        {results
+          .filter((r) => r.game.kind === 'best-aggregate')
+          .map((r) => (
+            <PairStatus
+              key={r.game.id}
+              result={r}
+              players={state.players}
+              flight={flightEntry}
+              hole={hole}
+            />
+          ))}
 
         <ul className="player-list">
           {flightEntry.players.map((playerId) => {

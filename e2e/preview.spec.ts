@@ -275,3 +275,18 @@ test('jména v zápisu se vejdou i s body za jamku', async ({ page }) => {
   for (const name of names)
     expect(name.clipped, `oříznuté jméno ${name.text}`).toBe(false)
 })
+
+test('Best + Součet: karta dvojic v zápisu ukazuje Best, Součet a body', async ({
+  page,
+}) => {
+  await openPreview(page, '#/play/r3/0')
+  await setPreviewIdentity(page, 'admin')
+  const card = page.locator('.pair-status')
+  await expect(card).toBeVisible()
+  await expect(card.locator('.pair-status-name')).toContainText('Best + Součet')
+  await expect(card.locator('.pair-card')).toHaveCount(2)
+  await expect(card.locator('.chip', { hasText: 'Best' }).first()).toBeVisible()
+  await expect(card.locator('.chip', { hasText: 'Součet' }).first()).toBeVisible()
+  await expect(card.locator('.chip.total').first()).toContainText('b.')
+  await expect(card.locator('.pair-status-score')).toContainText('b.')
+})

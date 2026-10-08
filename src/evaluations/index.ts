@@ -8,6 +8,7 @@ import type {
 } from '../model/types'
 import { DEFAULT_PICKUP } from '../model/pickup'
 import { positionDuel, teamMatch } from './duels'
+import { bestAggregate } from './bestAggregate'
 import { individualSkins, teamSkins } from './skins'
 import { individualStableford } from './stableford'
 import type { Evaluate, EvaluationResult } from './types'
@@ -21,6 +22,7 @@ const EVALUATIONS: Record<GameKind, Evaluate> = {
   'team-skins': teamSkins,
   'position-duel': positionDuel,
   'team-match': teamMatch,
+  'best-aggregate': bestAggregate,
 }
 
 export const GAME_KINDS: GameKind[] = [
@@ -29,7 +31,13 @@ export const GAME_KINDS: GameKind[] = [
   'team-skins',
   'position-duel',
   'team-match',
+  'best-aggregate',
 ]
+
+/** Hry se stranami z konfigurace (dvojice), které admin skládá v editoru hry. */
+export function hasSides(kind: GameKind): boolean {
+  return kind === 'team-match' || kind === 'best-aggregate'
+}
 
 export function evaluateGame(
   round: TournamentRound,

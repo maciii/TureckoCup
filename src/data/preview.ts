@@ -218,6 +218,14 @@ function gamesForDay(day: number, positions: Record<TeamId, PlayerId[]>): GameCo
           { allowance: 1, net: true, format: 'stableford' },
           { win: 1, halve: 0.5 },
         ),
+        game(
+          'best-aggregate',
+          'best-aggregate',
+          'preview.game.bestAggregate',
+          { allowance: 0.9, net: true },
+          { win: 1, halve: 0.5 },
+          { countsForTeam: true, sides: pairSides(positions) },
+        ),
       ]
     default:
       return [

@@ -63,6 +63,19 @@ export interface DuelResult {
    * `null` dělená. Chybějící klíč = jamka ještě nemá rány obou stran.
    */
   holeWinners?: Record<string, 0 | 1 | null>
+  /** Best + Součet: rozpad bodů obou stran po jamkách (pro zápis a scorekartu). */
+  holePoints?: Record<string, SidePoints[]>
+}
+
+/** Body jedné dvojice na jamce v Best + Součet a čísla, ze kterých vzešly. */
+export interface SidePoints {
+  best: number
+  aggregate: number
+  bonus: number
+  total: number
+  /** Lepší míč dvojice (`CONCEDED` = oba zvedli). */
+  bestBall: number | null
+  sum: number | null
 }
 
 export interface EvaluationResult {

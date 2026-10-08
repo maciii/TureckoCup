@@ -135,6 +135,7 @@ export type GameKind =
   | 'team-skins'
   | 'position-duel'
   | 'team-match'
+  | 'best-aggregate'
 
 /** Formát duelu pozic a hlavní týmové hry. */
 export type DuelFormat = 'strokes-gross' | 'strokes-net' | 'stableford' | 'match-play'

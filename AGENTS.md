@@ -92,7 +92,7 @@ src/
   model/        typy turnaje (types.ts), výpočty nad kolem (round.ts), program kola (schedule.ts),
                 extra body (bonuses.ts), zvednutá jamka (pickup.ts)
   scoring/      WHS vzorce (whs.ts), jádro skins a jamkovky - čisté, bez modelu
-  evaluations/  hry: stableford, skins, duels, bonuses; registr index.ts; agregace tournament.ts
+  evaluations/  hry: stableford, skins, duels, bestAggregate, bonuses; registr index.ts; agregace tournament.ts
   data/         ops.ts (operace + překlad na Firestore), localStore, fireStore, auth, seed
   courses/      snímky čtyř turnajových hřišť z golfgames-courses
   screens/      Overview, Round, Play, Admin, AdminRound, Scorecard, GameResults, MenuSheet

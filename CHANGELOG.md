@@ -3,6 +3,16 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.17.0] – 2026-10-08
+
+### Přidáno
+
+- **Hra Best + Součet** (vzor Golfgames): dvojice proti dvojici, na každé
+  jamce bod za lepší míč, bod za součet, 1 za birdie a 3 za eagle partnerů.
+  V zápisu je karta dvojic s Best, Součtem a body na jamce a průběžným
+  skóre zápasu; výsledky kola ukazují zápasy jako u Four-ballu. Testovací
+  verze ji má ve dni 3.
+
 ## [0.16.1] – 2026-10-08
 
 ### Opraveno
