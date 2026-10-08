@@ -80,9 +80,10 @@ export default function PlayScreen({ roundId, flight }: Props) {
   }, [roundId, flight, loaded])
 
   const pickup = pickupRuleOf(state.tournament?.pickup)
+  const bonusConfig = bonusConfigOf(state.tournament?.bonuses)
   const results = useMemo(
-    () => (round ? evaluateRound(round, state.players, pickup) : []),
-    [round, state.players, pickup.timesPar, pickup.plus, pickup.addStrokes],
+    () => (round ? evaluateRound(round, state.players, pickup, bonusConfig) : []),
+    [round, state.players, pickup.timesPar, pickup.plus, pickup.addStrokes, bonusConfig],
   )
 
   if (!round) {
@@ -137,7 +138,6 @@ export default function PlayScreen({ roundId, flight }: Props) {
   const si = strokeIndexRanked(round)[hole]
   const entryEnabled = canWrite && !locked && !notLive
   const stablefordGame = round.games.find((g) => g.kind === 'individual-stableford')
-  const bonusConfig = bonusConfigOf(state.tournament?.bonuses)
   const bonusChoices = availableBonuses(bonusConfig, round, hole)
   const skinsResult = results.find((r) => r.game.kind === 'individual-skins')
   const teamSkinsResult = results.find((r) => r.game.kind === 'team-skins')

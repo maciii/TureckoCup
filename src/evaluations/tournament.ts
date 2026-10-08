@@ -74,7 +74,7 @@ export function summarizeTournament(
   bonusConfig: BonusConfig = DEFAULT_BONUS_CONFIG,
 ): TournamentSummary {
   const evaluated: RoundEvaluation[] = playedRounds(rounds).map((round) => {
-    const results = evaluateRound(round, players, pickup)
+    const results = evaluateRound(round, players, pickup, bonusConfig)
     const bonuses = bonusSummary(round, players, bonusConfig)
     return { round, results, bonuses, teamPoints: roundTeamPoints(results, bonuses) }
   })

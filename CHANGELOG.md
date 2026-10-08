@@ -3,6 +3,16 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.18.0] – 2026-10-08
+
+### Změněno
+
+- **Extra body do týmového skóre se zapínají u hry, ne u kola.** U každé
+  týmové hry je přepínač „Extra body do této hry“: Best + Součet je přičte
+  k bodům dvojice na jamce (jako Golfgames), ostatní týmové hry k bodům
+  týmu z té hry sazbou z Pravidel turnaje. Přepínač u kola zmizel, tabulka
+  extra bodů kola už týmové body sama nedává.
+
 ## [0.17.3] – 2026-10-08
 
 ### Změněno

@@ -1,4 +1,5 @@
 import type {
+  BonusConfig,
   GameConfig,
   PickupRule,
   Player,
@@ -72,6 +73,8 @@ export interface SidePoints {
   best: number
   aggregate: number
   bonus: number
+  /** Extra body partnerů, pokud je hra počítá (`options.bonuses`). */
+  extra: number
   total: number
   /** Lepší míč dvojice (`CONCEDED` = oba zvedli). */
   bestBall: number | null
@@ -96,6 +99,8 @@ export interface EvaluationContext {
   players: Player[]
   /** Centrální pravidlo turnaje pro zvednutou jamku ve hře na rány. */
   pickup: PickupRule
+  /** Centrální nastavení extra bodů - hra je započítá, jen když to má zapnuté. */
+  bonuses: BonusConfig
 }
 
 export type Evaluate = (context: EvaluationContext, game: GameConfig) => EvaluationResult

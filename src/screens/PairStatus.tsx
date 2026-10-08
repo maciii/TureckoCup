@@ -68,6 +68,11 @@ export default function PairStatus({ result, players, flight, hole }: Props) {
                     {t('best.bonus')} +{own.bonus}
                   </span>
                 )}
+                {own.extra > 0 && (
+                  <span className="chip win">
+                    {t('bonus.short')} +{own.extra}
+                  </span>
+                )}
                 <span className="chip total">
                   {t('best.points', { count: own.total })}
                 </span>

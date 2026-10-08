@@ -182,12 +182,9 @@ export function bonusSummary(
       teamId: teamOf(players, id),
     }
   })
+  // Do týmu jdou extra body jen přes hru, která je má zapnuté (evaluateGame);
+  // tabulka vedlejší sázky sama týmové body nedává.
   const teamPoints: Record<TeamId, number> = { A: 0, B: 0 }
-  // Sazba je centrální, ale každé kolo si řekne, zda extra body do týmu jdou.
-  if (config.teamPerPoint > 0 && (round.bonusesCountForTeam ?? true)) {
-    for (const row of rows)
-      if (row.teamId) teamPoints[row.teamId] += row.value * config.teamPerPoint
-  }
   let pending = 0
   for (let hole = 0; hole < holeCount(round); hole++) {
     if (!round.playerIds.every((id) => scoreAt(round, id, hole) !== undefined))

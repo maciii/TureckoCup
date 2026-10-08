@@ -19,8 +19,8 @@ export default function RoundScreen({ roundId }: { roundId: string }) {
   const pickup = pickupRuleOf(state.tournament?.pickup)
   const bonusConfig = bonusConfigOf(state.tournament?.bonuses)
   const results = useMemo(
-    () => (round ? evaluateRound(round, state.players, pickup) : []),
-    [round, state.players, pickup.timesPar, pickup.plus, pickup.addStrokes],
+    () => (round ? evaluateRound(round, state.players, pickup, bonusConfig) : []),
+    [round, state.players, pickup.timesPar, pickup.plus, pickup.addStrokes, bonusConfig],
   )
   const bonuses = useMemo(
     () => (round ? bonusSummary(round, state.players, bonusConfig) : null),

@@ -299,8 +299,8 @@ describe('extra body (centrální nastavení, vedlejší sázka v každém kole)
     expect(row('p2').value).toBe(0)
     expect(row('p6').value).toBe(3 + 3)
     expect(summary.rows[0]!.id).toBe('p6')
-    // Týmové body: A (Mac 3) × 0,5; B (Ferry 6) × 0,5.
-    expect(summary.teamPoints).toEqual({ A: 1.5, B: 3 })
+    // Vedlejší sázka sama týmové body nedává - jdou přes hru s `options.bonuses`.
+    expect(summary.teamPoints).toEqual({ A: 0, B: 0 })
     expect(bonusAwardsAt(round, config(), 'p2', 0)[0]).toMatchObject({
       void: true,
       points: 0,
@@ -360,13 +360,20 @@ describe('extra body (centrální nastavení, vedlejší sázka v každém kole)
     round.scores.p1!['2'] = 2
     const summary = summarizeTournament([round], SEED_PLAYERS, undefined, config())
     expect(summary.individuals.find((i) => i.id === 'p1')?.bonus).toBe(1)
-    expect(summary.rounds[0]!.teamPoints.A).toBe(0.5)
-    expect(roundTeamPoints([], summary.rounds[0]!.bonuses)).toEqual({ A: 0.5, B: 0 })
-    // Kolo může extra body z týmového skóre vyřadit; body jednotlivců zůstávají.
-    const off = { ...round, bonusesCountForTeam: false }
-    const summaryOff = summarizeTournament([off], SEED_PLAYERS, undefined, config())
-    expect(summaryOff.individuals.find((i) => i.id === 'p1')?.bonus).toBe(1)
-    expect(summaryOff.rounds[0]!.teamPoints).toEqual({ A: 0, B: 0 })
+    // Vedlejší sázka sama týmu nic nedává.
+    expect(summary.rounds[0]!.teamPoints).toEqual({ A: 0, B: 0 })
+    expect(roundTeamPoints([], summary.rounds[0]!.bonuses)).toEqual({ A: 0, B: 0 })
+    // Do týmu jdou extra body přes hru, která je má zapnuté: sazba 0,5 b. za bod.
+    const withGame = {
+      ...round,
+      games: round.games.map((g) =>
+        g.kind === 'team-skins'
+          ? { ...g, countsForTeam: true, options: { ...g.options, bonuses: true } }
+          : g,
+      ),
+    }
+    const summaryOn = summarizeTournament([withGame], SEED_PLAYERS, undefined, config())
+    expect(summaryOn.rounds[0]!.teamPoints.A).toBe(0.5)
   })
 })
 

@@ -12,6 +12,7 @@ import {
 } from '../model/round'
 import { pickupStrokes } from '../model/pickup'
 import { finishDuels } from './duels'
+import { bonusPointsAt } from './bonuses'
 import type {
   DuelResult,
   Evaluate,
@@ -98,6 +99,7 @@ export function holePoints(
   right: GameSide,
   hole: number,
   options: { net: boolean; allowance: number },
+  withExtra = false,
 ): [SidePoints, SidePoints] | undefined {
   const a = sideScore(context, left.players, hole, options)
   const b = sideScore(context, right.players, hole, options)
@@ -108,11 +110,20 @@ export function holePoints(
     const best = bestWinner === index ? BEST_POINTS.best : 0
     const aggregate = aggWinner === index ? BEST_POINTS.aggregate : 0
     const bonus = bonusPoints(context, side.players, hole)
+    // Extra body (longest, sandie…) partnerů do bodů dvojice jako v Golfgames,
+    // když to má hra zapnuté.
+    const extra = withExtra
+      ? side.players.reduce(
+          (sum, id) => sum + bonusPointsAt(context.round, context.bonuses, id, hole),
+          0,
+        )
+      : 0
     return {
       best,
       aggregate,
       bonus,
-      total: best + aggregate + bonus,
+      extra,
+      total: best + aggregate + bonus + extra,
       bestBall: score.best,
       sum: score.sum,
     }
@@ -139,7 +150,14 @@ export const bestAggregate: Evaluate = (context, game): EvaluationResult => {
     let pending = 0
     let played = 0
     for (const hole of order) {
-      const hp = holePoints(context, left, right, hole, options)
+      const hp = holePoints(
+        context,
+        left,
+        right,
+        hole,
+        options,
+        game.options.bonuses ?? false,
+      )
       if (!hp) {
         pending += 1
         continue

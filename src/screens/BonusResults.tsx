@@ -28,11 +28,7 @@ export default function BonusResults({ round, players, config, summary }: Props)
           : t('bonus.description')
       }
       accent="gold"
-      right={
-        config.teamPerPoint > 0 && (round.bonusesCountForTeam ?? true)
-          ? t('common.team')
-          : undefined
-      }
+      right={undefined}
     >
       <Standings
         rows={summary.rows}

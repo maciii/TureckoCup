@@ -71,7 +71,6 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
   function patch(update: Partial<TournamentRound>) {
     store.dispatch({ kind: 'updateRound', roundId, patch: update })
   }
-  const bonusRate = bonusConfigOf(state.tournament?.bonuses).teamPerPoint
 
   function reseed() {
     const entry = SEED_SCHEDULE.find((s) => s.number === round!.number)
@@ -376,19 +375,6 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
           }
         >
           <div className="px stack">
-            {/* Extra body: sazba je v Pravidlech turnaje, kolo jen říká, zda do týmu jdou. */}
-            <Switch
-              label={t('admin.bonusesCountForTeam')}
-              on={round.bonusesCountForTeam ?? true}
-              onChange={(bonusesCountForTeam) => patch({ bonusesCountForTeam })}
-            />
-            <p className="hint">
-              {bonusRate > 0
-                ? t('admin.bonusesCountForTeamHint', {
-                    rate: String(bonusRate).replace('.', ','),
-                  })
-                : t('admin.bonusesCountForTeamOff')}
-            </p>
             {round.games.map((game, index) => (
               <GameEditor
                 key={game.id}
@@ -778,6 +764,7 @@ function GameEditor({
 }) {
   const { state } = useData()
   const options = game.options
+  const bonusRate = bonusConfigOf(state.tournament?.bonuses).teamPerPoint
   const setOptions = (next: Partial<GameConfig['options']>) =>
     onChange({ ...game, options: { ...options, ...next } })
   const isDuel = game.kind === 'position-duel' || hasSides(game.kind)
@@ -864,6 +851,28 @@ function GameEditor({
         on={game.countsForTeam}
         onChange={(countsForTeam) => onChange({ ...game, countsForTeam })}
       />
+      {/* Extra body jdou do týmu přes konkrétní hru: Best + Součet je dává do bodů
+          dvojice na jamce, ostatní týmové hry k bodům týmu sazbou z Pravidel turnaje. */}
+      {(game.countsForTeam || game.kind === 'best-aggregate') && (
+        <>
+          <Switch
+            label={t('admin.gameBonuses')}
+            on={options.bonuses ?? false}
+            onChange={(bonuses) => setOptions({ bonuses })}
+          />
+          {(options.bonuses ?? false) && (
+            <p className="hint">
+              {game.kind === 'best-aggregate'
+                ? t('admin.gameBonusesPairHint')
+                : bonusRate > 0
+                  ? t('admin.gameBonusesTeamHint', {
+                      rate: String(bonusRate).replace('.', ','),
+                    })
+                  : t('admin.gameBonusesTeamOff')}
+            </p>
+          )}
+        </>
+      )}
       {/* U duelů rozhoduje netto/brutto formát (Rány, Stableford); přepínač
           Netto má smysl jen u jamkovky, Best + Součet a her jednotlivců. */}
       {(!isDuel ||

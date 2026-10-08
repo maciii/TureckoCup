@@ -9,6 +9,10 @@ import type {
 import { DEFAULT_PICKUP } from '../model/pickup'
 import { positionDuel, teamMatch } from './duels'
 import { bestAggregate } from './bestAggregate'
+import { bonusTotal } from './bonuses'
+import { DEFAULT_BONUS_CONFIG } from '../model/bonuses'
+import { teamOf } from '../model/round'
+import type { BonusConfig } from '../model/types'
 import { individualSkins, teamSkins } from './skins'
 import { individualStableford } from './stableford'
 import type { Evaluate, EvaluationResult } from './types'
@@ -44,17 +48,29 @@ export function evaluateGame(
   players: Player[],
   game: GameConfig,
   pickup: PickupRule = DEFAULT_PICKUP,
+  bonuses: BonusConfig = DEFAULT_BONUS_CONFIG,
 ): EvaluationResult {
   const evaluate = EVALUATIONS[game.kind]
-  return evaluate({ round, players, pickup }, game)
+  const result = evaluate({ round, players, pickup, bonuses }, game)
+  // Extra body do týmu jdou přes hru, která je má zapnuté: Best + Součet si je
+  // dává do bodů dvojice sám, ostatní týmové hry je přičtou k bodům týmu sazbou.
+  if (game.options.bonuses && game.countsForTeam && game.kind !== 'best-aggregate') {
+    for (const id of round.playerIds) {
+      const team = teamOf(players, id)
+      if (team)
+        result.teamPoints[team] += bonusTotal(round, bonuses, id) * bonuses.teamPerPoint
+    }
+  }
+  return result
 }
 
 export function evaluateRound(
   round: TournamentRound,
   players: Player[],
   pickup: PickupRule = DEFAULT_PICKUP,
+  bonuses: BonusConfig = DEFAULT_BONUS_CONFIG,
 ): EvaluationResult[] {
-  return round.games.map((game) => evaluateGame(round, players, game, pickup))
+  return round.games.map((game) => evaluateGame(round, players, game, pickup, bonuses))
 }
 
 /** Týmové body kola ze her, které do týmového skóre vstupují, plus extra body, jsou-li zapnuté. */

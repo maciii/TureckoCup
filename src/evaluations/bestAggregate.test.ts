@@ -87,6 +87,20 @@ describe('Best + Součet', () => {
     expect(b).toMatchObject({ aggregate: 1, sum: 10 })
   })
 
+  it('se zapnutými extra body se sandie partnera přičte k bodům dvojice', () => {
+    const round = round1()
+    enter(round, { p3: [4], p1: [4], p2: [4], p6: [4] })
+    round.bonuses.p3!['0'] = ['sandie']
+    const plain = evaluateGame(round, SEED_PLAYERS, game()).duels![0]!.holePoints!['0']!
+    expect(plain[0]).toMatchObject({ extra: 0, total: 0 })
+    const withExtra = { ...game(), options: { ...game().options, bonuses: true } }
+    const [a, b] = evaluateGame(round, SEED_PLAYERS, withExtra).duels![0]!.holePoints![
+      '0'
+    ]! as [SidePoints, SidePoints]
+    expect(a).toMatchObject({ extra: 1, total: 1 })
+    expect(b.total).toBe(0)
+  })
+
   it('po dohrání dává vítězná dvojice bod týmu, remíza půl', () => {
     const round = round1()
     // Všichni par na každé jamce (pary hřiště, ne pořád 4 - na par 5 by to bylo birdie).

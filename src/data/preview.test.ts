@@ -157,7 +157,20 @@ describe('testovací verze turnaje', () => {
       bonusConfigOf(state.tournament.bonuses),
     )!
     expect(summary.rows.some((r) => r.value > 0)).toBe(true)
-    expect(summary.teamPoints.A + summary.teamPoints.B).toBeGreaterThan(0)
+    // Vedlejší sázka týmu nic nedává; do týmu jdou extra body přes hru dne 3 (Best + Součet).
+    expect(summary.teamPoints).toEqual({ A: 0, B: 0 })
+    const best = evaluateRound(
+      rounds[2]!,
+      PREVIEW_PLAYERS,
+      undefined,
+      bonusConfigOf(state.tournament.bonuses),
+    ).find((r) => r.game.kind === 'best-aggregate')!
+    expect(best.game.options.bonuses).toBe(true)
+    expect(
+      Object.values(best.duels![0]!.holePoints!).some((hp) =>
+        hp.some((p) => p.extra > 0),
+      ),
+    ).toBe(true)
     expect(state.tournament.pickup).toEqual({ timesPar: 2, plus: 0, addStrokes: false })
     expect(
       rounds.every((r) => r.games.every((g) => (g.kind as string) !== 'bonuses')),

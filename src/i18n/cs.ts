@@ -357,11 +357,13 @@ export const cs = {
   'pickup.par': 'par',
   'pickup.strokes': 'rány z HCP',
   'admin.addGame': 'Přidat hru',
-  'admin.bonusesCountForTeam': 'Extra body do týmového skóre',
-  'admin.bonusesCountForTeamHint':
-    'Sazba je v Pravidlech turnaje: {rate} b. týmu za každý extra bod hráče.',
-  'admin.bonusesCountForTeamOff':
-    'V Pravidlech turnaje je sazba 0 – extra body se do týmu nepočítají v žádném kole.',
+  'admin.gameBonuses': 'Extra body do této hry',
+  'admin.gameBonusesPairHint':
+    'Extra body partnerů (longest, sandie…) se přičtou k bodům dvojice na jamce, jako v Golfgames.',
+  'admin.gameBonusesTeamHint':
+    'Extra body hráčů jdou do bodů týmu z této hry: {rate} b. za každý extra bod (sazba v Pravidlech turnaje).',
+  'admin.gameBonusesTeamOff':
+    'Sazba v Pravidlech turnaje je 0 – nastav ji, jinak extra body do týmu nic nepřidají.',
   'admin.removeGame': 'Odebrat hru',
   'admin.removeGameConfirm': 'Odebrat hru {name}? Zapsané skóre zůstane.',
   'admin.access': 'Oprávnění',

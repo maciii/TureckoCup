@@ -157,6 +157,11 @@ export interface GameOptions {
   carry?: boolean
   /** Formát duelů (pozice, hlavní hra). */
   format?: DuelFormat
+  /**
+   * Extra body do téhle hry: u Best + Součet k bodům dvojice na jamce, u jiných
+   * týmových her do bodů týmu z této hry (sazba `tournament.bonuses.teamPerPoint`).
+   */
+  bonuses?: boolean
 }
 
 /** Kolik týmových bodů hra přináší. */
@@ -247,8 +252,6 @@ export interface TournamentRound {
    * nezadaný (prázdný text místo mazání pole, `updateRound` pole nemaže).
    */
   departure?: string
-  /** Počítat extra body kola do týmového skóre (sazba je centrálně); výchozí ano. */
-  bonusesCountForTeam?: boolean
 }
 
 /** Záznam v logu úprav `rounds/{rid}/edits`. */

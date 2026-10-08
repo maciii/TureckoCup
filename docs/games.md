@@ -79,10 +79,11 @@ dvojice flightu proti druhé, tedy A1+A2 vs B1+B2 a A3+A4 vs B3+B4). Body
 
 ## Extra body (centrální, v každém kole)
 
-**Do týmového skóre.** Sazba „bod týmu za extra bod“ je centrální (Pravidla
-turnaje), ale každé kolo má přepínač **Extra body do týmového skóre**
-(výchozí zapnuto); vypnutý nechá extra body jen jako vedlejší sázku
-jednotlivců.
+**Do týmového skóre** jdou extra body jen přes hru, která má zapnuté
+**Extra body do této hry** (`options.bonuses`): u Best + Součet se extra body
+partnerů přičtou k bodům dvojice na jamce (jako v Golfgames), u ostatních
+týmových her k bodům týmu z té hry sazbou `teamPerPoint` z Pravidel turnaje.
+Bez takové hry jsou extra body jen vedlejší sázkou jednotlivců.
 
 **Uložení.** Extra body jsou surová data jako rány: `round.bonuses[hráč][jamka]`
 je seznam id bonusů (`['longest', 'sandie']`), zapisuje se jedna buňka
@@ -126,8 +127,8 @@ Pravidla jako v Golfgames:
 - Longest a Nearest drží jediný hráč: zaškrtnutí u dalšího hráče ho
   předchozímu odebere; mají-li ho omylem dva (zápis bez signálu ze dvou
   telefonů), nedostane bod nikdo. Zvednutá jamka bonus nedává.
-- Do týmového skóre jdou extra body jen s `teamPerPoint > 0` (součet bodů
-  hráčů týmu × hodnota), jinak jsou jen vedlejší sázkou.
+- Do týmového skóre jdou extra body jen přes hru s `options.bonuses`
+  (viz Extra body), jinak jsou jen vedlejší sázkou.
 
 ## Best + Součet (`best-aggregate`)
 

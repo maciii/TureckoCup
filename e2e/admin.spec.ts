@@ -180,18 +180,19 @@ test('body za remízu jdou zadat s desetinnou čárkou a přežijí obnovení', 
   await expect(page.getByLabel('Bodů za remízu').first()).toHaveValue('0,5')
 })
 
-test('kolo rozhodne, zda extra body jdou do týmového skóre', async ({ page }) => {
+test('hra rozhodne, zda extra body jdou do týmového skóre', async ({ page }) => {
   await setIdentity(page, 'admin')
   await open(page, '#/admin/round/r1')
-  const toggle = page.getByRole('switch', { name: 'Extra body do týmového skóre' })
-  await expect(toggle).toHaveAttribute('aria-checked', 'true')
-  await toggle.click()
+  // Team Skins počítá do týmu, přepínač extra bodů je u ní; výchozí vypnuto.
+  const toggle = page.getByRole('switch', { name: 'Extra body do této hry' }).first()
   await expect(toggle).toHaveAttribute('aria-checked', 'false')
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-checked', 'true')
   await page.reload()
   await page.waitForSelector('.screen')
   await expect(
-    page.getByRole('switch', { name: 'Extra body do týmového skóre' }),
-  ).toHaveAttribute('aria-checked', 'false')
+    page.getByRole('switch', { name: 'Extra body do této hry' }).first(),
+  ).toHaveAttribute('aria-checked', 'true')
 })
 
 test('pevný hrací HCP po celý turnaj se promítne do kol', async ({ page }) => {
