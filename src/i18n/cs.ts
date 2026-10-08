@@ -240,7 +240,7 @@ export const cs = {
   },
   'admin.rosterSync': 'Promítnout soupisku do plánovaných kol',
   'admin.rosterSyncHint':
-    'Přepíše HCP indexy, pozice a složení flightů podle soupisky. Odpaliště, hry, časy, ruční HCP i rozehraná kola zůstanou.',
+    'Srovná pozice 1–4 v soupisce a přepíše pozice a složení flightů v kolech podle ní. Odpaliště, hry, časy, ruční HCP i rozehraná kola zůstanou.',
   'admin.handicapIndex': 'HCP index',
   'admin.handicapIndexShort': 'Index',
   'admin.courseHandicapShort': 'HCP',

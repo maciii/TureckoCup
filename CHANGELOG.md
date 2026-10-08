@@ -3,6 +3,19 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.10.0] – 2026-10-08
+
+### Změněno
+
+- **Extra body jsou výchozí hra každého kola** (jako v Golfgames): longest,
+  nearest, birdie a eagle zapnuté od začátku, zapisovatel vidí hvězdičku
+  u jména hráče hned. U už založených kol ji admin přidá tlačítkem
+  „+ Přidat hru“ a výběrem „Extra body“.
+- **HCP index se do nedohraných kol srovná sám** při otevření adminu -
+  žádné klepání.
+- „Promítnout soupisku do plánovaných kol“ zároveň srovná duplicitní
+  pozice 1–4 v soupisce (podle pořadí hráčů).
+
 ## [0.9.1] – 2026-10-07
 
 ### Změněno

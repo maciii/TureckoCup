@@ -12,6 +12,7 @@ import type {
   TournamentState,
 } from '../model/types'
 import type { Op } from './ops'
+import { defaultBonusValues } from '../model/bonuses'
 import aspendos from '../courses/aspendos.json'
 import lykia from '../courses/lykia-links.json'
 import carya from '../courses/belek-carya.json'
@@ -184,6 +185,20 @@ export function defaultGames(): GameConfig[] {
       countsForTeam: false,
       teamPoints: { win: 1, halve: 0.5 },
     },
+    // Extra body jsou jako v Golfgames zapnuté od začátku: longest, nearest,
+    // birdie a eagle; zapisovatel je hned vidí u jména hráče.
+    {
+      id: 'bonuses',
+      kind: 'bonuses',
+      options: {
+        allowance: 1,
+        net: false,
+        bonusValues: defaultBonusValues(),
+        confirmByPar: true,
+      },
+      countsForTeam: false,
+      teamPoints: { perPoint: 1 },
+    },
   ]
 }
 
@@ -294,6 +309,44 @@ export function playerIndexOps(
       roundId: round.id,
       patch: { playerIndex: { ...round.playerIndex, [playerId]: value } },
     })
+  }
+  return ops
+}
+
+/**
+ * Kola, která nejsou dohraná, mají mít index každého hráče ze soupisky.
+ * Admin to srovná automaticky při otevření adminu (jeden zápis na kolo).
+ */
+export function indexSyncOps(state: TournamentState): Op[] {
+  const ops: Op[] = []
+  for (const round of state.rounds) {
+    if (round.status === 'finished') continue
+    const stale = state.players.filter(
+      (p) => (round.playerIndex[p.id] ?? null) !== p.handicapIndex,
+    )
+    if (stale.length === 0) continue
+    const playerIndex = { ...round.playerIndex }
+    for (const p of stale) playerIndex[p.id] = p.handicapIndex
+    ops.push({ kind: 'updateRound', roundId: round.id, patch: { playerIndex } })
+  }
+  return ops
+}
+
+/**
+ * Pozice 1-4 v každém týmu bez děr a duplicit: hráči seřazení podle pozice
+ * (při shodě podle pořadí v soupisce) dostanou 1, 2, 3, 4.
+ */
+export function positionFixOps(players: Player[]): Op[] {
+  const ops: Op[] = []
+  for (const teamId of ['A', 'B'] as const) {
+    players
+      .filter((p) => p.teamId === teamId)
+      .sort((a, b) => a.position - b.position)
+      .forEach((p, index) => {
+        const position = (index + 1) as Player['position']
+        if (p.position !== position)
+          ops.push({ kind: 'updatePlayer', playerId: p.id, patch: { position } })
+      })
   }
   return ops
 }

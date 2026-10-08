@@ -5,7 +5,9 @@ import {
   SEED_ACCESS,
   SEED_PLAYERS,
   SEED_TOURNAMENT,
+  indexSyncOps,
   playerIndexOps,
+  positionFixOps,
   rosterOutdated,
   rosterSnapshot,
   seedRounds,
@@ -339,5 +341,56 @@ describe('HCP index patří hráči', () => {
     // Beze změny se nic nepíše.
     expect(playerIndexOps(state, 'p4', 18.8)).toHaveLength(1)
     for (const op of ops) expect(findInvalidWrite(opToWrites(op, meta, state))).toBeNull()
+  })
+})
+
+describe('automatické srovnání soupisky', () => {
+  it('indexSyncOps zapíše index hráče do nedohraných kol jedním zápisem na kolo', () => {
+    let state = initial()
+    state = applyOp(state, {
+      kind: 'updateRound',
+      roundId: 'r1',
+      patch: { status: 'finished' },
+    })
+    state = applyOp(state, {
+      kind: 'updatePlayer',
+      playerId: 'p4',
+      patch: { handicapIndex: 18.8 },
+    })
+    state = applyOp(state, {
+      kind: 'updatePlayer',
+      playerId: 'p8',
+      patch: { handicapIndex: 20.7 },
+    })
+    const ops = indexSyncOps(state)
+    expect(ops.map((op) => (op.kind === 'updateRound' ? op.roundId : ''))).toEqual([
+      'r2',
+      'r3',
+      'r4',
+      'r5',
+    ])
+    for (const op of ops) state = applyOp(state, op)
+    expect(state.rounds[0]!.playerIndex.p4).toBeNull()
+    expect(state.rounds[1]!.playerIndex).toMatchObject({ p4: 18.8, p8: 20.7, p1: 12.7 })
+    expect(indexSyncOps(state)).toEqual([])
+  })
+
+  it('positionFixOps srovná duplicitní pozice podle pořadí', () => {
+    const state = initial()
+    // Soldík (B3) i Honza (B4) na trojce, Jarin (A3) a Vrbič (A4) na čtyřce.
+    const players = state.players.map((p) =>
+      p.id === 'p8'
+        ? { ...p, position: 3 as const }
+        : p.id === 'p5'
+          ? { ...p, position: 4 as const }
+          : p,
+    )
+    const ops = positionFixOps(players)
+    // Jarin před Vrbičem (pořadí v soupisce) dostane trojku, Honza za Soldíkem čtyřku.
+    expect(ops).toEqual([
+      { kind: 'updatePlayer', playerId: 'p5', patch: { position: 3 } },
+      { kind: 'updatePlayer', playerId: 'p8', patch: { position: 4 } },
+    ])
+    expect(positionFixOps(state.players)).toEqual([])
   })
 })

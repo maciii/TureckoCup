@@ -4,7 +4,9 @@ import {
   SEED_ACCESS,
   SEED_PLAYERS,
   SEED_TOURNAMENT,
+  indexSyncOps,
   playerIndexOps,
+  positionFixOps,
   rosterOutdated,
   rosterSnapshot,
   seedRounds,
@@ -216,8 +218,15 @@ export default function AdminScreen() {
  * klepnutí promítne do všech, která ještě nezačala.
  */
 function RosterSync() {
-  const { state, store } = useData()
+  const { state, store, meta } = useData()
   const mode = state.tournament?.handicapMode ?? 'course'
+  // HCP index patří hráči: nedohraná kola se srovnají samy, bez klepání.
+  const indexOps = meta.role === 'admin' ? indexSyncOps(state) : []
+  useEffect(() => {
+    for (const op of indexOps) store.dispatch(op)
+    // Zápisy se projeví hned ve stavu; další průchod už nic nenajde.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [indexOps.length])
   const outdated = state.rounds.filter(
     (round) => round.status === 'planned' && rosterOutdated(round, state.players, mode),
   )
@@ -231,11 +240,20 @@ function RosterSync() {
         type="button"
         className="btn primary"
         onClick={() => {
+          // Nejdřív srovnat duplicitní pozice v soupisce, pak snímek z ní.
+          const fixes = positionFixOps(state.players)
+          for (const op of fixes) store.dispatch(op)
+          const players = state.players.map((p) => {
+            const fix = fixes.find(
+              (op) => op.kind === 'updatePlayer' && op.playerId === p.id,
+            )
+            return fix && fix.kind === 'updatePlayer' ? { ...p, ...fix.patch } : p
+          })
           for (const round of outdated) {
             store.dispatch({
               kind: 'updateRound',
               roundId: round.id,
-              patch: rosterSnapshot(round, state.players, mode),
+              patch: rosterSnapshot(round, players, mode),
             })
           }
         }}
