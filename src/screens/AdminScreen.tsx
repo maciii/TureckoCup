@@ -82,7 +82,7 @@ export default function AdminScreen() {
 
   return (
     <div className="screen">
-      <Header title={t('admin.title')} />
+      <Header title={t(isAdmin ? 'admin.title' : 'nav.account')} />
 
       <main className="content">
         {meta.error && (

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useData, variantHref } from '../data'
 import { t } from '../i18n'
@@ -22,9 +23,18 @@ function Icon({ children }: { children: ReactNode }) {
   )
 }
 
-/** Výsuvné menu zleva ve světlém stylu appky; zelená jen jako barva ikon. */
+/**
+ * Výsuvné menu zleva. Co v něm je, řídí role: nepřihlášený vidí nahoře
+ * přihlášení (jinde ho hledat nemusí), hráč své jméno a odhlášení, položku
+ * Admin jen admin - ostatním by nedávala smysl.
+ */
 export default function MenuSheet({ onClose, playRoute, current }: Props) {
   const { meta, store, state } = useData()
+  const signedIn = meta.account !== null
+  // SDK přihlášení se načítá dopředu, aby popup šel otevřít hned z klepnutí.
+  useEffect(() => {
+    if (!signedIn) store.prepareSignIn()
+  }, [signedIn, store])
 
   function go(route: Route) {
     onClose()
@@ -75,11 +85,28 @@ export default function MenuSheet({ onClose, playRoute, current }: Props) {
             <div className="nm">{state.tournament?.name ?? t('app.name')}</div>
             <div className="sub">
               {meta.account
-                ? accountName(state.players, meta.account)
+                ? `${accountName(state.players, meta.account)} · ${t(`admin.role.${meta.role}`)}`
                 : t('admin.role.visitor')}
             </div>
           </div>
         </div>
+
+        {!meta.account && (
+          <div className="menu-signin">
+            <button
+              type="button"
+              className="btn primary"
+              disabled={!meta.authReady}
+              onClick={() => {
+                onClose()
+                void store.signIn()
+              }}
+            >
+              {meta.authReady ? t('admin.signIn') : t('admin.signingIn')}
+            </button>
+            <p className="hint">{t('nav.signInHint')}</p>
+          </div>
+        )}
 
         {playRoute && (
           <>
@@ -109,16 +136,17 @@ export default function MenuSheet({ onClose, playRoute, current }: Props) {
           '',
           current === 'overview',
         )}
-        {item(
-          t('nav.admin'),
-          { view: 'admin' },
-          <>
-            <circle cx="12" cy="8" r="3.4" />
-            <path d="M5 20c0-4 3.1-6.5 7-6.5s7 2.5 7 6.5" />
-          </>,
-          'admin',
-          current === 'admin' || current === 'adminRound',
-        )}
+        {meta.role === 'admin' &&
+          item(
+            t('nav.admin'),
+            { view: 'admin' },
+            <>
+              <circle cx="12" cy="8" r="3.4" />
+              <path d="M5 20c0-4 3.1-6.5 7-6.5s7 2.5 7 6.5" />
+            </>,
+            'admin',
+            current === 'admin' || current === 'adminRound',
+          )}
 
         <div className="menu-label">{t('app.versions')}</div>
         {meta.demo === 'preview' ? (
@@ -169,6 +197,18 @@ export default function MenuSheet({ onClose, playRoute, current }: Props) {
                 ))}
               </div>
             </div>
+          )}
+          {meta.account && (
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => {
+                onClose()
+                void store.signOut()
+              }}
+            >
+              {t('admin.signOut')}
+            </button>
           )}
           {store.resetDemo && (
             <button

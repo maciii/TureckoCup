@@ -224,7 +224,8 @@ export function createLocalStore(
     },
     prepareSignIn() {},
     async signIn() {
-      role = 'admin'
+      // Ukázka: přihlášený je hráč; admina si přepne ukázková identita v menu.
+      role = 'writer'
       persistIdentity()
       notify()
     },

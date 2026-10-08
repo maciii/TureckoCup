@@ -3,6 +3,18 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.14.0] – 2026-10-08
+
+### Změněno
+
+- **Menu podle role.** Nepřihlášený má hned pod názvem turnaje tlačítko
+  „Přihlásit se Googlem“ a nápovědu, přihlášený hráč vidí své jméno s rolí
+  a dole „Odhlásit se“. Položka **Admin** je jen pro administrátora.
+  Obrazovka s účtem zůstává na adrese `#/admin` pod názvem „Účet“.
+- Zápis bez přihlášení nabídne tlačítko přihlášení přímo v hlášce místo
+  odkazu na menu Admin. V ukázkovém režimu přihlášení dělá z návštěvníka
+  hráče (admina přepne ukázková identita).
+
 ## [0.13.0] – 2026-10-08
 
 ### Změněno

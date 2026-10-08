@@ -56,6 +56,9 @@ export const cs = {
   'nav.round': 'Kolo',
   'nav.play': 'Zápis',
   'nav.admin': 'Admin',
+  'nav.account': 'Účet',
+  'nav.signInHint':
+    'Hráči se přihlásí Google e-mailem ze soupisky. Výsledky jdou sledovat bez přihlášení.',
   'nav.menu': 'Menu',
   'nav.overviews': 'Přehledy',
 
@@ -204,7 +207,7 @@ export const cs = {
     few: '{count} neodeslané zápisy',
     other: '{count} neodeslaných zápisů',
   },
-  'play.signInRequired': 'Pro zápis skóre se přihlas Googlem v menu Admin.',
+  'play.signInRequired': 'Pro zápis skóre se přihlas Googlem.',
   'play.notWriter': 'tvůj účet ({account}) nemá oprávnění zapisovat, napiš adminovi',
   'play.roundFinished': 'Kolo je uzavřené, skóre už nejde měnit.',
   'play.roundNotLive': 'Kolo ještě není spuštěné. Admin ho musí přepnout na Živě.',
@@ -214,7 +217,7 @@ export const cs = {
   'play.switchFlight': 'Změnit flight',
   'play.showScorecard': 'Scorekarta',
 
-  'admin.title': 'Admin a účet',
+  'admin.title': 'Admin',
   'admin.account': 'Účet',
   'admin.removeEmail': 'Odebrat',
   'admin.signIn': 'Přihlásit se Googlem',

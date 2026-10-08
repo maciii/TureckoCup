@@ -101,7 +101,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
   if (!flightEntry) {
     return (
       <Shell title={t('play.title')} subtitle={round.course.name}>
-        {!canWrite && <p className="notice">{t('play.signInRequired')}</p>}
+        {!canWrite && <SignInNotice />}
         <p className="eyebrow">{t('play.chooseFlight')}</p>
         <ul className="option-list">
           {round.flights.map((entry, index) => (
@@ -261,7 +261,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
             {meta.error}
           </button>
         )}
-        {!canWrite && <p className="notice">{t('play.signInRequired')}</p>}
+        {!canWrite && <SignInNotice />}
         {locked && <p className="notice">{t('play.roundFinished')}</p>}
         {notLive && <p className="notice">{t('play.roundNotLive')}</p>}
 
@@ -662,4 +662,28 @@ function readHole(roundId: string, flight: number | null): number | undefined {
     /* ignore */
   }
   return undefined
+}
+
+/** Výzva k přihlášení přímo v zápisu - nepřihlášený nemusí hledat menu. */
+function SignInNotice() {
+  const { meta, store } = useData()
+  // SDK přihlášení se načte dopředu, aby popup šel otevřít hned z klepnutí.
+  useEffect(() => {
+    if (!meta.account) store.prepareSignIn()
+  }, [meta.account, store])
+  return (
+    <div className="notice signin">
+      <span>{t('play.signInRequired')}</span>
+      {!meta.account && (
+        <button
+          type="button"
+          className="btn primary sm"
+          disabled={!meta.authReady}
+          onClick={() => void store.signIn()}
+        >
+          {meta.authReady ? t('admin.signIn') : t('admin.signingIn')}
+        </button>
+      )}
+    </div>
+  )
 }
