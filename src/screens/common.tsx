@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import crestUrl from '../assets/crest.png'
 import type {
   GameConfig,
   Player,
@@ -270,21 +271,9 @@ export function formatDateTime(value: unknown): string | null {
   })
 }
 
-export function FlagMark({ size = 28 }: { size?: number }) {
-  return (
-    <svg
-      className="flag-mark"
-      width={size}
-      height={size}
-      viewBox="0 0 64 64"
-      fill="none"
-      aria-hidden="true"
-    >
-      <ellipse className="flag-green" cx="32" cy="46" rx="18" ry="7" />
-      <rect className="flag-pole" x="30" y="14" width="3" height="32" rx="1.5" />
-      <path className="flag-cloth" d="M33 14 L52 21 L33 28 Z" />
-    </svg>
-  )
+/** Erb turnaje (src/assets/crest.png, předloha design/crest.png). */
+export function Crest({ className }: { className: string }) {
+  return <img className={className} src={crestUrl} alt="" aria-hidden="true" />
 }
 
 export function BackIcon() {

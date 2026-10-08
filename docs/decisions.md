@@ -162,8 +162,35 @@ jamek - jinak by v nastavení neviděl, čím se hry dne liší.
 verze funguje offline a na produkci bez přihlášení. Zápisy v ní zůstávají
 jen v prohlížeči, proto ji odlišuje zlatý štítek „Test“ na každé obrazovce.
 
+## 16. Vzhled podle erbu turnaje
+
+**Kontext.** Turnaj má vlastní erb (pohár, české a turecké barvy, zlatý
+lem, námořnická modř). Aplikace do té doby nesla zelenou z Golfgames.
+
+**Rozhodnutí.** Předloha je `design/crest.png`, z ní `scripts/gen-icons.py`
+dělá PWA ikony (erb na modři erbu, maskable ve zmenšené bezpečné zóně),
+favicon a erb do aplikace. Paleta v `:root` je z erbu: `--brand` je
+námořnická modř (hlavička, odkazy, zvolené záložky, hlavní tlačítka),
+`--gold-bright` zlatá linka hlavičky, červená vlajek pro chyby a ztráty,
+krémové pozadí. Zelená zůstává golfu: zisk, skin, par. Tým A má zlatou
+erbu, tým B světlejší modř, aby se nepletl s ovládacími prvky.
+
+**Důsledek.** Žádné `#hex` v komponentách, vše přes proměnné; status bar
+na iPhonu zůstává systémový (`default`), námořnickou bere jen Android
+z `theme-color`.
+
+## 17. Google účet bez ověřeného e-mailu
+
+**Kontext.** Hráč s Google účtem na adrese seznam.cz dostal po přihlášení
+„není mezi hráči“, i když adresu v soupisce měl. Firebase u Google účtů
+s cizí doménou nenastavuje `email_verified`, a rules ověření vyžadovaly.
+
+**Rozhodnutí.** `verified()` v rules pustí i neověřený e-mail, pokud ho
+přinesl poskytovatel `google.com` - Google adresu ověřuje při založení
+účtu. Jiné přihlášení aplikace nenabízí, takže se nic jiného neotevírá.
+Klient navíc rozliší hlášku pro neověřený e-mail od „není mezi hráči“.
+
 ## Otevřené otázky
 
 - Hlavní hra kola a její bodování (do rozhodnutí je týmové skóre jen Team
   Skins, označené jako předběžné).
-- Extra body: model i rules je nesou, UI ani hry je nevyhodnocují.

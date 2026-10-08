@@ -6,7 +6,7 @@ import { navigate } from '../nav'
 import type { Route } from '../nav'
 import { usePwaInstall } from '../pwa'
 import {
-  FlagMark,
+  Crest,
   Header,
   MenuIcon,
   Pill,
@@ -116,9 +116,7 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
         )}
 
         <div className="hero">
-          <span className="hero-mark">
-            <FlagMark size={30} />
-          </span>
+          <Crest className="hero-crest" />
           <h1>{state.tournament?.name ?? t('app.name')}</h1>
           <p>
             {state.tournament

@@ -17,30 +17,34 @@
 :root {
   color-scheme: light;
 
-  --bg: #faf9f5;
+  /* Barvy erbu Turecko Cupu (design/crest.png): námořnická modř, zlatý lem,
+     červená vlajek a krémový střed. Zelená zůstává golfu - zisk, skin, par. */
+  --bg: #f6f4ee;
   --surface: #ffffff;
-  --ink: #151a16;
-  --ink-2: #5b6259;
-  --ink-3: #9a9d90;
-  --line: #e9e7df;
-  --track: #eeece4;
+  --ink: #121a2b;
+  --ink-2: #515a6b;
+  --ink-3: #8b919e;
+  --line: #e5e1d6;
+  --track: #ece8dd;
 
+  --brand: #0b1d3a;
+  --brand-soft: #e8ecf3;
   --green: #1f7a4d;
   --green-soft: #e7f3ec;
-  --fairway-deep: #0a5c32;
-  --gold: #b9862a;
-  --gold-soft: #faf1dc;
-  --red: #d3352b;
-  --red-soft: #fbe3e0;
+  --gold: #a67c2e;
+  --gold-bright: #d7b777;
+  --gold-soft: #f7ecd2;
+  --red: #b3101a;
+  --red-soft: #f9e1e0;
   --navy: #1c4f79;
   --navy-soft: rgba(28, 79, 121, 0.14);
 
-  /* Týmy: A je sluneční žlutá s tmavým písmem, B námořnická modrá s bílým.
+  /* Týmy: A je zlatá erbu s tmavým písmem, B námořnická modrá s bílým.
      Syté odstíny jsou na výplně (pilulky, zvolená tlačítka), tlumené na text. */
-  --team-a: #ffd23f;
+  --team-a: #f0c24a;
   --team-a-ink: #2a1e05;
   --team-a-text: #7a5a15;
-  --team-a-soft: #faf1dc;
+  --team-a-soft: #f7ecd2;
   --team-b: #1c4f79;
   --team-b-ink: #ffffff;
   --team-b-text: #1c4f79;
@@ -50,7 +54,7 @@
   --tap: 44px;
   --app-max-width: 448px;
   --pad: 24px;
-  --shadow: 0 1px 2px rgba(23, 36, 28, 0.06), 0 14px 32px -18px rgba(23, 36, 28, 0.28);
+  --shadow: 0 1px 2px rgba(11, 29, 58, 0.06), 0 14px 32px -18px rgba(11, 29, 58, 0.3);
 }
 
 * {
@@ -100,11 +104,11 @@ button {
 }
 
 a {
-  color: var(--fairway-deep);
+  color: var(--brand);
 }
 
 :focus-visible {
-  outline: 2px solid var(--fairway-deep);
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
   border-radius: 3px;
 }
@@ -135,8 +139,17 @@ a {
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  background: var(--brand);
+  color: var(--on-dark);
+  border-bottom: 2px solid var(--gold-bright);
+}
+
+.app-header .icon-button {
+  color: var(--on-dark);
+}
+
+.app-header :focus-visible {
+  outline-color: var(--gold-bright);
 }
 
 .app-header h1 {
@@ -157,7 +170,7 @@ a {
   text-align: center;
   font-size: 11.5px;
   font-weight: 600;
-  color: var(--ink-3);
+  color: rgba(255, 255, 255, 0.72);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -168,9 +181,9 @@ a {
   min-width: 0;
 }
 
-/* Testovací verze: zlatý proužek a štítek, ať je na první pohled jiná než ostrá. */
+/* Testovací verze: silnější zlatý proužek a štítek, ať je na první pohled jiná než ostrá. */
 .app-header.preview {
-  border-bottom: 3px solid var(--gold);
+  border-bottom-width: 4px;
 }
 
 .preview-tag {
@@ -272,19 +285,6 @@ a {
   padding: 18px var(--pad) 14px;
 }
 
-.flag-mark .flag-green {
-  fill: var(--on-dark);
-  opacity: 0.35;
-}
-
-.flag-mark .flag-pole {
-  fill: var(--on-dark);
-}
-
-.flag-mark .flag-cloth {
-  fill: var(--team-a);
-}
-
 .uid {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
@@ -293,16 +293,17 @@ a {
   -webkit-user-select: all;
 }
 
-.hero-mark {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--fairway-deep);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 0 1px var(--line);
-  margin-bottom: 8px;
+.hero-crest {
+  width: 124px;
+  height: auto;
+  margin-bottom: 6px;
+  filter: drop-shadow(0 8px 14px rgba(11, 29, 58, 0.22));
+}
+
+.menu-crest {
+  width: 36px;
+  height: auto;
+  flex: none;
 }
 
 .hero h1 {
@@ -534,8 +535,8 @@ a {
   text-transform: uppercase;
   padding: 3px 9px;
   border-radius: 99px;
-  background: var(--green-soft);
-  color: var(--fairway-deep);
+  background: var(--brand-soft);
+  color: var(--brand);
   white-space: nowrap;
 }
 
@@ -574,7 +575,7 @@ a {
 }
 
 .tab.selected {
-  background: var(--fairway-deep);
+  background: var(--brand);
   color: #fff;
 }
 
@@ -761,7 +762,7 @@ a {
   font-weight: 800;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: var(--fairway-deep);
+  color: var(--brand);
 }
 
 .soft-card .label {
@@ -1359,13 +1360,13 @@ a {
 }
 
 .btn.primary {
-  background: var(--fairway-deep);
+  background: var(--brand);
   color: #fff;
 }
 
 .btn.green-soft {
-  background: var(--green-soft);
-  color: var(--fairway-deep);
+  background: var(--brand-soft);
+  color: var(--brand);
 }
 
 .btn.red-soft {
@@ -1462,7 +1463,7 @@ a {
 }
 
 .input:focus {
-  outline: 2px solid var(--fairway-deep);
+  outline: 2px solid var(--brand);
   outline-offset: -1px;
 }
 
@@ -1717,8 +1718,8 @@ a {
 }
 
 .menu-item.selected {
-  background: var(--green-soft);
-  color: var(--fairway-deep);
+  background: var(--brand-soft);
+  color: var(--brand);
 }
 
 .menu-item:disabled {
@@ -1915,7 +1916,7 @@ a.menu-item {
   font-weight: 800;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
-  color: var(--fairway-deep);
+  color: var(--brand);
 }
 
 /* Náhled druhého flightu: štítek jako ostatní, ale klikací. */
@@ -1939,8 +1940,8 @@ a.menu-item {
   margin-left: 6px;
   padding: 1px 6px;
   border-radius: 6px;
-  background: var(--green-soft);
-  color: var(--fairway-deep);
+  background: var(--brand-soft);
+  color: var(--brand);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -1963,8 +1964,8 @@ a.menu-item {
   margin-right: 6px;
   padding: 0 4px;
   border-radius: 5px;
-  background: var(--green-soft);
-  color: var(--fairway-deep);
+  background: var(--brand-soft);
+  color: var(--brand);
   font-size: 11px;
   font-weight: 800;
 }
@@ -2045,7 +2046,7 @@ a.menu-item {
   font-weight: 800;
   letter-spacing: 0.04em;
   line-height: 1;
-  color: var(--fairway-deep);
+  color: var(--brand);
 }
 
 /* Výběr hráče do dvojice four-ballu. */
@@ -2074,7 +2075,7 @@ a.menu-item {
 .formula {
   font-size: 13px;
   font-weight: 800;
-  color: var(--fairway-deep);
+  color: var(--brand);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2089,7 +2090,7 @@ a.menu-item {
 }
 
 .scorecard td.bonus-sum {
-  color: var(--fairway-deep);
+  color: var(--brand);
 }
 
 .field-label .hint {

@@ -3,6 +3,19 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.13.0] – 2026-10-08
+
+### Změněno
+
+- **Ikona a barvy podle erbu turnaje** (`design/crest.png`): PWA ikony,
+  ikona na ploše iPhonu a favicon nesou erb na námořnické modři; hlavička
+  aplikace je námořnická se zlatou linkou, odkazy, zvolené záložky a hlavní
+  tlačítka jsou v modři erbu, zlatá týmu Achiles je zlatá erbu. Erb je na
+  úvodní obrazovce a v menu. Ikony generuje `scripts/gen-icons.py`.
+- **Google účet bez ověřeného e-mailu** (typicky adresa seznam.cz u Google
+  účtu) pravidla pustí: Google adresu ověřuje při založení účtu, Firebase
+  u cizích domén příznak nenastaví. Jiné přihlášení aplikace nenabízí.
+
 ## [0.12.0] – 2026-10-08
 
 ### Přidáno

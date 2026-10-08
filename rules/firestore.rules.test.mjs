@@ -34,9 +34,14 @@ const STRANGER = 'cizi@example.com'
 
 let env
 
-function user(uid, email, verified = true) {
+function user(uid, email, verified = true, provider = 'password') {
   return env
-    .authenticatedContext(uid, email ? { email, email_verified: verified } : {})
+    .authenticatedContext(
+      uid,
+      email
+        ? { email, email_verified: verified, firebase: { sign_in_provider: provider } }
+        : {},
+    )
     .firestore()
 }
 
@@ -225,9 +230,15 @@ test('přihlášený mimo whitelist nesmí zapisovat', async () => {
   await assertFails(scoreUpdate(db, 'p1', '0', 4, 's1'))
 })
 
-test('neověřený e-mail nestačí', async () => {
+test('neověřený e-mail nestačí, ledaže ho přinesl Google', async () => {
   const db = user('w2', WRITER, false)
   await assertFails(scoreUpdate(db, 'p1', '0', 4, 'w2'))
+  // Google účet se seznamovou adresou: Firebase email_verified nenastaví.
+  const google = user('w3', WRITER, false, 'google.com')
+  await assertSucceeds(scoreUpdate(google, 'p1', '0', 4, 'w3'))
+  await assertSucceeds(getDoc(doc(google, 'tournaments', TID, 'private', 'access')))
+  const stranger = user('s2', STRANGER, false, 'google.com')
+  await assertFails(scoreUpdate(stranger, 'p1', '0', 4, 's2'))
 })
 
 test('anonymní účet nesmí zapisovat ani číst oprávnění', async () => {

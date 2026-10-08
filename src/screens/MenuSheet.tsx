@@ -4,7 +4,7 @@ import { t } from '../i18n'
 import { navigate } from '../nav'
 import type { Route } from '../nav'
 import { APP_VERSION } from '../version'
-import { FlagMark, accountName } from './common'
+import { Crest, accountName } from './common'
 
 interface Props {
   onClose: () => void
@@ -70,9 +70,7 @@ export default function MenuSheet({ onClose, playRoute, current }: Props) {
           </button>
         </div>
         <div className="menu-id">
-          <span className="hero-mark" style={{ width: 32, height: 32, margin: 0 }}>
-            <FlagMark size={18} />
-          </span>
+          <Crest className="menu-crest" />
           <div>
             <div className="nm">{state.tournament?.name ?? t('app.name')}</div>
             <div className="sub">
