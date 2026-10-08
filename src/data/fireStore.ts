@@ -33,6 +33,9 @@ import {
 import { BOOTSTRAP_ADMIN_EMAIL } from './seed'
 import type { Account, Listener, Role, Store, StoreMeta, SyncStatus } from './store'
 
+/** Odstup druhého pokusu po odmítnutí zápisu buňky pravidly. */
+const RETRY_DENIED_MS = 1500
+
 /**
  * Firestore adapter.
  *
@@ -390,18 +393,38 @@ export function createFireStore(tournamentId: string): Store {
           // Sestavení dávky může vyhodit synchronně (neplatná hodnota v datech);
           // i to musí skončit v `meta.error`, jinak by optimistický stav tiše
           // zůstal jiný než server.
-          const batch = module.writeBatch(db)
-          for (const write of writes) {
-            const ref = docRef(module, db, write)
-            const data = materialize(module, write.data)
-            if (write.mode === 'update') batch.update(ref, data)
-            else if (write.mode === 'setMerge') batch.set(ref, data, { merge: true })
-            else batch.set(ref, data)
+          const commit = () => {
+            const batch = module.writeBatch(db)
+            for (const write of writes) {
+              const ref = docRef(module, db, write)
+              const data = materialize(module, write.data)
+              if (write.mode === 'update') batch.update(ref, data)
+              else if (write.mode === 'setMerge') batch.set(ref, data, { merge: true })
+              else batch.set(ref, data)
+            }
+            return batch.commit()
           }
           // Záměrně bez await v UI: offline by promise nikdy nedoběhl.
-          batch.commit().then(settle, (err: unknown) => {
-            settle()
-            reject(err)
+          // Odmítnutí pravidly bývá u zápisu buňky přechodné (kolo právě
+          // přepnuté, oprávnění právě uložené, token po obnově) - jeden pokus
+          // znovu po chvíli, teprve pak hláška zapisovateli.
+          commit().then(settle, (err: unknown) => {
+            if (codeOf(err) !== 'permission-denied' || !isCellOp(op)) {
+              settle()
+              reject(err)
+              return
+            }
+            setTimeout(() => {
+              try {
+                commit().then(settle, (again: unknown) => {
+                  settle()
+                  reject(again)
+                })
+              } catch (again) {
+                settle()
+                reject(again)
+              }
+            }, RETRY_DENIED_MS)
           })
         })
         .catch((err: unknown) => {

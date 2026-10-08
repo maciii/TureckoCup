@@ -88,10 +88,18 @@ service cloud.firestore {
         && after.scores.diff(before.scores).affectedKeys().hasOnly([p])
         && after.scores[p].diff(before.scores[p]).affectedKeys().hasOnly([h])
         && (!(h in after.scores[p]) || validStrokes(after.scores[p][h]))
-        && after.bonuses.diff(before.bonuses).affectedKeys().hasOnly([p])
-        && after.bonuses[p].diff(before.bonuses[p]).affectedKeys().hasOnly([h])
-        && (!(h in after.bonuses[p])
-            || (after.bonuses[p][h] is list && after.bonuses[p][h].size() <= 8));
+        && validBonusEdit(before, after, p, h);
+    }
+
+    // Mapa bonusů nemusí v kole existovat (kola založená před extra body) -
+    // `get` s výchozí prázdnou mapou, jinak by zápis skóre hráče spadl.
+    function validBonusEdit(before, after, p, h) {
+      let b = before.get('bonuses', {});
+      let a = after.get('bonuses', {});
+      return a.diff(b).affectedKeys().hasOnly([p])
+        && a.get(p, {}).diff(b.get(p, {})).affectedKeys().hasOnly([h])
+        && (!(h in a.get(p, {}))
+            || (a[p][h] is list && a[p][h].size() <= 8));
     }
 
     match /tournaments/{tid} {

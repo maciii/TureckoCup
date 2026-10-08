@@ -3,6 +3,16 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.15.1] – 2026-10-08
+
+### Opraveno
+
+- Zápis buňky, který pravidla odmítnou, klient po 1,5 s zopakuje a teprve
+  druhé odmítnutí hlásí; hláška radí zkusit znovu nebo se přihlásit znovu.
+  Odmítnutí bývá přechodné (kolo právě přepnuté, oprávnění právě uložené).
+- Pravidla snesou kolo bez mapy extra bodů (založené před extra body).
+- Live admin: úloha `bonuses` doplní prázdné mapy extra bodů do kol.
+
 ## [0.15.0] – 2026-10-08
 
 ### Změněno

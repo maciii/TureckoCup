@@ -10,7 +10,7 @@ on:
         required: true
         default: check
         type: choice
-        options: [check, tees, games, index, schedule]
+        options: [check, tees, games, index, schedule, bonuses]
 
 concurrency:
   group: live-admin

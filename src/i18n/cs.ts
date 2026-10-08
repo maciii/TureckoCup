@@ -221,7 +221,8 @@ export const cs = {
     other: '{count} neodeslaných zápisů',
   },
   'play.signInRequired': 'Pro zápis skóre se přihlas Googlem.',
-  'play.notWriter': 'tvůj účet ({account}) nemá oprávnění zapisovat, napiš adminovi',
+  'play.notWriter':
+    'server ho odmítl i napodruhé (účet {account}). Zkus to znovu; když to trvá, odhlas se a přihlas, nebo napiš adminovi.',
   'play.roundFinished': 'Kolo je uzavřené, skóre už nejde měnit.',
   'play.roundNotLive': 'Kolo ještě není spuštěné. Admin ho musí přepnout na Živě.',
   'play.rejected': 'Zápis jamky {hole} ({name}) byl odmítnut: {reason}',

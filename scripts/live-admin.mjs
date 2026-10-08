@@ -16,12 +16,13 @@ import { getFirestore } from 'firebase-admin/firestore'
  *   games     odstraní z kol hru 'bonuses' (extra body jsou od 0.11.0 centrální)
  *   index     HCP index hráčů do nedohraných kol (snímek `playerIndex`)
  *   schedule  doplní chybějící odjezd a tee time podle seedu (jen kolo 1)
+ *   bonuses   doplní prázdné mapy extra bodů (kola založená před extra body)
  *
  *   node scripts/live-admin.mjs check
  *   GOOGLE_APPLICATION_CREDENTIALS=klíč.json VITE_FIREBASE_PROJECT_ID=turecko-cup
  */
 
-const TASKS = ['check', 'tees', 'games', 'index', 'schedule']
+const TASKS = ['check', 'tees', 'games', 'index', 'schedule', 'bonuses']
 const task = process.argv[2]
 if (!TASKS.includes(task)) {
   console.error(`Použití: node scripts/live-admin.mjs <${TASKS.join('|')}>`)
@@ -161,6 +162,18 @@ async function schedule() {
   }
 }
 
+async function bonuses() {
+  for (const round of rounds) {
+    const patch = {}
+    for (const id of round.playerIds ?? players.map((p) => p.id)) {
+      if (!round.bonuses?.[id]) patch[`bonuses.${id}`] = {}
+    }
+    if (Object.keys(patch).length === 0) continue
+    await root.collection('rounds').doc(round.id).update(patch)
+    console.log(`  ${round.id}: doplněno ${Object.keys(patch).length} map extra bodů`)
+  }
+}
+
 async function index() {
   for (const round of rounds) {
     if (round.status === 'finished') continue
@@ -190,4 +203,5 @@ if (task === 'tees') await tees()
 if (task === 'games') await games()
 if (task === 'index') await index()
 if (task === 'schedule') await schedule()
+if (task === 'bonuses') await bonuses()
 if (task !== 'check') console.log('Hotovo.')

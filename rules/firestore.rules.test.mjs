@@ -137,6 +137,21 @@ test('zapisovatel zapíše i s logem úprav v jedné dávce', async () => {
   await assertSucceeds(batch.commit())
 })
 
+test('zapisovatel zapíše i do kola bez mapy bonusů (založené před extra body)', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const { bonuses, ...legacy } = roundDoc()
+    await setDoc(doc(ctx.firestore(), 'tournaments', TID, 'rounds', 'r1'), legacy)
+  })
+  const db = user('w1', WRITER)
+  await assertSucceeds(scoreUpdate(db, 'p1', '0', 4, 'w1'))
+  await assertSucceeds(
+    updateDoc(doc(db, 'tournaments', TID, 'rounds', 'r1'), {
+      'bonuses.p1.0': ['sandie'],
+      lastEdit: { playerId: 'p1', hole: '0', by: 'w1', at: serverTimestamp() },
+    }),
+  )
+})
+
 test('zapisovatel nesmí přepsat celou mapu skóre', async () => {
   // Dvě zapsané jamky; přepsání celé mapy by smazalo obě najednou.
   await env.withSecurityRulesDisabled(async (ctx) => {
