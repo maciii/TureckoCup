@@ -3,6 +3,14 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.16.0] – 2026-10-08
+
+### Přidáno
+
+- U každého kola přepínač **Extra body do týmového skóre** (Admin → kolo,
+  nad hrami; výchozí zapnuto). Sazba za bod zůstává centrálně v Pravidlech
+  turnaje; vypnuté kolo nechá extra body jen jako vedlejší sázku jednotlivců.
+
 ## [0.15.6] – 2026-10-08
 
 ### Změněno

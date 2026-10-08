@@ -362,6 +362,11 @@ describe('extra body (centrální nastavení, vedlejší sázka v každém kole)
     expect(summary.individuals.find((i) => i.id === 'p1')?.bonus).toBe(1)
     expect(summary.rounds[0]!.teamPoints.A).toBe(0.5)
     expect(roundTeamPoints([], summary.rounds[0]!.bonuses)).toEqual({ A: 0.5, B: 0 })
+    // Kolo může extra body z týmového skóre vyřadit; body jednotlivců zůstávají.
+    const off = { ...round, bonusesCountForTeam: false }
+    const summaryOff = summarizeTournament([off], SEED_PLAYERS, undefined, config())
+    expect(summaryOff.individuals.find((i) => i.id === 'p1')?.bonus).toBe(1)
+    expect(summaryOff.rounds[0]!.teamPoints).toEqual({ A: 0, B: 0 })
   })
 })
 

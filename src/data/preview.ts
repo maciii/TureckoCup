@@ -300,6 +300,8 @@ interface DayPlan {
   /** Program kola: hromadný odjezd a tee time obou flightů. */
   departure: string
   teeTimes: [string, string]
+  /** Den 3 ukáže kolo, kde extra body do týmu nejdou (jen vedlejší sázka). */
+  bonusesCountForTeam?: boolean
 }
 
 const DAY_PLANS: DayPlan[] = [
@@ -318,6 +320,7 @@ const DAY_PLANS: DayPlan[] = [
     secondStart: 9,
     departure: '08:10',
     teeTimes: ['09:20', '09:20'],
+    bonusesCountForTeam: false,
   },
   {
     status: 'live',
@@ -357,6 +360,7 @@ export function previewRounds(seed = PREVIEW_SEED): TournamentRound[] {
         },
       ],
       departure: plan.departure,
+      ...(plan.bonusesCountForTeam === false ? { bonusesCountForTeam: false } : {}),
       games: day <= 4 ? gamesForDay(day, positions) : base.games,
       ...emptyScoreMaps(base.playerIds),
     }

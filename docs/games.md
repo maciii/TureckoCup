@@ -74,6 +74,11 @@ dvojice flightu proti druhé, tedy A1+A2 vs B1+B2 a A3+A4 vs B3+B4). Body
 
 ## Extra body (centrální, v každém kole)
 
+**Do týmového skóre.** Sazba „bod týmu za extra bod“ je centrální (Pravidla
+turnaje), ale každé kolo má přepínač **Extra body do týmového skóre**
+(výchozí zapnuto); vypnutý nechá extra body jen jako vedlejší sázku
+jednotlivců.
+
 **Uložení.** Extra body jsou surová data jako rány: `round.bonuses[hráč][jamka]`
 je seznam id bonusů (`['longest', 'sandie']`), zapisuje se jedna buňka
 (`setBonuses`) a každá změna jde do logu úprav kola (`edits`: kdo, kdy, komu,

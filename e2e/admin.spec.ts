@@ -166,6 +166,20 @@ test('HCP index patří hráči: kola si ho berou samy a změna v kole ho vrát�
   expect(errors()).toEqual([])
 })
 
+test('kolo rozhodne, zda extra body jdou do týmového skóre', async ({ page }) => {
+  await setIdentity(page, 'admin')
+  await open(page, '#/admin/round/r1')
+  const toggle = page.getByRole('switch', { name: 'Extra body do týmového skóre' })
+  await expect(toggle).toHaveAttribute('aria-checked', 'true')
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-checked', 'false')
+  await page.reload()
+  await page.waitForSelector('.screen')
+  await expect(
+    page.getByRole('switch', { name: 'Extra body do týmového skóre' }),
+  ).toHaveAttribute('aria-checked', 'false')
+})
+
 test('pevný hrací HCP po celý turnaj se promítne do kol', async ({ page }) => {
   const errors = collectErrors(page)
   await open(page, '#/admin/round/r1')

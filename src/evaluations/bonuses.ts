@@ -183,7 +183,8 @@ export function bonusSummary(
     }
   })
   const teamPoints: Record<TeamId, number> = { A: 0, B: 0 }
-  if (config.teamPerPoint > 0) {
+  // Sazba je centrální, ale každé kolo si řekne, zda extra body do týmu jdou.
+  if (config.teamPerPoint > 0 && (round.bonusesCountForTeam ?? true)) {
     for (const row of rows)
       if (row.teamId) teamPoints[row.teamId] += row.value * config.teamPerPoint
   }

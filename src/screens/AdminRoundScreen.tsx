@@ -35,7 +35,7 @@ import {
   normalizeTime,
 } from '../model/schedule'
 import { playerIdByEmail } from '../model/access'
-import { getBonus } from '../model/bonuses'
+import { bonusConfigOf, getBonus } from '../model/bonuses'
 import { navigate } from '../nav'
 import {
   Header,
@@ -70,6 +70,7 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
   function patch(update: Partial<TournamentRound>) {
     store.dispatch({ kind: 'updateRound', roundId, patch: update })
   }
+  const bonusRate = bonusConfigOf(state.tournament?.bonuses).teamPerPoint
 
   function reseed() {
     const entry = SEED_SCHEDULE.find((s) => s.number === round!.number)
@@ -374,6 +375,19 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
           }
         >
           <div className="px stack">
+            {/* Extra body: sazba je v Pravidlech turnaje, kolo jen říká, zda do týmu jdou. */}
+            <Switch
+              label={t('admin.bonusesCountForTeam')}
+              on={round.bonusesCountForTeam ?? true}
+              onChange={(bonusesCountForTeam) => patch({ bonusesCountForTeam })}
+            />
+            <p className="hint">
+              {bonusRate > 0
+                ? t('admin.bonusesCountForTeamHint', {
+                    rate: String(bonusRate).replace('.', ','),
+                  })
+                : t('admin.bonusesCountForTeamOff')}
+            </p>
             {round.games.map((game, index) => (
               <GameEditor
                 key={game.id}

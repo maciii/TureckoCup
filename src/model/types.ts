@@ -246,6 +246,8 @@ export interface TournamentRound {
    * nezadaný (prázdný text místo mazání pole, `updateRound` pole nemaže).
    */
   departure?: string
+  /** Počítat extra body kola do týmového skóre (sazba je centrálně); výchozí ano. */
+  bonusesCountForTeam?: boolean
 }
 
 /** Záznam v logu úprav `rounds/{rid}/edits`. */

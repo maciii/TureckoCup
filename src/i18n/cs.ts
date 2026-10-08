@@ -339,6 +339,11 @@ export const cs = {
   'pickup.par': 'par',
   'pickup.strokes': 'rány z HCP',
   'admin.addGame': 'Přidat hru',
+  'admin.bonusesCountForTeam': 'Extra body do týmového skóre',
+  'admin.bonusesCountForTeamHint':
+    'Sazba je v Pravidlech turnaje: {rate} b. týmu za každý extra bod hráče.',
+  'admin.bonusesCountForTeamOff':
+    'V Pravidlech turnaje je sazba 0 – extra body se do týmu nepočítají v žádném kole.',
   'admin.removeGame': 'Odebrat hru',
   'admin.removeGameConfirm': 'Odebrat hru {name}? Zapsané skóre zůstane.',
   'admin.access': 'Oprávnění',
