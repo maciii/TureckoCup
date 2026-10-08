@@ -3,6 +3,19 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.16.1] – 2026-10-08
+
+### Opraveno
+
+- **Aktualizace se používá sama**, jen ne uprostřed zápisu: na obrazovce
+  zápisu počká, až z ní zapisovatel odejde, jinde se stránka obnoví hned.
+  Otevřená aplikace novou verzi hledá každých 10 minut a po návratu na
+  popředí (dřív jen při spuštění, takže dlouho otevřená aplikace zůstala
+  na staré verzi).
+- **Hranice chyb**: výjimka v obrazovce už nenechá bílou obrazovku
+  (vypadala jako pád). Ukáže se hláška s tlačítkem Pokračovat, chyba se
+  uloží a menu ji ukazuje dole jako „Poslední chyba“, ať jde nahlásit.
+
 ## [0.16.0] – 2026-10-08
 
 ### Přidáno

@@ -1973,6 +1973,11 @@ a.menu-item {
   }
 }
 
+.menu-error {
+  color: var(--red);
+  word-break: break-word;
+}
+
 .menu-foot .link-button {
   align-self: flex-start;
 }

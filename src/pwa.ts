@@ -121,6 +121,32 @@ export function announceUpdate(apply: () => void): void {
   for (const listener of updateListeners) listener(true)
 }
 
+/**
+ * Nová verze se použije sama, jen ne uprostřed zápisu: na obrazovce zápisu
+ * počká, až z ní zapisovatel odejde. Jinde (přehled, kolo, admin) se stránka
+ * obnoví hned - hash zůstane, uživatel se vrátí na stejné místo.
+ */
+export function useAutoUpdate(view: string): void {
+  const { ready, apply } = useAppUpdate()
+  useEffect(() => {
+    if (ready && view !== 'play') apply()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, view])
+}
+
+/** Otevřená aplikace jinak novou verzi nikdy nehledá - jen při načtení. */
+export const UPDATE_CHECK_MS = 10 * 60 * 1000
+
+export function scheduleUpdateChecks(registration: ServiceWorkerRegistration): void {
+  const check = () => {
+    if (navigator.onLine) void registration.update().catch(() => undefined)
+  }
+  setInterval(check, UPDATE_CHECK_MS)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') check()
+  })
+}
+
 export function useAppUpdate(): { ready: boolean; apply: () => void } {
   const [ready, setReady] = useState(applyUpdate !== null)
   useEffect(() => {

@@ -1,18 +1,25 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
-import { announceUpdate } from './pwa'
+import { announceUpdate, scheduleUpdateChecks } from './pwa'
+import ErrorBoundary from './ErrorBoundary'
+import { installErrorLogging } from './errors'
 import App from './App'
 import { DataProvider } from './data'
 import { LocaleProvider } from './i18n'
 import './styles.css'
 
-// Offline-first: service worker se registruje hned a novou verzi si vezme
-// při dalším spuštění, ať se zápis na hřišti nepřerušuje.
-// Nová verze čeká; obnovení stránky potvrdí uživatel v menu (viz pwa.ts).
+installErrorLogging()
+
+// Offline-first: service worker se registruje hned. Nová verze se použije
+// sama mimo obrazovku zápisu (viz pwa.ts), otevřená aplikace ji hledá
+// pravidelně i po návratu na popředí.
 const updateSW = registerSW({
   immediate: true,
   onNeedRefresh: () => announceUpdate(() => void updateSW(true)),
+  onRegisteredSW: (_url, registration) => {
+    if (registration) scheduleUpdateChecks(registration)
+  },
 })
 
 const container = document.getElementById('root')
@@ -20,9 +27,11 @@ if (container) {
   createRoot(container).render(
     <StrictMode>
       <LocaleProvider>
-        <DataProvider>
-          <App />
-        </DataProvider>
+        <ErrorBoundary>
+          <DataProvider>
+            <App />
+          </DataProvider>
+        </ErrorBoundary>
       </LocaleProvider>
     </StrictMode>,
   )

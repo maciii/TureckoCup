@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useData, variantHref } from '../data'
 import { t } from '../i18n'
@@ -6,6 +6,7 @@ import { navigate } from '../nav'
 import type { Route } from '../nav'
 import { APP_VERSION } from '../version'
 import { useAppUpdate } from '../pwa'
+import { clearError, lastError } from '../errors'
 import { Crest, accountName } from './common'
 
 /** Návody žijí mimo aplikaci (sdílené stránky), ať jdou měnit bez nasazení. */
@@ -37,6 +38,7 @@ export default function MenuSheet({ onClose, playRoute, current }: Props) {
   const { meta, store, state } = useData()
   const signedIn = meta.account !== null
   const update = useAppUpdate()
+  const [crash, setCrash] = useState(lastError)
   // SDK přihlášení se načítá dopředu, aby popup šel otevřít hned z klepnutí.
   useEffect(() => {
     if (!signedIn) store.prepareSignIn()
@@ -272,6 +274,22 @@ export default function MenuSheet({ onClose, playRoute, current }: Props) {
             {t('common.version', { version: APP_VERSION })}
             {update.ready && ` · ${t('app.updateReady')}`}
           </p>
+          {crash && (
+            <p className="menu-version menu-error">
+              {t('app.lastError')} ({crash.version}, {crash.at.slice(11, 16)}):{' '}
+              {crash.message}{' '}
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => {
+                  clearError()
+                  setCrash(null)
+                }}
+              >
+                {t('app.clearError')}
+              </button>
+            </p>
+          )}
         </div>
       </nav>
     </div>

@@ -60,6 +60,12 @@ export const cs = {
   'nav.guides': 'Návody',
   'app.updateReady': 'Je připravená nová verze aplikace.',
   'app.updateApply': 'Obnovit aplikaci',
+  'app.crashed': 'Aplikace narazila na chybu.',
+  'app.crashHint':
+    'Zapsané rány jsou uložené. Pokračuj na přehled, nebo aplikaci obnov. Chyba je v menu dole, pošli ji adminovi.',
+  'app.retry': 'Pokračovat',
+  'app.lastError': 'Poslední chyba',
+  'app.clearError': 'smazat',
   'nav.guidePlayers': 'Návod pro hráče',
   'nav.guideAdmin': 'Příručka admina',
   'nav.guideHint': 'Otevře se v prohlížeči',

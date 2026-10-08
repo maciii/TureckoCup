@@ -10,12 +10,14 @@ import OverviewScreen from './screens/OverviewScreen'
 import PlayScreen from './screens/PlayScreen'
 import RoundScreen from './screens/RoundScreen'
 import { useSwipeBack } from './swipeBack'
+import { useAutoUpdate } from './pwa'
 
 /** Kořen aplikace: vybere obrazovku podle hashe. */
 export default function App() {
   const route = useRoute()
   const { state } = useData()
   useSwipeBack(route.view !== 'overview')
+  useAutoUpdate(route.view)
 
   if (resolveDataMode() === 'unconfigured') {
     return (
