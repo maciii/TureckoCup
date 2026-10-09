@@ -87,7 +87,12 @@ test('admin zadá program kola, druhý flight dostane čas o 10 minut později',
   await expect(page.getByLabel('Tee time flightu 1')).toHaveValue('08:45')
   await expectNoHorizontalOverflow(page)
 
+  // Den kola 2: živé kolo je nejbližší, karta nese program (test nesmí
+  // záviset na skutečném datu - po půlnoci by nejbližší bylo kolo 3).
   await open(page)
+  await page.clock.setFixedTime(new Date('2026-10-09T08:00:00'))
+  await page.reload()
+  await page.waitForSelector('.screen')
   const schedule = page.locator('section.schedule')
   await expect(schedule.locator('.eyebrow')).toContainText('Program kola')
   await expect(schedule).toContainText('Kolo 2')

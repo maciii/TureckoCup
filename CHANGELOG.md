@@ -3,6 +3,12 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.24.1] – 2026-10-10
+
+### Opraveno
+
+- E2E test programu kola nezávisí na skutečném datu (po půlnoci selhával v CI).
+
 ## [0.24.0] – 2026-10-09
 
 ### Změněno
