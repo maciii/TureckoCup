@@ -210,10 +210,10 @@ export const cs = {
   'bonus.confirmHint': 'Longest a Nearest platí jen při paru a lepším.',
   'bonus.longest.name': 'Longest',
   'bonus.longest.description':
-    'Nejdelší odpal; jen na pětiparových jamkách, pro jednoho hráče.',
+    'Nejdelší odpal (obvykle par 5); na jamce pro jednoho hráče.',
   'bonus.nearest.name': 'Nearest',
   'bonus.nearest.description':
-    'Nejbližší rána k jamce; jen na tříparových, pro jednoho hráče.',
+    'Nejbližší rána k jamce (obvykle par 3); na jamce pro jednoho hráče.',
   'bonus.birdie.name': 'Birdie',
   'bonus.birdie.description': 'Počítá se automaticky ze zapsaných ran.',
   'bonus.eagle.name': 'Eagle',
@@ -334,7 +334,7 @@ export const cs = {
   'admin.rules': 'Pravidla turnaje',
   'admin.bonuses': 'Extra body',
   'admin.bonusesHint':
-    'Platí ve všech kolech a hrách. Hodnota je za bod při paru; 0 = bonus se nehraje a v zápisu se nenabízí. Longest jen na pětiparových, Nearest na tříparových jamkách.',
+    'Platí ve všech kolech a hrách. Hodnota je za bod při paru; 0 = bonus se nehraje a v zápisu se nenabízí. Longest a Nearest jdou zaškrtnout na kterékoli jamce, na jamce je má jen jeden hráč.',
   'admin.bonusAuto': 'z ran',
   'admin.bonusConfirmLongest': 'Longest platí jen při paru a lepším',
   'admin.bonusConfirmNearest': 'Nearest platí jen při paru a lepším',

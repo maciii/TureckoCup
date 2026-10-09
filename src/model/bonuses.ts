@@ -1,11 +1,12 @@
 import type { BonusConfig, PlayerId, TournamentRound } from './types'
-import { holeKey, parAt } from './round'
+import { holeKey } from './round'
 
 /**
  * Extra body - longest, nearest, sandie a spol. Definice jsou převzaté
- * z Golfgames (`BONUSES`): texty podle id (`bonus.<id>.name`), Longest jen
- * na pětiparových, Nearest na tříparových jamkách, oba drží na jamce jediný
- * hráč. Birdie a eagle jsou navíc proti Golfgames: nezaškrtávají se, spočítají
+ * z Golfgames (`BONUSES`): texty podle id (`bonus.<id>.name`). Longest a
+ * Nearest drží na jamce jediný hráč a nabízejí se na každé jamce - na které
+ * se hrají, si řekne flight (longest i na dlouhém paru 4, nearest na druhou
+ * ránu), par je jen obvyklé místo pro nápovědu a ukázková data. Birdie a eagle jsou navíc proti Golfgames: nezaškrtávají se, spočítají
  * se ze zapsaných ran, a ve výchozím nastavení jsou vypnuté.
  *
  * Zapsané bonusy žijí v `round.bonuses[hráč][jamka]` (seznam id); která se
@@ -23,15 +24,15 @@ export interface BonusDefinition {
   defaultValue: number
   /** Počítá se automaticky z ran, nezaškrtává se. */
   auto?: boolean
-  /** Nabízí se jen na jamkách s tímhle parem. */
-  onlyPar?: number
+  /** Par, kde se obvykle hraje - jen nápověda a ukázková data, nabídka ho nehlídá. */
+  typicalPar?: number
   /** Na jamce ho může mít jen jeden hráč; hodnota se nenásobí výsledkem. */
   exclusive?: boolean
 }
 
 export const BONUSES: BonusDefinition[] = [
-  { id: 'longest', mark: 'L', defaultValue: 1, onlyPar: 5, exclusive: true },
-  { id: 'nearest', mark: 'N', defaultValue: 1, onlyPar: 3, exclusive: true },
+  { id: 'longest', mark: 'L', defaultValue: 1, typicalPar: 5, exclusive: true },
+  { id: 'nearest', mark: 'N', defaultValue: 1, typicalPar: 3, exclusive: true },
   { id: 'sandie', mark: 'S', defaultValue: 1 },
   { id: 'water', mark: 'W', defaultValue: 1 },
   { id: 'barkie', mark: 'T', defaultValue: 1 },
@@ -85,19 +86,17 @@ export function bonusesAt(
   return Array.isArray(list) ? list : []
 }
 
-/** Bonusy, které jde na jamce zaškrtnout: zapnuté a odpovídající paru. */
+/**
+ * Bonusy, které jde na jamce zaškrtnout: zapnuté a ruční. Par se nehlídá -
+ * dřív byl Longest jen na par 5 a Nearest na par 3 a na hřišti začínajícím
+ * parem 4 pak v zápisu „chyběly“; kde se hrají, rozhodne flight.
+ */
 export function availableBonuses(
   config: BonusConfig,
-  round: TournamentRound,
-  hole: number,
+  _round: TournamentRound,
+  _hole: number,
 ): BonusDefinition[] {
-  const par = parAt(round, hole)
-  return BONUSES.filter(
-    (bonus) =>
-      !bonus.auto &&
-      bonusValue(config, bonus.id) > 0 &&
-      (bonus.onlyPar === undefined || bonus.onlyPar === par),
-  )
+  return BONUSES.filter((bonus) => !bonus.auto && bonusValue(config, bonus.id) > 0)
 }
 
 /** Seznam po přepnutí bonusu; pořadí podle definic, aby se značky nepřehazovaly. */

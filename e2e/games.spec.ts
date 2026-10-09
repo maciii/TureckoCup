@@ -131,11 +131,13 @@ test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky
   const rows = page.locator('.player-row')
   const mac = rows.nth(1)
   const pavlos = rows.nth(2)
-  // Jamka 1 a 2 (par 4): hvězdička v řádku nabízí sandie, water, barkie, arnie - ne nearest.
+  // Jamka 1 (par 4): hvězdička nabízí všech šest ručních bonusů - Longest
+  // i Nearest jdou zaškrtnout na kterékoli jamce, kde se hrají, rozhodne flight.
   await mac.getByRole('button', { name: 'Extra body: Mac' }).click()
   const sheet = page.getByRole('dialog', { name: 'Extra body' })
-  await expect(sheet.locator('.bonus-option')).toHaveCount(4)
-  await expect(sheet.getByRole('button', { name: /Nearest/ })).toHaveCount(0)
+  await expect(sheet.locator('.bonus-option')).toHaveCount(6)
+  await expect(sheet.getByRole('button', { name: /Longest/ })).toHaveCount(1)
+  await expect(sheet.getByRole('button', { name: /Nearest/ })).toHaveCount(1)
   await sheet.getByRole('button', { name: 'Zavřít' }).click()
   await enterPar(page, [0, 1, 2, 3])
   // Stav her na jamce: po zápisu všech čtyř je Stableford i duel rozhodnutý.
@@ -161,8 +163,7 @@ test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky
   await pavlos.locator('.score-value').click()
   await mac.getByRole('button', { name: 'Extra body: Mac' }).click()
   await expect(sheet).toContainText('Mac · jamka 3')
-  await expect(sheet.locator('.bonus-option')).toHaveCount(5)
-  await expect(sheet.getByRole('button', { name: /Longest/ })).toHaveCount(0)
+  await expect(sheet.locator('.bonus-option')).toHaveCount(6)
   await expect(sheet.getByRole('button', { name: /Nearest/ })).toContainText('+2')
   await sheet.getByRole('button', { name: /Nearest/ }).click()
   await sheet.getByRole('button', { name: /Sandie/ }).click()

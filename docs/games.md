@@ -99,8 +99,8 @@ her v **každém kole** a nastavuje se **jednou pro celý turnaj**
 
 | Bonus     | Značka | Výchozí | Kdy                                           |
 | --------- | ------ | ------- | --------------------------------------------- |
-| `longest` | L      | 1       | jen par 5, na jamce jediný hráč, zaškrtává se |
-| `nearest` | N      | 1       | jen par 3, na jamce jediný hráč, zaškrtává se |
+| `longest` | L      | 1       | kterákoli jamka (obvykle par 5), jediný hráč  |
+| `nearest` | N      | 1       | kterákoli jamka (obvykle par 3), jediný hráč  |
 | `sandie`  | S      | 1       | zaškrtává se (bunker a přesto dobrý výsledek) |
 | `water`   | W      | 1       | zaškrtává se                                  |
 | `barkie`  | T      | 1       | zaškrtává se (strom)                          |

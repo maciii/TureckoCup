@@ -345,7 +345,10 @@ describe('extra body (centrální nastavení, vedlejší sázka v každém kole)
     round.bonuses.p1!['0'] = ['sandie']
     const off = { ...config(), values: { ...config().values, sandie: 0 } }
     expect(bonusPointsAt(round, off, 'p1', 0)).toBe(0)
+    // Longest a Nearest se nabízejí i na paru 4 (jamka 1) - kde se hrají, rozhodne flight.
     expect(availableBonuses(off, round, 0).map((b) => b.id)).toEqual([
+      'longest',
+      'nearest',
       'water',
       'barkie',
       'arnie',

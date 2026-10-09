@@ -3,6 +3,15 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.20.2] – 2026-10-09
+
+### Opraveno
+
+- **Longest a Nearest jdou zaškrtnout na kterékoli jamce.** Dřív se Longest
+  nabízel jen na par 5 a Nearest jen na par 3, takže na hřišti začínajícím
+  parem 4 (Lykia Links, den Best + Součet) v panelu extra bodů chyběly.
+  Kde se hrají, rozhodne flight; na jamce je má dál jen jeden hráč.
+
 ## [0.20.1] – 2026-10-08
 
 ### Opraveno

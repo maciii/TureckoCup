@@ -397,7 +397,7 @@ export function previewRounds(seed = PREVIEW_SEED): TournamentRound[] {
     {
       for (let hole = 0; hole < round.course.holeCount; hole++) {
         for (const bonus of BONUSES) {
-          if (!bonus.exclusive || bonus.onlyPar !== parAt(round, hole)) continue
+          if (!bonus.exclusive || bonus.typicalPar !== parAt(round, hole)) continue
           if ((bonusConfig.values[bonus.id] ?? 0) <= 0) continue
           const entered = round.playerIds.filter((id) => isEntered(round, id, hole))
           const holder = entered[Math.floor(random() * entered.length)]
