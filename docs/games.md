@@ -127,6 +127,12 @@ Pravidla jako v Golfgames:
   týmové hře s extra body druhému týmu; ve vedlejší sázce jednotlivců
   soupeř není, tam jen propadá. Dokud hráč jamku nezapsal, značka je
   tlumená - není jasno.
+- **Kolo může Longest a Nearest přepsat** (`round.bonusRules`, Admin → kolo →
+  Longest a Nearest, jako v Golfgames): jestli se hrají a čím se potvrzují -
+  bez potvrzení, brutto par, nebo netto par (par + rány z HCP na jamce).
+  Chybí-li přepis, platí Pravidla turnaje (`confirmLongest`, `confirmNearest`,
+  `longestByPersonalPar`, `nearestByPersonalPar`). Vyhodnocení si přepis
+  bere samo (`roundBonusConfig`).
 - Longest a Nearest drží jediný hráč: zaškrtnutí u dalšího hráče ho
   předchozímu odebere; mají-li ho omylem dva (zápis bez signálu ze dvou
   telefonů), nedostane bod nikdo. Zvednutá jamka bonus nedává.

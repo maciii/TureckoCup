@@ -60,6 +60,17 @@ export interface Tournament {
 
 export type HandicapMode = 'course' | 'fixed'
 
+/** Potvrzení Longest/Nearest: vůbec, brutto parem, nebo osobním (netto) parem. */
+export type BonusConfirm = 'off' | 'gross' | 'net'
+
+/** Nastavení Longest nebo Nearest pro jedno kolo (přepis Pravidel turnaje, jako v Golfgames). */
+export interface ExclusiveBonusRule {
+  play: boolean
+  confirm: BonusConfirm
+}
+
+export type ExclusiveBonusId = 'longest' | 'nearest'
+
 /** Nastavení extra bodů podle Golfgames (`GameOptions.bonusValues` a spol.). */
 export interface BonusConfig {
   /** Hodnota každého bonusu za par; 0 = nehraje se, nenabízí se. */
@@ -70,6 +81,8 @@ export interface BonusConfig {
   confirmNearest: boolean
   /** Longest se potvrzuje parem + ranami z handicapu na jamce, ne brutto parem. */
   longestByPersonalPar: boolean
+  /** Nearest se potvrzuje osobním parem místo brutto. */
+  nearestByPersonalPar: boolean
   /** Násobič hodnoty ostatních bonusů podle brutto výsledku; par ×1, bogey a horší 0. */
   multipliers: { birdie: number; eagle: number }
   /** Týmové body za každý extra bod; 0 = extra body do týmového skóre nejdou. */
@@ -256,6 +269,11 @@ export interface TournamentRound {
    * nezadaný (prázdný text místo mazání pole, `updateRound` pole nemaže).
    */
   departure?: string
+  /**
+   * Longest a Nearest v tomhle kole: hrají se a jak se potvrzují. Chybí =
+   * podle Pravidel turnaje (`tournament.bonuses`).
+   */
+  bonusRules?: Partial<Record<ExclusiveBonusId, ExclusiveBonusRule>>
 }
 
 /** Záznam v logu úprav `rounds/{rid}/edits`. */

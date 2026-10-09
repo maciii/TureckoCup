@@ -5,7 +5,12 @@ import { courseHandicapOf, strokesReceived } from '../model/round'
 import { evaluateGame, evaluateRound, roundTeamPoints } from './index'
 import { summarizeTournament } from './tournament'
 import type { BonusConfig } from '../model/types'
-import { DEFAULT_BONUS_CONFIG, availableBonuses } from '../model/bonuses'
+import {
+  DEFAULT_BONUS_CONFIG,
+  availableBonuses,
+  roundBonusConfig,
+  roundBonusRule,
+} from '../model/bonuses'
 import { bonusAwardsAt, bonusPointsAt, bonusSummary } from './bonuses'
 import { stablefordAt } from './stableford'
 
@@ -465,5 +470,55 @@ describe('nepotvrzený Longest/Nearest jde soupeřům', () => {
       bonusAwardsAt(round, config, 'p1', 4).find((a) => a.bonus.id === 'longest')!
         .forfeit,
     ).toBe(false)
+  })
+})
+
+describe('Longest a Nearest podle nastavení kola', () => {
+  it('bez přepisu platí Pravidla turnaje, přepis mění hru i potvrzení', () => {
+    const round = round1()
+    const config = DEFAULT_BONUS_CONFIG
+    expect(roundBonusRule(round, config, 'longest')).toEqual({
+      play: true,
+      confirm: 'net',
+    })
+    expect(roundBonusRule(round, config, 'nearest')).toEqual({
+      play: true,
+      confirm: 'gross',
+    })
+    expect(roundBonusConfig(round, config)).toBe(config)
+    round.bonusRules = {
+      longest: { play: true, confirm: 'off' },
+      nearest: { play: false, confirm: 'net' },
+    }
+    const effective = roundBonusConfig(round, config)
+    expect(effective.values.nearest).toBe(0)
+    expect(effective.confirmLongest).toBe(false)
+    expect(availableBonuses(config, round, 0).map((b) => b.id)).not.toContain('nearest')
+    // Idempotentní: vyhodnocení ho může použít i na už přepsané nastavení.
+    expect(roundBonusConfig(round, effective)).toEqual(effective)
+  })
+
+  it('Nearest netto parem: s ranou z HCP projde i bogey; bez potvrzení i dvojbogey', () => {
+    const round = round1()
+    // Jamka 3 (index 2) je par 3; Mac (13 ran) má na ní ránu jen při SI <= 13.
+    const si = round.course.strokeIndex[2]!
+    const hole = 2
+    for (const id of round.playerIds) round.scores[id]![String(hole)] = 3
+    round.scores.p1![String(hole)] = 4
+    round.bonuses.p1![String(hole)] = ['nearest']
+    const config = DEFAULT_BONUS_CONFIG
+    // Brutto (výchozí): bogey Nearest nepotvrdí.
+    expect(bonusPointsAt(round, config, 'p1', hole)).toBe(0)
+    round.bonusRules = { nearest: { play: true, confirm: 'net' } }
+    expect(bonusPointsAt(round, config, 'p1', hole)).toBe(si <= 13 ? 1 : 0)
+    round.bonusRules = { nearest: { play: true, confirm: 'off' } }
+    round.scores.p1![String(hole)] = 6
+    expect(bonusPointsAt(round, config, 'p1', hole)).toBe(1)
+    // Longest vypnutý v kole: zapsaný bonus nic nedá a nejde ani zaškrtnout.
+    round.bonusRules = { longest: { play: false, confirm: 'net' } }
+    round.bonuses.p1!['4'] = ['longest']
+    for (const id of round.playerIds) round.scores[id]!['4'] = 5
+    expect(bonusPointsAt(round, config, 'p1', 4)).toBe(0)
+    expect(availableBonuses(config, round, 4).map((b) => b.id)).not.toContain('longest')
   })
 })

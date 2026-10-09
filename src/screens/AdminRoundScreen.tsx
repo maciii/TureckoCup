@@ -7,8 +7,10 @@ import {
   playerIndexOps,
   seedRoundConfig,
 } from '../data/seed'
-import { localizedTeeName, t } from '../i18n'
+import { dynamicKey, localizedTeeName, t } from '../i18n'
 import type {
+  BonusConfirm,
+  ExclusiveBonusRule,
   DuelFormat,
   GameConfig,
   GameKind,
@@ -35,7 +37,12 @@ import {
   normalizeTime,
 } from '../model/schedule'
 import { playerIdByEmail } from '../model/access'
-import { bonusConfigOf, getBonus } from '../model/bonuses'
+import {
+  EXCLUSIVE_BONUS_IDS,
+  bonusConfigOf,
+  getBonus,
+  roundBonusRule,
+} from '../model/bonuses'
 import { navigate } from '../nav'
 import {
   Header,
@@ -48,6 +55,9 @@ import {
   teamName,
   DecimalInput,
 } from './common'
+
+/** Pořadí voleb potvrzení Longest/Nearest v editoru kola. */
+const BONUS_CONFIRMS: BonusConfirm[] = ['off', 'gross', 'net']
 
 /** Hry, kde jde zapnout dvojité body na 9. a 18. jamce. */
 const DOUBLE_HOLE_KINDS: GameKind[] = [
@@ -124,6 +134,7 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
   }
 
   const noWriters = Object.keys(state.access?.playerEmails ?? {}).length === 0
+  const tournamentBonuses = bonusConfigOf(state.tournament?.bonuses)
 
   const tabs = (
     options: { id: string; label: string }[],
@@ -222,6 +233,42 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
                 ))}
               </tbody>
             </table>
+          </div>
+        </Section>
+
+        {/* Longest a Nearest podle Golfgames: v každém kole zvlášť, jestli se hrají
+            a čím se potvrzují; výchozí z Pravidel turnaje. */}
+        <Section
+          title={t('admin.roundBonuses')}
+          note={t('admin.roundBonusesHint')}
+          accent="gold"
+        >
+          <div className="px stack">
+            {EXCLUSIVE_BONUS_IDS.map((id) => {
+              const rule = roundBonusRule(round, tournamentBonuses, id)
+              const set = (next: Partial<ExclusiveBonusRule>) =>
+                patch({ bonusRules: { ...round.bonusRules, [id]: { ...rule, ...next } } })
+              return (
+                <div key={id} className="bonus-rule">
+                  <Switch
+                    label={t('admin.bonusPlay', {
+                      name: t(dynamicKey('bonus', id, 'name')),
+                    })}
+                    on={rule.play}
+                    onChange={(play) => set({ play })}
+                  />
+                  {rule.play &&
+                    tabs(
+                      BONUS_CONFIRMS.map((confirm) => ({
+                        id: confirm,
+                        label: t(dynamicKey('admin.bonusConfirm', confirm)),
+                      })),
+                      rule.confirm,
+                      (confirm) => set({ confirm: confirm as BonusConfirm }),
+                    )}
+                </div>
+              )
+            })}
           </div>
         </Section>
 

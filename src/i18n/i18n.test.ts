@@ -63,6 +63,7 @@ describe('katalog textů', () => {
       'tee.',
       'admin.role.',
       'admin.signInError.',
+      'admin.bonusConfirm.',
     ]
     const source = sourceFiles('src')
       .filter((file) => !file.endsWith('cs.ts') && !file.endsWith('.test.ts'))

@@ -15,7 +15,14 @@ import {
   teamOf,
 } from '../model/round'
 import type { BonusDefinition } from '../model/bonuses'
-import { BONUSES, bonusValue, bonusesAt, hasBonuses, holdersOf } from '../model/bonuses'
+import {
+  BONUSES,
+  bonusValue,
+  bonusesAt,
+  hasBonuses,
+  holdersOf,
+  roundBonusConfig,
+} from '../model/bonuses'
 import type { StandingRow } from './types'
 import { rankRows } from './types'
 
@@ -66,10 +73,12 @@ function resultMultiplier(config: BonusConfig, diff: number): number {
 /** Bonusy hráče na jamce i s tím, jestli a za kolik se počítají. */
 export function bonusAwardsAt(
   round: TournamentRound,
-  config: BonusConfig,
+  baseConfig: BonusConfig,
   playerId: PlayerId,
   hole: number,
 ): BonusAward[] {
+  // Longest a Nearest mohou mít v kole vlastní pravidlo (hraje se, potvrzení).
+  const config = roundBonusConfig(round, baseConfig)
   const score = scoreAt(round, playerId, hole)
   const par = parAt(round, hole)
   const picked = score === PICKED_UP
@@ -91,10 +100,9 @@ export function bonusAwardsAt(
       const shared = holdersOf(round, hole, bonus.id).length > 1
       const confirm =
         bonus.id === 'longest' ? config.confirmLongest : config.confirmNearest
-      const personal =
-        bonus.id === 'longest' && config.longestByPersonalPar
-          ? strokesReceived(round, playerId, hole)
-          : 0
+      const byPersonalPar =
+        bonus.id === 'longest' ? config.longestByPersonalPar : config.nearestByPersonalPar
+      const personal = byPersonalPar ? strokesReceived(round, playerId, hole) : 0
       const confirmed = !confirm || (diff !== undefined && diff - personal <= 0)
       // Zvednutá jamka par nedala - nepotvrzený bod, stejně jako bogey.
       const failed = !pending && (picked || !confirmed)

@@ -1,4 +1,11 @@
-import type { BonusConfig, PlayerId, TournamentRound } from './types'
+import type {
+  BonusConfig,
+  BonusConfirm,
+  ExclusiveBonusId,
+  ExclusiveBonusRule,
+  PlayerId,
+  TournamentRound,
+} from './types'
 import { holeKey } from './round'
 
 /**
@@ -53,6 +60,7 @@ export const DEFAULT_BONUS_CONFIG: BonusConfig = {
   confirmLongest: true,
   confirmNearest: true,
   longestByPersonalPar: true,
+  nearestByPersonalPar: false,
   multipliers: { birdie: 2, eagle: 3 },
   teamPerPoint: 0,
 }
@@ -69,6 +77,58 @@ export function bonusConfigOf(config: Partial<BonusConfig> | undefined): BonusCo
 
 export function bonusValue(config: BonusConfig, id: string): number {
   return config.values[id] ?? 0
+}
+
+export const EXCLUSIVE_BONUS_IDS: ExclusiveBonusId[] = ['longest', 'nearest']
+
+/** Potvrzení Longest/Nearest podle Pravidel turnaje. */
+export function confirmOf(config: BonusConfig, id: ExclusiveBonusId): BonusConfirm {
+  const confirm = id === 'longest' ? config.confirmLongest : config.confirmNearest
+  const personal =
+    id === 'longest' ? config.longestByPersonalPar : config.nearestByPersonalPar
+  return !confirm ? 'off' : personal ? 'net' : 'gross'
+}
+
+/** Pravidlo Longest/Nearest v kole: přepis u kola, jinak Pravidla turnaje. */
+export function roundBonusRule(
+  round: TournamentRound,
+  config: BonusConfig,
+  id: ExclusiveBonusId,
+): ExclusiveBonusRule {
+  return (
+    round.bonusRules?.[id] ?? {
+      play: bonusValue(config, id) > 0,
+      confirm: confirmOf(config, id),
+    }
+  )
+}
+
+/**
+ * Nastavení extra bodů platné v kole: Pravidla turnaje s přepisem Longest a
+ * Nearest u kola (hraje se / nehraje, potvrzení vůbec, brutto nebo netto
+ * parem - jako v Golfgames). Idempotentní, volá se přímo z vyhodnocení.
+ */
+export function roundBonusConfig(
+  round: TournamentRound,
+  config: BonusConfig,
+): BonusConfig {
+  if (!round.bonusRules) return config
+  const longest = roundBonusRule(round, config, 'longest')
+  const nearest = roundBonusRule(round, config, 'nearest')
+  const value = (id: ExclusiveBonusId, rule: ExclusiveBonusRule) =>
+    !rule.play ? 0 : bonusValue(config, id) > 0 ? bonusValue(config, id) : 1
+  return {
+    ...config,
+    values: {
+      ...config.values,
+      longest: value('longest', longest),
+      nearest: value('nearest', nearest),
+    },
+    confirmLongest: longest.confirm !== 'off',
+    longestByPersonalPar: longest.confirm === 'net',
+    confirmNearest: nearest.confirm !== 'off',
+    nearestByPersonalPar: nearest.confirm === 'net',
+  }
 }
 
 /** Hraje se o extra body vůbec? */
@@ -93,10 +153,11 @@ export function bonusesAt(
  */
 export function availableBonuses(
   config: BonusConfig,
-  _round: TournamentRound,
+  round: TournamentRound,
   _hole: number,
 ): BonusDefinition[] {
-  return BONUSES.filter((bonus) => !bonus.auto && bonusValue(config, bonus.id) > 0)
+  const effective = roundBonusConfig(round, config)
+  return BONUSES.filter((bonus) => !bonus.auto && bonusValue(effective, bonus.id) > 0)
 }
 
 /** Seznam po přepnutí bonusu; pořadí podle definic, aby se značky nepřehazovaly. */

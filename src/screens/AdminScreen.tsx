@@ -419,6 +419,11 @@ function BonusSettings() {
         on={config.confirmNearest}
         onChange={(confirmNearest) => save({ confirmNearest })}
       />
+      <Switch
+        label={t('admin.bonusNearestPersonalPar')}
+        on={config.nearestByPersonalPar}
+        onChange={(nearestByPersonalPar) => save({ nearestByPersonalPar })}
+      />
       <div className="field">
         <span className="field-label">{t('admin.bonusMultiplierBirdie')}</span>
         <DecimalInput

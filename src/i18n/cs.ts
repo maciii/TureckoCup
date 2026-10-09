@@ -344,6 +344,15 @@ export const cs = {
   'admin.bonusAuto': 'z ran',
   'admin.bonusConfirmLongest': 'Longest platí jen při paru a lepším',
   'admin.bonusConfirmNearest': 'Nearest platí jen při paru a lepším',
+  'admin.bonusNearestPersonalPar':
+    'Nearest se potvrzuje osobním parem (par + rány z HCP)',
+  'admin.roundBonuses': 'Longest a Nearest',
+  'admin.roundBonusesHint':
+    'Pro tohle kolo: jestli se hrají a čím se potvrzují (bez potvrzení, brutto par, netto = osobní par s ranami z HCP). Výchozí je z Pravidel turnaje, nepotvrzený bod jde soupeřům.',
+  'admin.bonusPlay': 'Hraje se {name}',
+  'admin.bonusConfirm.off': 'Bez potvrzení',
+  'admin.bonusConfirm.gross': 'Brutto par',
+  'admin.bonusConfirm.net': 'Netto par',
   'admin.bonusPersonalPar': 'Longest se potvrzuje osobním parem (par + rány z HCP)',
   'admin.bonusMultiplierBirdie': 'Násobič při birdie',
   'admin.bonusMultiplierEagle': 'Násobič při eagle a lepším',

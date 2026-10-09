@@ -3,6 +3,16 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.22.0] – 2026-10-09
+
+### Přidáno
+
+- **Longest a Nearest u kola** (Admin → kolo → Longest a Nearest), jako
+  v Golfgames: pro každý z nich, jestli se v kole hraje a čím se potvrzuje -
+  bez potvrzení, brutto par, nebo netto par (par + rány z HCP na jamce).
+  Výchozí je z Pravidel turnaje; tam přibyl přepínač „Nearest se potvrzuje
+  osobním parem“. Vyhodnocení i panel extra bodů berou nastavení kola.
+
 ## [0.21.1] – 2026-10-09
 
 ### Opraveno

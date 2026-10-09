@@ -1,6 +1,12 @@
 import type { BonusConfig, PlayerId, TournamentRound } from '../model/types'
 import type { BonusDefinition } from '../model/bonuses'
-import { availableBonuses, bonusValue, bonusesAt, holdersOf } from '../model/bonuses'
+import {
+  availableBonuses,
+  bonusValue,
+  bonusesAt,
+  holdersOf,
+  roundBonusConfig,
+} from '../model/bonuses'
 import { shortName } from '../model/round'
 import { dynamicKey, t } from '../i18n'
 import { useData } from '../data'
@@ -34,6 +40,7 @@ export default function BonusSheet({
 }: Props) {
   const { state } = useData()
   const available = availableBonuses(config, round, hole)
+  const effective = roundBonusConfig(round, config)
   const selected = bonusesAt(round, playerId, hole)
   return (
     <div className="sheet-backdrop" onClick={onClose} role="presentation">
@@ -97,7 +104,7 @@ export default function BonusSheet({
         </ul>
         <p className="hint px" style={{ paddingTop: 10 }}>
           {available.some((b) => b.exclusive) && t('bonus.exclusiveHint')}
-          {(config.confirmLongest || config.confirmNearest) &&
+          {(effective.confirmLongest || effective.confirmNearest) &&
             ` ${t('bonus.confirmHint')}`}
           {available.some((b) => !b.exclusive) && ` ${t('bonus.multiplierHint')}`}
         </p>

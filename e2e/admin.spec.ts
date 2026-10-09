@@ -248,3 +248,43 @@ test('dvojité body na 9. a 18. jamce jdou zapnout u hry s body na jamce', async
   ).toHaveAttribute('aria-checked', 'true')
   expect(errors()).toEqual([])
 })
+
+test('Longest a Nearest jdou u kola vypnout a přepnout potvrzení na netto', async ({
+  page,
+}) => {
+  const errors = collectErrors(page)
+  await startRound(page)
+  await open(page, '#/admin/round/r1')
+  const section = page.locator('section', {
+    has: page.getByRole('heading', { name: 'Longest a Nearest' }),
+  })
+  // Výchozí z Pravidel turnaje: Longest netto parem, Nearest brutto parem.
+  await expect(
+    section.getByRole('button', { name: 'Netto par', pressed: true }),
+  ).toHaveCount(1)
+  await expect(
+    section.getByRole('button', { name: 'Brutto par', pressed: true }),
+  ).toHaveCount(1)
+  await section.getByRole('switch', { name: 'Hraje se Nearest' }).click()
+  await expect(section.getByRole('switch', { name: 'Hraje se Nearest' })).toHaveAttribute(
+    'aria-checked',
+    'false',
+  )
+  await section.getByRole('button', { name: 'Bez potvrzení' }).first().click()
+  await expect(
+    section.getByRole('button', { name: 'Bez potvrzení', pressed: true }),
+  ).toHaveCount(1)
+
+  // V zápisu Nearest zmizel, Longest zůstal.
+  await setIdentity(page, 'writer')
+  await open(page, '#/play/r1/0')
+  await page
+    .locator('.player-row')
+    .nth(1)
+    .getByRole('button', { name: 'Extra body: Mac' })
+    .click()
+  const sheet = page.getByRole('dialog', { name: 'Extra body' })
+  await expect(sheet.getByRole('button', { name: /Nearest/ })).toHaveCount(0)
+  await expect(sheet.getByRole('button', { name: /Longest/ })).toHaveCount(1)
+  expect(errors()).toEqual([])
+})
