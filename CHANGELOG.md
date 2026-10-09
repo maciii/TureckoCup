@@ -3,6 +3,14 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.20.4] – 2026-10-09
+
+### Změněno
+
+- Best + Součet: vyhraná hodnota v kartě dvojic (Best, Součet, Birdie,
+  Double, Extra) má červené pozadí místo zlatého - zlatá byla na podkladu
+  špatně vidět.
+
 ## [0.20.3] – 2026-10-09
 
 ### Opraveno

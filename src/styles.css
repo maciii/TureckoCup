@@ -1250,8 +1250,9 @@ a {
 }
 
 .chip.win {
-  background: var(--gold);
-  color: var(--team-a-ink);
+  /* Vyhraná hodnota červeně - zlatá na béžovém podkladu byla špatně vidět. */
+  background: var(--red);
+  color: var(--on-dark);
 }
 
 .chip.total {
