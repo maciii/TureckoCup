@@ -5,7 +5,7 @@ import { skinsAtStake } from '../evaluations/skins'
 import { stablefordAt } from '../evaluations/stableford'
 import { t } from '../i18n'
 import type { BonusConfig } from '../model/types'
-import { shortName, teamOf } from '../model/round'
+import { playOrder, shortName, teamOf } from '../model/round'
 import type { Flight, Player, PlayerId, TeamId, TournamentRound } from '../model/types'
 import { sideLabel, teamName } from './common'
 
@@ -56,7 +56,7 @@ export default function HoleStatus({
       lines.push({
         key: result.game.id,
         name: label,
-        onHole: flight.players
+        onHole: playOrder(round, flight)
           .map((id) => {
             const points = stablefordAt(round, id, hole, result.game.options)
             return `${name(id)} ${points === undefined ? t('common.dash') : points}`
@@ -125,7 +125,7 @@ export default function HoleStatus({
     }
   }
 
-  const awards = flight.players.flatMap((id) =>
+  const awards = playOrder(round, flight).flatMap((id) =>
     bonusAwardsAt(round, bonusConfig, id, hole)
       .filter((award) => !award.void)
       .map(
@@ -133,7 +133,7 @@ export default function HoleStatus({
           `${name(id)} ${award.bonus.mark}${award.points > 0 ? `+${award.points}` : ''}`,
       ),
   )
-  const bonusTotals = flight.players
+  const bonusTotals = playOrder(round, flight)
     .map((id) => ({ id, total: bonusTotal(round, bonusConfig, id) }))
     .filter((entry) => entry.total > 0)
   if (awards.length > 0 || bonusTotals.length > 0) {

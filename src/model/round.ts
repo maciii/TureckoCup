@@ -294,3 +294,24 @@ export function assignPosition(
   list[slot] = playerId
   return list
 }
+
+/**
+ * Pořadí hráčů flightu v zápisu a scorekartě: podle dvojic hry se stranami
+ * (Four-ball, Best + Součet), jak je admin nastavil - partneři pod sebou,
+ * ať sedí s kartou dvojic. Bez takové hry pořadí flightu; hráč mimo strany
+ * jde na konec.
+ */
+export function playOrder(round: TournamentRound, flight: Flight): PlayerId[] {
+  const sided = round.games.find(
+    (game) =>
+      (game.kind === 'team-match' || game.kind === 'best-aggregate') &&
+      (game.sides?.length ?? 0) > 0,
+  )
+  if (!sided) return flight.players
+  const inFlight = new Set(flight.players)
+  const ordered = (sided.sides ?? []).flatMap((side) =>
+    side.players.filter((id) => inFlight.has(id)),
+  )
+  const seen = new Set(ordered)
+  return [...ordered, ...flight.players.filter((id) => !seen.has(id))]
+}

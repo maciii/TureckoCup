@@ -35,6 +35,7 @@ import {
   shortName,
   strokeIndexRanked,
   strokesReceived,
+  playOrder,
 } from '../model/round'
 import { goBack, navigate } from '../nav'
 import {
@@ -352,7 +353,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
           ))}
 
         <ul className="player-list">
-          {flightEntry.players.map((playerId) => {
+          {playOrder(round, flightEntry).map((playerId) => {
             const score = scoreAt(round, playerId, hole)
             const strokes = strokesReceived(round, playerId, hole)
             const completed = holesCompleted(round, playerId)
@@ -526,7 +527,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
         <BonusSheet
           round={round}
           config={bonusConfig}
-          playerIds={flightEntry.players}
+          playerIds={playOrder(round, flightEntry)}
           playerId={bonusFor}
           onSelect={setBonusFor}
           hole={hole}

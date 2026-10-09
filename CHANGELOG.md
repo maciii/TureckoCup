@@ -3,6 +3,15 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.20.3] – 2026-10-09
+
+### Opraveno
+
+- **Hráči v zápisu a ve scorekartě jdou podle dvojic ze hry.** U Four-ballu
+  a Best + Součet jsou partneři pod sebou v pořadí stran, jak je admin
+  nastavil (Mac + Honza, Ferry + Soldík), ne v pořadí flightu; stejně
+  panel stavu jamky, panel extra bodů a karta živého kola.
+
 ## [0.20.2] – 2026-10-09
 
 ### Opraveno

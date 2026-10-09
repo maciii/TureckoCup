@@ -289,4 +289,14 @@ test('Best + Součet: karta dvojic v zápisu ukazuje Best, Součet a body', asyn
   await expect(card.locator('.chip', { hasText: 'Součet' }).first()).toBeVisible()
   await expect(card.locator('.chip.total').first()).toContainText('b.')
   await expect(card.locator('.pair-status-score')).toContainText('b.')
+  // Řádky hráčů jdou podle dvojic ze hry: partneři pod sebou, stejně jako karta.
+  const pairNames = await card.locator('.pair-name').allInnerTexts()
+  const expected = pairNames.flatMap((text) =>
+    text
+      .replace(/^[AB]\s*/, '')
+      .split(' + ')
+      .map((name) => name.trim()),
+  )
+  const rowNames = await page.locator('.player-row .player-name-text').allInnerTexts()
+  expect(rowNames.map((name) => name.trim())).toEqual(expected)
 })

@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useData } from '../data'
 import type { EvaluationResult } from '../evaluations'
 import { t } from '../i18n'
-import { flightIndexOf, shortName } from '../model/round'
+import { flightIndexOf, playOrder, shortName } from '../model/round'
 import type { TournamentRound } from '../model/types'
 import { navigate } from '../nav'
 import { flightProgressLabel, formatDay, gameTitle } from './common'
@@ -94,7 +94,9 @@ export default function LiveNow({ round, results }: Props) {
                 )}
               </span>
               <span className="row-meta">
-                {flight.players.map((id) => shortName(state.players, id)).join(', ')}
+                {playOrder(round, flight)
+                  .map((id) => shortName(state.players, id))
+                  .join(', ')}
               </span>
             </span>
           </li>
