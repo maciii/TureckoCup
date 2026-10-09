@@ -13,7 +13,7 @@ import {
 } from '../model/round'
 import { pickupStrokes } from '../model/pickup'
 import { finishDuels } from './duels'
-import { bonusPointsAt } from './bonuses'
+import { bonusForfeitAt, bonusPointsAt } from './bonuses'
 import type {
   DuelResult,
   Evaluate,
@@ -123,12 +123,18 @@ export function holePoints(
     const bonus = bonusPoints(context, side.players, hole) * multiplier
     const doubleBest = (doubleWinner === index ? doubleBestValue : 0) * multiplier
     // Extra body (longest, sandie…) partnerů do bodů dvojice jako v Golfgames,
-    // když to má hra zapnuté.
+    // když to má hra zapnuté; nepotvrzený Longest/Nearest soupeřů připadne nám.
+    const rival = index === 0 ? right : left
     const extra = withExtra
-      ? side.players.reduce(
+      ? (side.players.reduce(
           (sum, id) => sum + bonusPointsAt(context.round, context.bonuses, id, hole),
           0,
-        ) * multiplier
+        ) +
+          rival.players.reduce(
+            (sum, id) => sum + bonusForfeitAt(context.round, context.bonuses, id, hole),
+            0,
+          )) *
+        multiplier
       : 0
     return {
       best,

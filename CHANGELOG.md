@@ -3,6 +3,16 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.21.1] – 2026-10-09
+
+### Opraveno
+
+- **Nepotvrzený Longest/Nearest jde soupeřům.** Když držitel jamku nezahraje
+  na par (nebo zvedne), dostane bod druhá dvojice v Best + Součet, v jiné
+  týmové hře s extra body druhý tým. Ve vedlejší sázce jednotlivců soupeř
+  není, tam bod dál jen propadá. Dva držitelé dál nedávají nic nikomu.
+  Panel stavu jamky ukáže „Honza L✗ soupeři +1“.
+
 ## [0.21.0] – 2026-10-09
 
 ### Přidáno

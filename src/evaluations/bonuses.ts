@@ -29,7 +29,9 @@ import { rankRows } from './types'
  *   - Longest a Nearest drží na jamce jediný hráč a hodnota se nenásobí.
  *     S potvrzením musí hráč jamku zahrát na par nebo líp: Longest osobním
  *     parem (par + rány z handicapu, volitelně), Nearest vždy brutto parem.
- *     Nepotvrzený bod propadá (vedlejší sázka nemá soupeřovu stranu).
+ *     Nepotvrzený bod (bogey a horší, zvednutá jamka) **jde soupeřům**
+ *     (`forfeit`): ve hře dvojic k bodům druhé dvojice, v týmové hře druhému
+ *     týmu; ve vedlejší sázce jednotlivců soupeř není, tam jen propadá.
  *   - Mají-li exkluzivní bonus omylem dva (zápis bez signálu ze dvou
  *     telefonů), nedostane bod nikdo. Zvednutá jamka bonus nedává.
  *   - Birdie a eagle (navíc proti Golfgames) se počítají z ran, pokud mají
@@ -41,6 +43,8 @@ export interface BonusAward {
   points: number
   /** Zapsaný, ale nepočítá se (nepotvrzený, dva držitelé, zvednuto, bogey). */
   void: boolean
+  /** Nepotvrzený Longest/Nearest: hodnota jde soupeřům (ne při dvou držitelích). */
+  forfeit: boolean
   /** Jamka ještě není zapsaná - není jasno. */
   pending: boolean
 }
@@ -77,7 +81,8 @@ export function bonusAwardsAt(
     if (bonus.auto) {
       if (diff === undefined) continue
       const hit = bonus.id === 'birdie' ? diff === -1 : diff <= -2
-      if (hit) awards.push({ bonus, points: value, void: false, pending: false })
+      if (hit)
+        awards.push({ bonus, points: value, void: false, forfeit: false, pending: false })
       continue
     }
     if (!bonusesAt(round, playerId, hole).includes(bonus.id)) continue
@@ -91,11 +96,14 @@ export function bonusAwardsAt(
           ? strokesReceived(round, playerId, hole)
           : 0
       const confirmed = !confirm || (diff !== undefined && diff - personal <= 0)
-      const isVoid = picked || shared || (!pending && !confirmed)
+      // Zvednutá jamka par nedala - nepotvrzený bod, stejně jako bogey.
+      const failed = !pending && (picked || !confirmed)
+      const isVoid = picked || shared || failed
       awards.push({
         bonus,
         points: isVoid || pending ? 0 : value,
         void: isVoid,
+        forfeit: !shared && failed && confirm,
         pending: pending && !isVoid,
       })
       continue
@@ -106,6 +114,7 @@ export function bonusAwardsAt(
       bonus,
       points: isVoid || pending ? 0 : value * multiplier,
       void: isVoid,
+      forfeit: false,
       pending: pending && !isVoid,
     })
   }
@@ -122,6 +131,32 @@ export function bonusPointsAt(
     (sum, a) => sum + a.points,
     0,
   )
+}
+
+/** Body, které hráč na jamce nepotvrzeným Longest/Nearest odevzdal soupeřům. */
+export function bonusForfeitAt(
+  round: TournamentRound,
+  config: BonusConfig,
+  playerId: PlayerId,
+  hole: number,
+): number {
+  return bonusAwardsAt(round, config, playerId, hole).reduce(
+    (sum, a) => sum + (a.forfeit ? bonusValue(config, a.bonus.id) : 0),
+    0,
+  )
+}
+
+/** Odevzdané body hráče za celé kolo. */
+export function bonusForfeitTotal(
+  round: TournamentRound,
+  config: BonusConfig,
+  playerId: PlayerId,
+): number {
+  let points = 0
+  for (let hole = 0; hole < holeCount(round); hole++) {
+    points += bonusForfeitAt(round, config, playerId, hole)
+  }
+  return points
 }
 
 /** Extra body hráče za celé kolo. */

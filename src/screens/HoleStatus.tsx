@@ -5,6 +5,7 @@ import { skinsAtStake } from '../evaluations/skins'
 import { stablefordAt } from '../evaluations/stableford'
 import { t } from '../i18n'
 import type { BonusConfig } from '../model/types'
+import { bonusValue } from '../model/bonuses'
 import { playOrder, shortName, teamOf } from '../model/round'
 import type { Flight, Player, PlayerId, TeamId, TournamentRound } from '../model/types'
 import { sideLabel, teamName } from './common'
@@ -127,10 +128,15 @@ export default function HoleStatus({
 
   const awards = playOrder(round, flight).flatMap((id) =>
     bonusAwardsAt(round, bonusConfig, id, hole)
-      .filter((award) => !award.void)
-      .map(
-        (award) =>
-          `${name(id)} ${award.bonus.mark}${award.points > 0 ? `+${award.points}` : ''}`,
+      .filter((award) => !award.void || award.forfeit)
+      .map((award) =>
+        award.forfeit
+          ? t('bonus.forfeitLine', {
+              name: name(id),
+              mark: award.bonus.mark,
+              points: bonusValue(bonusConfig, award.bonus.id),
+            })
+          : `${name(id)} ${award.bonus.mark}${award.points > 0 ? `+${award.points}` : ''}`,
       ),
   )
   const bonusTotals = playOrder(round, flight)

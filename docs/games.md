@@ -122,8 +122,11 @@ Pravidla jako v Golfgames:
 - Longest a Nearest se nenásobí. S potvrzením (`confirmLongest`,
   `confirmNearest`, výchozí zapnuto) platí jen při paru a lepším: Longest
   osobním parem (par + rány z HCP, `longestByPersonalPar`), Nearest vždy
-  brutto parem. Nepotvrzený bod propadá (vedlejší sázka nemá soupeřovu
-  stranu). Dokud hráč jamku nezapsal, značka je tlumená - není jasno.
+  brutto parem. **Nepotvrzený bod (bogey a horší, zvednutá jamka) jde
+  soupeřům**: v Best + Součet k bodům druhé dvojice na té jamce, v jiné
+  týmové hře s extra body druhému týmu; ve vedlejší sázce jednotlivců
+  soupeř není, tam jen propadá. Dokud hráč jamku nezapsal, značka je
+  tlumená - není jasno.
 - Longest a Nearest drží jediný hráč: zaškrtnutí u dalšího hráče ho
   předchozímu odebere; mají-li ho omylem dva (zápis bez signálu ze dvou
   telefonů), nedostane bod nikdo. Zvednutá jamka bonus nedává.

@@ -435,3 +435,35 @@ describe('dvojité body na 9. a 18. jamce', () => {
     expect(result.holes.find((h) => h.hole === 8)!.value).toBe(2)
   })
 })
+
+describe('nepotvrzený Longest/Nearest jde soupeřům', () => {
+  it('v týmové hře s extra body dostane sazbu druhý tým; vedlejší sázka ho jen škrtne', () => {
+    const round = round1()
+    const config = { ...DEFAULT_BONUS_CONFIG, teamPerPoint: 1 }
+    // Mac (A) má na pětce (par 5) Longest, ale zahrál dvojbogey (má tam ránu, bogey by prošel).
+    for (const id of round.playerIds) round.scores[id]!['4'] = 5
+    round.scores.p1!['4'] = 7
+    round.bonuses.p1!['4'] = ['longest']
+    const award = bonusAwardsAt(round, config, 'p1', 4).find(
+      (a) => a.bonus.id === 'longest',
+    )!
+    expect(award).toMatchObject({ void: true, forfeit: true, points: 0 })
+    expect(bonusPointsAt(round, config, 'p1', 4)).toBe(0)
+    expect(bonusSummary(round, SEED_PLAYERS, config)!.teamPoints).toEqual({ A: 0, B: 0 })
+    const teamGame = {
+      ...round.games.find((g) => g.kind === 'team-skins')!,
+      countsForTeam: true,
+      // Brutto, ať pětka dopadne remízou a jediný týmový bod je ten odevzdaný Longest.
+      options: { allowance: 1, net: false, carry: true, bonuses: true },
+    }
+    expect(
+      evaluateGame(round, SEED_PLAYERS, teamGame, undefined, config).teamPoints,
+    ).toEqual({ A: 0, B: 1 })
+    // Dva držitelé: nikomu nic, ani soupeřům.
+    round.bonuses.p3!['4'] = ['longest']
+    expect(
+      bonusAwardsAt(round, config, 'p1', 4).find((a) => a.bonus.id === 'longest')!
+        .forfeit,
+    ).toBe(false)
+  })
+})

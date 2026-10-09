@@ -9,7 +9,7 @@ import type {
 import { DEFAULT_PICKUP } from '../model/pickup'
 import { positionDuel, teamMatch } from './duels'
 import { bestAggregate } from './bestAggregate'
-import { bonusTotal } from './bonuses'
+import { bonusForfeitTotal, bonusTotal } from './bonuses'
 import { DEFAULT_BONUS_CONFIG } from '../model/bonuses'
 import { teamOf } from '../model/round'
 import type { BonusConfig } from '../model/types'
@@ -57,8 +57,12 @@ export function evaluateGame(
   if (game.options.bonuses && game.countsForTeam && game.kind !== 'best-aggregate') {
     for (const id of round.playerIds) {
       const team = teamOf(players, id)
-      if (team)
-        result.teamPoints[team] += bonusTotal(round, bonuses, id) * bonuses.teamPerPoint
+      if (!team) continue
+      result.teamPoints[team] += bonusTotal(round, bonuses, id) * bonuses.teamPerPoint
+      // Nepotvrzený Longest/Nearest jde druhému týmu.
+      const other: TeamId = team === 'A' ? 'B' : 'A'
+      result.teamPoints[other] +=
+        bonusForfeitTotal(round, bonuses, id) * bonuses.teamPerPoint
     }
   }
   return result

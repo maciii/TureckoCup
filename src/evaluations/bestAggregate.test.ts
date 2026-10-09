@@ -167,4 +167,34 @@ describe('Best + Součet', () => {
     expect(doubled.holePoints!['0']![1]!.total).toBe(2)
     expect(doubled.sides.map((s) => s.value)).toEqual([0, 8])
   })
+
+  it('nepotvrzený Longest partnera dá bod soupeřům, potvrzený vlastní dvojici', () => {
+    const round = round1()
+    // Jamka 5 (index 4, par 5): všichni par, Mac (A) drží Longest.
+    enter(round, {
+      p3: [5, 5, 5, 5, 5],
+      p1: [5, 5, 5, 5, 5],
+      p2: [5, 5, 5, 5, 5],
+      p6: [5, 5, 5, 5, 5],
+    })
+    round.bonuses.p1!['4'] = ['longest']
+    const withExtra = { ...game(), options: { ...game().options, bonuses: true } }
+    let hp = evaluateGame(round, SEED_PLAYERS, withExtra).duels![0]!.holePoints!['4']!
+    expect(hp[0]).toMatchObject({ extra: 1, total: 1 })
+    expect(hp[1]).toMatchObject({ extra: 0, total: 0 })
+    // Mac má na pětce ránu z HCP, bogey je jeho osobní par; dvojbogey už Longest nepotvrdí
+    // a bod jde dvojici B.
+    round.scores.p1!['4'] = 7
+    hp = evaluateGame(round, SEED_PLAYERS, withExtra).duels![0]!.holePoints!['4']!
+    expect(hp[0]).toMatchObject({ extra: 0 })
+    expect(hp[1]).toMatchObject({ extra: 1 })
+    // Zvednutá jamka: také soupeřům.
+    round.scores.p1!['4'] = PICKED_UP
+    hp = evaluateGame(round, SEED_PLAYERS, withExtra).duels![0]!.holePoints!['4']!
+    expect(hp[1]!.extra).toBe(1)
+    // Bez extra bodů ve hře se nic nepřelévá.
+    expect(
+      evaluateGame(round, SEED_PLAYERS, game()).duels![0]!.holePoints!['4']![1]!.extra,
+    ).toBe(0)
+  })
 })

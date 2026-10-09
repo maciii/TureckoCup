@@ -211,7 +211,9 @@ export const cs = {
   'bonus.heldBy': 'Teď má {name}; zaškrtnutím ho převezmeš.',
   'bonus.exclusiveHint':
     'Longest a Nearest může mít na jamce jen jeden hráč; zaškrtnutí ho vezme tomu, kdo ho měl.',
-  'bonus.confirmHint': 'Longest a Nearest platí jen při paru a lepším.',
+  'bonus.confirmHint':
+    'Longest a Nearest platí jen při paru a lepším; nepotvrzený bod dostanou soupeři.',
+  'bonus.forfeitLine': '{name} {mark}✗ soupeři +{points}',
   'bonus.longest.name': 'Longest',
   'bonus.longest.description':
     'Nejdelší odpal (obvykle par 5); na jamce pro jednoho hráče.',
