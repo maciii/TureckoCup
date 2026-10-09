@@ -327,3 +327,33 @@ export const DOUBLE_HOLES = [8, 17]
 export function holeMultiplier(options: { doubleHoles?: boolean }, hole: number): number {
   return options.doubleHoles && DOUBLE_HOLES.includes(hole) ? 2 : 1
 }
+
+/** Hry, ve kterých hráč (jeho dvojice) na jamce dubloval. */
+export function doublesAt(
+  round: TournamentRound,
+  playerId: PlayerId,
+  hole: number,
+): string[] {
+  const list = round.doubles?.[playerId]?.[holeKey(hole)]
+  return Array.isArray(list) ? list : []
+}
+
+/** Dublovala strana (dvojice) na jamce v dané hře? Stačí zápis u jednoho z partnerů. */
+export function sideDoubled(
+  round: TournamentRound,
+  gameId: string,
+  players: readonly PlayerId[],
+  hole: number,
+): boolean {
+  return players.some((id) => doublesAt(round, id, hole).includes(gameId))
+}
+
+/** Který hráč strany nese zápis dublu (pro jeho zrušení); `undefined` = nikdo. */
+export function doubleHolder(
+  round: TournamentRound,
+  gameId: string,
+  players: readonly PlayerId[],
+  hole: number,
+): PlayerId | undefined {
+  return players.find((id) => doublesAt(round, id, hole).includes(gameId))
+}

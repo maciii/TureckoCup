@@ -50,7 +50,7 @@ export default function HoleStatus({
 
   for (const result of results) {
     const kind = result.game.kind
-    if (kind === 'best-aggregate') continue
+    if (kind === 'best-aggregate' || kind === 'four-ball-skins') continue
     const label = result.game.name ?? t(`games.${kind}.name`)
     const outcome = result.holes.find((h) => h.hole === hole)
     if (kind === 'individual-stableford') {

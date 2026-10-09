@@ -11,6 +11,7 @@ import { isValidTime } from '../model/schedule'
 import { pickupRuleOf } from '../model/pickup'
 import HoleStatus from './HoleStatus'
 import PairStatus from './PairStatus'
+import SkinsMatchStatus from './SkinsMatchStatus'
 import type { BonusDefinition } from '../model/bonuses'
 import {
   availableBonuses,
@@ -349,6 +350,19 @@ export default function PlayScreen({ roundId, flight }: Props) {
               players={state.players}
               flight={flightEntry}
               hole={hole}
+            />
+          ))}
+        {results
+          .filter((r) => r.game.kind === 'four-ball-skins')
+          .map((r) => (
+            <SkinsMatchStatus
+              key={r.game.id}
+              round={round}
+              result={r}
+              players={state.players}
+              flight={flightEntry}
+              hole={hole}
+              canWrite={entryEnabled}
             />
           ))}
 

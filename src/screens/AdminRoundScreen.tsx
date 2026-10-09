@@ -30,6 +30,7 @@ import {
   teamOf,
 } from '../model/round'
 import { GAME_KINDS, hasSides } from '../evaluations'
+import { DOUBLE_BY } from '../evaluations/fourBallSkins'
 import {
   TEE_INTERVAL_MINUTES,
   addMinutes,
@@ -65,6 +66,7 @@ const DOUBLE_HOLE_KINDS: GameKind[] = [
   'individual-skins',
   'team-skins',
   'best-aggregate',
+  'four-ball-skins',
 ]
 
 const STATUSES: RoundStatus[] = ['planned', 'live', 'finished']
@@ -513,7 +515,9 @@ function EditsLog({ roundId }: { roundId: string }) {
   const change = (edit: EditRecord) =>
     edit.bonusTo
       ? `★ ${marks(edit.bonusFrom ?? [])} → ${marks(edit.bonusTo)}`
-      : `${value(edit.from)} → ${value(edit.to)}`
+      : edit.doubleTo
+        ? `×2 ${(edit.doubleFrom ?? []).join(' ') || t('common.dash')} → ${edit.doubleTo.join(' ') || t('common.dash')}`
+        : `${value(edit.from)} → ${value(edit.to)}`
 
   return (
     <Section
@@ -824,8 +828,12 @@ function GameEditor({
     onChange({ ...game, options: { ...options, ...next } })
   const isDuel = game.kind === 'position-duel' || hasSides(game.kind)
   // Best + Součet má vlastní bodování - formát duelu u něj nemá co dělat.
-  const hasFormat = isDuel && game.kind !== 'best-aggregate'
-  const isSkins = game.kind === 'individual-skins' || game.kind === 'team-skins'
+  const hasFormat =
+    isDuel && game.kind !== 'best-aggregate' && game.kind !== 'four-ball-skins'
+  const isSkins =
+    game.kind === 'individual-skins' ||
+    game.kind === 'team-skins' ||
+    game.kind === 'four-ball-skins'
   const holeNumbers = Array.from({ length: round.course.holeCount }, (_, i) => i)
   const holes = game.holes ?? { from: 0, to: round.course.holeCount - 1 }
 
@@ -1001,6 +1009,28 @@ function GameEditor({
             on={options.carry ?? true}
             onChange={(carry) => setOptions({ carry })}
           />
+          {game.kind === 'four-ball-skins' && (
+            <div
+              className="field"
+              style={{ flexDirection: 'column', alignItems: 'stretch' }}
+            >
+              <span className="field-label">{t('admin.gameDoubleBy')}</span>
+              <div className="tabs compact" style={{ width: '100%' }}>
+                {DOUBLE_BY.map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    className={`tab${(options.doubleBy ?? 'behind') === mode ? ' selected' : ''}`}
+                    aria-pressed={(options.doubleBy ?? 'behind') === mode}
+                    onClick={() => setOptions({ doubleBy: mode })}
+                  >
+                    {t(dynamicKey('admin.gameDoubleBy', mode))}
+                  </button>
+                ))}
+              </div>
+              <p className="hint">{t('admin.gameDoubleByHint')}</p>
+            </div>
+          )}
           {game.kind === 'team-skins' && (
             <div className="field">
               <span className="field-label">{t('admin.gamePerSkin')}</span>

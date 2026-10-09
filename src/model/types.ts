@@ -149,6 +149,7 @@ export type GameKind =
   | 'position-duel'
   | 'team-match'
   | 'best-aggregate'
+  | 'four-ball-skins'
 
 /** Formát duelu pozic a hlavní týmové hry. */
 export type DuelFormat = 'strokes-gross' | 'strokes-net' | 'stableford' | 'match-play'
@@ -179,7 +180,12 @@ export interface GameOptions {
   doubleBest?: number
   /** Dvojité body na 9. a 18. jamce (`DOUBLE_HOLES`): Stableford, skiny, body dvojice v Best + Součet. */
   doubleHoles?: boolean
+  /** Four-ball Skins: kdo smí na jamce dublovat (hrát o dva skiny); chybí = prohrávající dvojice. */
+  doubleBy?: DoubleBy
 }
+
+/** Four-ball Skins: kdo smí dublovat jamku. */
+export type DoubleBy = 'off' | 'behind' | 'lastLoser' | 'anyone'
 
 /** Kolik týmových bodů hra přináší. */
 export interface TeamPointsRule {
@@ -230,6 +236,13 @@ export const MAX_STROKES = 20
 export type ScoreMap = Record<PlayerId, Record<HoleKey, number>>
 export type BonusMap = Record<PlayerId, Record<HoleKey, string[]>>
 
+/**
+ * Dubly ve Four-ball Skins: hráč × jamka → id her, ve kterých jeho dvojice
+ * na jamce dublovala. Stejná buňka jako extra body (rules, log úprav);
+ * dvojice dublovala, když to má kterýkoli její hráč.
+ */
+export type DoubleMap = Record<PlayerId, Record<HoleKey, string[]>>
+
 export interface LastEdit {
   playerId: PlayerId
   hole: HoleKey
@@ -262,6 +275,8 @@ export interface TournamentRound {
   games: GameConfig[]
   scores: ScoreMap
   bonuses: BonusMap
+  /** Dubly Four-ball Skins; chybí u kol založených dřív. */
+  doubles?: DoubleMap
   lastEdit?: LastEdit
   note?: string
   /**
@@ -286,6 +301,9 @@ export interface EditRecord {
   /** Extra body před a po (id bonusů) - log říká, kdo komu kdy který přiznal. */
   bonusFrom?: string[]
   bonusTo?: string[]
+  /** Dubl Four-ball Skins před a po (id her). */
+  doubleFrom?: string[]
+  doubleTo?: string[]
   by: string
   byEmail?: string
   at: unknown

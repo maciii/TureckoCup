@@ -2114,6 +2114,31 @@ a.menu-item {
   gap: 6px;
 }
 
+/* Four-ball Skins v zápisu: stav jamky a tlačítko Dubl v kartě dvojice. */
+.skins-match-hole {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+
+.skins-match .pair-card {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.skins-match .pair-chips {
+  flex: none;
+  align-items: center;
+}
+
+.skins-match .btn.sm {
+  width: auto;
+  min-width: 72px;
+}
+
 /* --- živé kolo na přehledu ------------------------------------------------------ */
 
 .live-now {

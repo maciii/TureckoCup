@@ -46,8 +46,19 @@ export interface SkinsInput {
   sideCount: number
   /** Dělená jamka přenáší skin dál (výchozí ano). */
   carry?: boolean
-  /** Kolik skinů jamka sama nese (výchozí 1; dvojitá jamka 2). */
-  holeValue?: (hole: number) => number
+  /**
+   * Kolik skinů jamka sama nese (výchozí 1; dvojitá jamka 2, dubl 4). Dostane
+   * stav před jamkou - Four-ball Skins podle něj rozhodne, kdo smí dublovat.
+   */
+  holeValue?: (hole: number, state: SkinsState) => number
+}
+
+/** Stav banku před jamkou pro `holeValue`. */
+export interface SkinsState {
+  totals: readonly number[]
+  carry: number
+  /** Strana, která vzala poslední rozhodnutou jamku; `null` před první. */
+  lastWinner: number | null
 }
 
 export function computeSkins(input: SkinsInput): SkinsOutcome {
@@ -58,9 +69,11 @@ export function computeSkins(input: SkinsInput): SkinsOutcome {
   const holes: SkinHoleResult[] = []
   let carry = 0
   let pending = 0
+  let lastWinner: number | null = null
 
   for (const hole of holeOrder) {
     const scores = Array.from({ length: sideCount }, (_, side) => scoreOf(side, hole))
+    const value = holeValue(hole, { totals, carry, lastWinner })
 
     if (scores.some((score) => score === undefined)) {
       // Jamka není rozhodnutá - bank se nemění, ale jamka stále "visí".
@@ -75,13 +88,14 @@ export function computeSkins(input: SkinsInput): SkinsOutcome {
 
     if (leaders.length === 1 && Number.isFinite(lowest)) {
       const winner = leaders[0] ?? 0
-      const skins = carry + holeValue(hole)
+      const skins = carry + value
       totals[winner] = (totals[winner] ?? 0) + skins
       carry = 0
+      lastWinner = winner
       holes.push({ hole, decided: true, winner, skins, carry: 0 })
     } else {
       // Dělená jamka (nebo všichni zvedli): skin se přenáší, nebo propadá.
-      carry = carryOver ? carry + holeValue(hole) : 0
+      carry = carryOver ? carry + value : 0
       holes.push({ hole, decided: true, winner: null, skins: 0, carry })
     }
   }

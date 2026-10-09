@@ -2,6 +2,7 @@ import type {
   Access,
   BonusConfig,
   GameConfig,
+  HoleKey,
   Player,
   PlayerId,
   RoundStatus,
@@ -10,6 +11,7 @@ import type {
 } from '../model/types'
 import { MAX_STROKES, PICKED_UP } from '../model/types'
 import { holeKey, holeOrder, isEntered, parAt, strokesReceived } from '../model/round'
+import { evaluateGame } from '../evaluations'
 import { BONUSES, DEFAULT_BONUS_CONFIG } from '../model/bonuses'
 
 /** Extra body testovací verze: výchozí Golfgames hodnoty, navíc birdie za bod a do týmu půl bodu. */
@@ -253,6 +255,21 @@ function gamesForDay(day: number, positions: Record<TeamId, PlayerId[]>): GameCo
           { win: 2, halve: 1 },
           { countsForTeam: true },
         ),
+        game(
+          'four-ball-skins',
+          'four-ball-skins',
+          'preview.game.fourBallSkins',
+          // Den 4 a 5: skiny dvojic s dubly prohrávající dvojice, dvojitá 9 a 18.
+          {
+            allowance: 0.9,
+            net: true,
+            carry: true,
+            doubleBy: 'behind',
+            doubleHoles: true,
+          },
+          { win: 1, halve: 0.5 },
+          { countsForTeam: true, sides: pairSides(positions) },
+        ),
       ]
   }
 }
@@ -405,6 +422,19 @@ export function previewRounds(seed = PREVIEW_SEED): TournamentRound[] {
           const key = holeKey(hole)
           round.bonuses[holder]![key] = [...(round.bonuses[holder]![key] ?? []), bonus.id]
         }
+      }
+    }
+    // Dubly Four-ball Skins: den 4 má jeden u dvojice, která zrovna prohrávala.
+    round.doubles = Object.fromEntries(round.playerIds.map((id) => [id, {}]))
+    const skinsGame = round.games.find((g) => g.kind === 'four-ball-skins')
+    if (skinsGame && index === 3) {
+      const duel = evaluateGame(round, PREVIEW_PLAYERS, skinsGame).duels?.[0]
+      const entry = Object.entries(duel?.mayDouble ?? {}).find(
+        ([, sides]) => sides.length > 0,
+      )
+      const side = entry ? duel?.sides[entry[1][0]!] : undefined
+      if (entry && side?.players[0]) {
+        round.doubles[side.players[0]]![entry[0] as HoleKey] = [skinsGame.id]
       }
     }
     return round

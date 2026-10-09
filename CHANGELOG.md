@@ -3,6 +3,18 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.23.0] – 2026-10-09
+
+### Přidáno
+
+- **Four-ball Skins** - nová hra: dvojice proti dvojici, lepší míč (netto
+  nebo brutto), skin za jamku, dělená jamka přenáší; dvojice s víc skiny
+  bere po dohrání bod do týmu, remíza 0,5, za každý zápas zvlášť. Dvojitá
+  9 a 18 a extra body do hry jako u ostatních her. **Dubl**: oprávněná
+  dvojice (nastavitelné: prohrávající, kdo ztratil jamku, kdokoli, nikdo)
+  hraje jamku o dva skiny; zapíná se tlačítkem v kartě zápasu, kdykoli,
+  ukládá se jako surová data s logem úprav. Testovací verze dny 4 a 5.
+
 ## [0.22.0] – 2026-10-09
 
 ### Přidáno

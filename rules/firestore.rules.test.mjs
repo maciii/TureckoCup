@@ -207,6 +207,43 @@ test('zapisovatel zapíše extra body jako jednu buňku, ne dvě', async () => {
   )
 })
 
+test('zapisovatel zapíše dubl Four-ball Skins jako jednu buňku, i do kola bez mapy dublů', async () => {
+  const db = user('w1', WRITER)
+  const ref = doc(db, 'tournaments', TID, 'rounds', 'r1')
+  await assertSucceeds(
+    updateDoc(ref, {
+      'doubles.p2.3': ['fbs'],
+      lastEdit: { playerId: 'p2', hole: '3', by: 'w1', at: serverTimestamp() },
+    }),
+  )
+  await assertSucceeds(
+    updateDoc(ref, {
+      'doubles.p2.3': deleteField(),
+      lastEdit: { playerId: 'p2', hole: '3', by: 'w1', at: serverTimestamp() },
+    }),
+  )
+  // Dubl jiného hráče než v lastEdit, dvě jamky, nebo dubl a skóre jiného hráče.
+  await assertFails(
+    updateDoc(ref, {
+      'doubles.p1.3': ['fbs'],
+      lastEdit: { playerId: 'p2', hole: '3', by: 'w1', at: serverTimestamp() },
+    }),
+  )
+  await assertFails(
+    updateDoc(ref, {
+      'doubles.p2.3': ['fbs'],
+      'doubles.p2.4': ['fbs'],
+      lastEdit: { playerId: 'p2', hole: '3', by: 'w1', at: serverTimestamp() },
+    }),
+  )
+  await assertFails(
+    updateDoc(ref, {
+      'doubles.p2.3': 'fbs',
+      lastEdit: { playerId: 'p2', hole: '3', by: 'w1', at: serverTimestamp() },
+    }),
+  )
+})
+
 test('zapisovatel nesmí podvrhnout lastEdit.by ani čas', async () => {
   const db = user('w1', WRITER)
   await assertFails(scoreUpdate(db, 'p1', '0', 4, 'nekdo-jiny'))

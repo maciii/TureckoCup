@@ -26,7 +26,7 @@ export default function GameResults({ round, players, result, teams }: Props) {
   const format = game.options.format ?? 'strokes-net'
   const isDuel = game.kind === 'position-duel' || hasSides(game.kind)
   const note =
-    isDuel && game.kind !== 'best-aggregate'
+    isDuel && game.kind !== 'best-aggregate' && game.kind !== 'four-ball-skins'
       ? t(`format.${format}`)
       : gameDescription(game)
   const pendingNote =

@@ -35,6 +35,7 @@ export const cs = {
   'preview.game.skinsGross': 'Skins brutto všech osm',
   'preview.game.teamSkinsBack': 'Team Skins zadní devítka',
   'preview.game.duelsGross': 'Singly pozic brutto',
+  'preview.game.fourBallSkins': 'Four-ball Skins s dubly',
   'app.noTournament': 'Turnaj ještě není založený.',
   'app.noTournamentHint': 'Administrátor ho založí v Admin → Inicializovat turnaj.',
 
@@ -96,6 +97,19 @@ export const cs = {
   'games.best-aggregate.name': 'Best + Součet',
   'games.best-aggregate.description':
     'Dvojice proti dvojici: bod za lepší míč, bod za součet, birdie 1, eagle 3',
+  'games.four-ball-skins.name': 'Four-ball Skins',
+  'games.four-ball-skins.description':
+    'Dvojice proti dvojici, lepší míč, skin za jamku, dělená přenáší; dubl = dva skiny',
+  'skins.match.atStake': {
+    one: 've hře {count} skin',
+    few: 've hře {count} skiny',
+    other: 've hře {count} skinů',
+  },
+  'skins.match.won': '{name} bere {count}',
+  'skins.match.carried': 'dělená · v banku {count}',
+  'skins.match.double': 'Dubl',
+  'skins.match.doubled': 'Dubl: {name}',
+  'skins.match.doubleIgnored': 'Dubl u {name} se nepočítá - nesměl dublovat.',
   'best.best': 'Best',
   'best.aggregate': 'Součet',
   'best.bonus': 'Birdie',
@@ -331,6 +345,13 @@ export const cs = {
   'admin.gameScopeFlight': 'Ve flightu',
   'admin.gameScopeAll': 'Všech 8',
   'admin.gameCarry': 'Přenos banku',
+  'admin.gameDoubleBy': 'Dubl (jamka o dva skiny) smí',
+  'admin.gameDoubleBy.behind': 'Prohrávající',
+  'admin.gameDoubleBy.lastLoser': 'Kdo ztratil jamku',
+  'admin.gameDoubleBy.anyone': 'Kdokoli',
+  'admin.gameDoubleBy.off': 'Nikdo',
+  'admin.gameDoubleByHint':
+    'Dubl zapne zapisovatel v kartě zápasu u dvojice; jamka pak nese dva skiny (dvojitá 9 a 18 čtyři), bank se přičte. Dubl u dvojice, která dublovat nesměla, se nepočítá.',
   'admin.gamePerSkin': 'Bodů za skin',
   'admin.gameWin': 'Bodů za výhru',
   'admin.gameHalve': 'Bodů za remízu',

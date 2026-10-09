@@ -38,6 +38,15 @@ export type Op =
       /** Id zapsaných bonusů; prázdný seznam klíč smaže. */
       value: string[]
     }
+  | {
+      /** Dubl Four-ball Skins: dvojice hráče na jamce hraje o dva skiny (buňka hráč × jamka, seznam id her). */
+      kind: 'setDouble'
+      roundId: string
+      playerId: PlayerId
+      hole: number
+      gameId: string
+      on: boolean
+    }
   | { kind: 'updateRound'; roundId: string; patch: Partial<TournamentRound> }
   | { kind: 'updatePlayer'; playerId: PlayerId; patch: Partial<Player> }
   | { kind: 'updateTournament'; patch: Partial<Tournament> }
@@ -84,11 +93,21 @@ export function applyOp(state: TournamentState, op: Op): TournamentState {
         else player[key] = [...op.value]
         return { ...round, bonuses: { ...round.bonuses, [op.playerId]: player } }
       })
+    case 'setDouble':
+      return mapRound(state, op.roundId, (round) => {
+        const key = holeKey(op.hole)
+        const player = { ...(round.doubles?.[op.playerId] ?? {}) }
+        const next = doubleList(player[key], op.gameId, op.on)
+        if (next.length === 0) delete player[key]
+        else player[key] = next
+        return { ...round, doubles: { ...(round.doubles ?? {}), [op.playerId]: player } }
+      })
     case 'clearScores':
       return mapRound(state, op.roundId, (round) => ({
         ...round,
         scores: Object.fromEntries(round.playerIds.map((id) => [id, {}])),
         bonuses: Object.fromEntries(round.playerIds.map((id) => [id, {}])),
+        doubles: Object.fromEntries(round.playerIds.map((id) => [id, {}])),
       }))
     case 'updateRound':
       return mapRound(state, op.roundId, (round) => ({ ...round, ...op.patch }))
@@ -106,6 +125,17 @@ export function applyOp(state: TournamentState, op: Op): TournamentState {
     case 'updateAccess':
       return { ...state, access: op.access }
   }
+}
+
+/** Seznam dublů po přepnutí hry; pořadí zachované, bez duplicit. */
+function doubleList(
+  current: string[] | undefined,
+  gameId: string,
+  on: boolean,
+): string[] {
+  const list = Array.isArray(current) ? current : []
+  if (on) return list.includes(gameId) ? list : [...list, gameId]
+  return list.filter((id) => id !== gameId)
 }
 
 function mapRound(
@@ -219,6 +249,42 @@ export function opToWrites(op: Op, meta: OpMeta, state: TournamentState): Write[
         },
       ]
     }
+    case 'setDouble': {
+      // Dubl je surová buňka jako extra body: hráč × jamka, lastEdit a log úprav.
+      const key = holeKey(op.hole)
+      const round = state.rounds.find((r) => r.id === op.roundId)
+      const doubleFrom = round?.doubles?.[op.playerId]?.[key] ?? []
+      const doubleTo = doubleList(doubleFrom, op.gameId, op.on)
+      return [
+        {
+          path: ['rounds', op.roundId],
+          mode: 'update',
+          data: {
+            [`doubles.${op.playerId}.${key}`]:
+              doubleTo.length === 0 ? DELETE_FIELD : [...doubleTo],
+            lastEdit: { playerId: op.playerId, hole: key, by: meta.uid, at: SERVER_TIME },
+          },
+        },
+        {
+          path: ['rounds', op.roundId, 'edits'],
+          mode: 'set',
+          autoId: true,
+          data: {
+            playerId: op.playerId,
+            hole: key,
+            from: null,
+            to: null,
+            doubleFrom: [...doubleFrom],
+            doubleTo,
+            by: meta.uid,
+            ...(meta.email ? { byEmail: meta.email } : {}),
+            at: SERVER_TIME,
+            clientAt: meta.clientAt,
+            appVersion: meta.appVersion,
+          },
+        },
+      ]
+    }
     case 'clearScores': {
       const round = state.rounds.find((r) => r.id === op.roundId)
       const ids = round?.playerIds ?? []
@@ -229,6 +295,7 @@ export function opToWrites(op: Op, meta: OpMeta, state: TournamentState): Write[
           data: {
             scores: Object.fromEntries(ids.map((id) => [id, {}])),
             bonuses: Object.fromEntries(ids.map((id) => [id, {}])),
+            doubles: Object.fromEntries(ids.map((id) => [id, {}])),
           },
         },
       ]
@@ -246,12 +313,14 @@ export function opToWrites(op: Op, meta: OpMeta, state: TournamentState): Write[
 
 /** Smí operaci dělat zapisovatel, nebo je to admin záležitost? */
 export function requiresAdmin(op: Op): boolean {
-  return op.kind !== 'setScore' && op.kind !== 'setBonuses'
+  return !isCellOp(op)
 }
 
-/** Zápis do buňky kola (skóre nebo extra body) - smí ho zapisovatel. */
-export function isCellOp(op: Op): op is Extract<Op, { kind: 'setScore' | 'setBonuses' }> {
-  return op.kind === 'setScore' || op.kind === 'setBonuses'
+/** Zápis do buňky kola (skóre, extra body, dubl) - smí ho zapisovatel. */
+export function isCellOp(
+  op: Op,
+): op is Extract<Op, { kind: 'setScore' | 'setBonuses' | 'setDouble' }> {
+  return op.kind === 'setScore' || op.kind === 'setBonuses' || op.kind === 'setDouble'
 }
 
 /**

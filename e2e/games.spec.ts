@@ -208,3 +208,59 @@ test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky
   await expect(row('Ota').locator('.pill')).toHaveText('0')
   expect(errors()).toEqual([])
 })
+
+test('Four-ball Skins: dubl v kartě zápasu, přenos dvou skinů a výsledek kola', async ({
+  page,
+}) => {
+  const errors = collectErrors(page)
+  await startRound(page)
+  await open(page, '#/admin/round/r1')
+  await page.getByRole('button', { name: '+ Přidat hru' }).click()
+  const card = page.locator('.game-card').nth(4)
+  await card.getByLabel('Hry kola').selectOption('four-ball-skins')
+  await expect(card.getByLabel('Zápas 1 A 1')).toHaveValue('p3')
+  await expect(card.getByRole('switch', { name: 'Přenos banku' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  )
+  // Kdo smí dublovat: výchozí prohrávající, pro test kdokoli.
+  await expect(
+    card.getByRole('button', { name: 'Prohrávající', pressed: true }),
+  ).toHaveCount(1)
+  await card.getByRole('button', { name: 'Kdokoli' }).click()
+  await expectNoHorizontalOverflow(page)
+
+  await setIdentity(page, 'writer')
+  await open(page, '#/play/r1/0')
+  const match = page.locator('.skins-match')
+  await expect(match).toContainText('Four-ball Skins')
+  await expect(match).toContainText('ve hře 1 skin')
+  // Dubl první dvojice: jamka za dva skiny.
+  await match.getByRole('button', { name: 'Dubl' }).first().click()
+  await expect(match).toContainText('Dubl: Ota + Mac')
+  await expect(match).toContainText('ve hře 2 skiny')
+  // Všichni par: dělená, dva skiny do banku; na druhé jamce se hraje o tři.
+  await enterPar(page, [0, 1, 2, 3])
+  await expect(match).toContainText('dělená · v banku 2')
+  await page
+    .getByRole('button', { name: /Další jamka/ })
+    .last()
+    .click()
+  await expect(match).toContainText('ve hře 3 skiny')
+  // Mac birdie: Ota + Mac berou tři.
+  const mac = page.locator('.player-row').nth(1)
+  await mac.locator('.score-value').click()
+  await mac.locator('.step-button').first().click()
+  await enterPar(page, [0, 2, 3])
+  await expect(match).toContainText('Ota + Mac bere 3')
+  await expect(match.locator('.pair-status-score')).toContainText('3')
+  await expectNoHorizontalOverflow(page)
+
+  await open(page, '#/round/r1')
+  const section = page.locator('section', {
+    has: page.getByRole('heading', { name: 'Four-ball Skins' }),
+  })
+  await expect(section.locator('.duel')).toHaveCount(2)
+  await expect(section.locator('.duel').first()).toContainText('3 : 0')
+  expect(errors()).toEqual([])
+})

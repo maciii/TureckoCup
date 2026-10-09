@@ -9,6 +9,7 @@ import type {
 import { DEFAULT_PICKUP } from '../model/pickup'
 import { positionDuel, teamMatch } from './duels'
 import { bestAggregate } from './bestAggregate'
+import { fourBallSkins } from './fourBallSkins'
 import { bonusForfeitTotal, bonusTotal } from './bonuses'
 import { DEFAULT_BONUS_CONFIG } from '../model/bonuses'
 import { teamOf } from '../model/round'
@@ -27,6 +28,7 @@ const EVALUATIONS: Record<GameKind, Evaluate> = {
   'position-duel': positionDuel,
   'team-match': teamMatch,
   'best-aggregate': bestAggregate,
+  'four-ball-skins': fourBallSkins,
 }
 
 export const GAME_KINDS: GameKind[] = [
@@ -36,11 +38,12 @@ export const GAME_KINDS: GameKind[] = [
   'position-duel',
   'team-match',
   'best-aggregate',
+  'four-ball-skins',
 ]
 
 /** Hry se stranami z konfigurace (dvojice), které admin skládá v editoru hry. */
 export function hasSides(kind: GameKind): boolean {
-  return kind === 'team-match' || kind === 'best-aggregate'
+  return kind === 'team-match' || kind === 'best-aggregate' || kind === 'four-ball-skins'
 }
 
 export function evaluateGame(

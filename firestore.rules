@@ -5,7 +5,7 @@ rules_version = '2';
 // Tři role:
 //   Visitor  čte všechno veřejné bez přihlášení (turnaj, hráči, kola)
 //   Hráč     přihlášený Googlem s e-mailem hráče v private/access.playerEmails;
-//            smí měnit jen jednu buňku skóre/bonusů na jeden zápis v kole,
+//            smí měnit jen jednu buňku skóre/bonusů/dublů na jeden zápis v kole,
 //            které není uzavřené
 //   Admin    e-mail v private/access.adminEmails nebo bootstrap e-mail níž;
 //            smí vše
@@ -79,7 +79,7 @@ service cloud.firestore {
       let p = e.playerId;
       let h = e.hole;
       return before.status != 'finished'
-        && after.diff(before).affectedKeys().hasOnly(['scores', 'bonuses', 'lastEdit'])
+        && after.diff(before).affectedKeys().hasOnly(['scores', 'bonuses', 'doubles', 'lastEdit'])
         && e.keys().hasOnly(['playerId', 'hole', 'by', 'at'])
         && e.by == request.auth.uid
         && e.at == request.time
@@ -88,7 +88,18 @@ service cloud.firestore {
         && after.scores.diff(before.scores).affectedKeys().hasOnly([p])
         && after.scores[p].diff(before.scores[p]).affectedKeys().hasOnly([h])
         && (!(h in after.scores[p]) || validStrokes(after.scores[p][h]))
-        && validBonusEdit(before, after, p, h);
+        && validBonusEdit(before, after, p, h)
+        && validDoubleEdit(before, after, p, h);
+    }
+
+    // Dubly Four-ball Skins: stejná buňka hráč × jamka jako bonusy (seznam id her).
+    function validDoubleEdit(before, after, p, h) {
+      let b = before.get('doubles', {});
+      let a = after.get('doubles', {});
+      return a.diff(b).affectedKeys().hasOnly([p])
+        && a.get(p, {}).diff(b.get(p, {})).affectedKeys().hasOnly([h])
+        && (!(h in a.get(p, {}))
+            || (a[p][h] is list && a[p][h].size() <= 8));
     }
 
     // Mapa bonusů nemusí v kole existovat (kola založená před extra body) -

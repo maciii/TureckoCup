@@ -66,6 +66,12 @@ export interface DuelResult {
   holeWinners?: Record<string, 0 | 1 | null>
   /** Best + Součet: rozpad bodů obou stran po jamkách (pro zápis a scorekartu). */
   holePoints?: Record<string, SidePoints[]>
+  /** Four-ball Skins: strany, které směly na jamce dublovat (stav před jamkou). */
+  mayDouble?: Record<string, (0 | 1)[]>
+  /** Four-ball Skins: započítaný dubl na jamce (která strana). */
+  doubles?: Record<string, 0 | 1>
+  /** Four-ball Skins: o kolik skinů se na jamce hrálo (bank + hodnota jamky). */
+  stakes?: Record<string, number>
 }
 
 /** Body jedné dvojice na jamce v Best + Součet a čísla, ze kterých vzešly. */

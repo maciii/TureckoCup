@@ -20,6 +20,7 @@ import {
   findInvalidWrite,
   opProblemMessage,
   opToWrites,
+  requiresAdmin,
 } from './ops'
 import type { Op, OpMeta } from './ops'
 
@@ -235,6 +236,43 @@ describe('checkOp - stejná pravidla pro ukázkový režim i Firestore', () => {
 })
 
 describe('extra body', () => {
+  it('setDouble: buňka hráč × jamka se seznamem her, lastEdit a log úprav', () => {
+    let state = initial()
+    const op: Op = {
+      kind: 'setDouble',
+      roundId: 'r1',
+      playerId: 'p2',
+      hole: 3,
+      gameId: 'fbs',
+      on: true,
+    }
+    const writes = opToWrites(op, meta, state)
+    state = applyOp(state, op)
+    expect(state.rounds[0]!.doubles?.p2).toEqual({ '3': ['fbs'] })
+    expect(writes).toHaveLength(2)
+    expect(writes[0]!.data).toEqual({
+      'doubles.p2.3': ['fbs'],
+      lastEdit: { playerId: 'p2', hole: '3', by: 'u1', at: expect.anything() },
+    })
+    expect(writes[1]!.data).toMatchObject({
+      playerId: 'p2',
+      hole: '3',
+      from: null,
+      to: null,
+      doubleFrom: [],
+      doubleTo: ['fbs'],
+    })
+    // Stejná operace dvakrát nic nezdvojí; zrušení dublu klíč smaže.
+    state = applyOp(state, op)
+    expect(state.rounds[0]!.doubles?.p2).toEqual({ '3': ['fbs'] })
+    const off: Op = { ...op, on: false }
+    expect(opToWrites(off, meta, state)[0]!.data['doubles.p2.3']).toEqual(DELETE_FIELD)
+    state = applyOp(state, off)
+    expect(state.rounds[0]!.doubles?.p2).toEqual({})
+    expect(findInvalidWrite(writes)).toBeNull()
+    expect(requiresAdmin(op)).toBe(false)
+  })
+
   it('zápis bonusu je jedna buňka s lastEdit, prázdný seznam klíč smaže', () => {
     let state = initial()
     const op: Op = {
