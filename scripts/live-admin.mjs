@@ -144,8 +144,12 @@ async function games() {
   }
 }
 
-/** Dvojité body na 9. a 18. jamce u všech her živého kola, kde dávají smysl. */
+/**
+ * Dvojité body na 9. a 18. jamce u her dnešního kola (živého, nebo s dnešním
+ * datem - admin ho nemusel přepnout na Živě), kde dávají smysl.
+ */
 async function double() {
+  const today = new Date().toISOString().slice(0, 10)
   const kinds = [
     'individual-stableford',
     'individual-skins',
@@ -153,7 +157,8 @@ async function double() {
     'best-aggregate',
   ]
   for (const round of rounds) {
-    if (round.status !== 'live') continue
+    if (round.status === 'finished') continue
+    if (round.status !== 'live' && round.date !== today) continue
     const games = round.games.map((g) =>
       kinds.includes(g.kind) && !g.options?.doubleHoles
         ? { ...g, options: { ...g.options, doubleHoles: true } }
