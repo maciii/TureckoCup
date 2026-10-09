@@ -102,6 +102,10 @@ export const cs = {
   'best.points': '{count} b.',
   'best.conceded': 'X',
   'best.doubleBest': 'Double',
+  'best.doubleHole': '×2',
+  'admin.gameDoubleHoles': 'Dvojité body na 9. a 18. jamce',
+  'admin.gameDoubleHolesHint':
+    'Na devítce a osmnáctce se body hry násobí dvěma: Stablefordové body, hodnota skinu (i přenesená) a všechny body dvojice v Best + Součet.',
   'admin.gameDoubleBest': 'Double Best (bodů)',
   'admin.gameDoubleBestHint':
     'Bod navíc, když oba míče dvojice porazí oba míče soupeře; 0 = nehraje se.',

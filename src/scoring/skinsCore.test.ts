@@ -122,3 +122,36 @@ describe('Skins - rozdělení jamek', () => {
     })
   })
 })
+
+describe('Skins - dvojitá jamka', () => {
+  it('jamka s hodnotou 2 nese dva skiny a dělená přenáší dva', () => {
+    const result = computeSkins({
+      holeOrder: [0, 1, 2],
+      sideCount: 2,
+      holeValue: (hole) => (hole === 1 ? 2 : 1),
+      // Jamka 1 dělená (přenos 1), jamka 2 (dvojitá) vyhrává strana 0: 1 + 2 skiny.
+      // Jamka 3 dělená - přenáší se jeden skin.
+      scoreOf: (side, hole) =>
+        [
+          [4, 4, 5],
+          [4, 5, 5],
+        ][side]![hole],
+    })
+    expect(result.holes.map((h) => h.skins)).toEqual([0, 3, 0])
+    expect(result.totals).toEqual([3, 0])
+    expect(result.carry).toBe(1)
+    // Dělená dvojitá jamka přenáší dva skiny.
+    const tied = computeSkins({
+      holeOrder: [0, 1],
+      sideCount: 2,
+      holeValue: (hole) => (hole === 0 ? 2 : 1),
+      scoreOf: (side, hole) =>
+        [
+          [4, 4],
+          [4, 3],
+        ][side]![hole],
+    })
+    expect(tied.holes[0]!.carry).toBe(2)
+    expect(tied.totals).toEqual([0, 3])
+  })
+})

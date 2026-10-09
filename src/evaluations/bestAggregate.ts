@@ -1,6 +1,7 @@
 import type { GameSide, PlayerId } from '../model/types'
 import { PICKED_UP } from '../model/types'
 import {
+  holeMultiplier,
   CONCEDED,
   gameHoles,
   holeOrder,
@@ -105,6 +106,7 @@ export function holePoints(
   options: { net: boolean; allowance: number },
   withExtra = false,
   doubleBestValue = 0,
+  multiplier = 1,
 ): [SidePoints, SidePoints] | undefined {
   const a = sideScore(context, left.players, hole, options)
   const b = sideScore(context, right.players, hole, options)
@@ -115,17 +117,18 @@ export function holePoints(
   const doubleWinner: 0 | 1 | null =
     doubleBestValue > 0 ? (a.worst < b.best ? 0 : b.worst < a.best ? 1 : null) : null
   const build = (index: 0 | 1, score: SideScore, side: GameSide): SidePoints => {
-    const best = bestWinner === index ? BEST_POINTS.best : 0
-    const aggregate = aggWinner === index ? BEST_POINTS.aggregate : 0
-    const bonus = bonusPoints(context, side.players, hole)
-    const doubleBest = doubleWinner === index ? doubleBestValue : 0
+    // Dvojitá jamka (9, 18) násobí všechno, co dvojice na jamce získala.
+    const best = (bestWinner === index ? BEST_POINTS.best : 0) * multiplier
+    const aggregate = (aggWinner === index ? BEST_POINTS.aggregate : 0) * multiplier
+    const bonus = bonusPoints(context, side.players, hole) * multiplier
+    const doubleBest = (doubleWinner === index ? doubleBestValue : 0) * multiplier
     // Extra body (longest, sandie…) partnerů do bodů dvojice jako v Golfgames,
     // když to má hra zapnuté.
     const extra = withExtra
       ? side.players.reduce(
           (sum, id) => sum + bonusPointsAt(context.round, context.bonuses, id, hole),
           0,
-        )
+        ) * multiplier
       : 0
     return {
       best,
@@ -168,6 +171,7 @@ export const bestAggregate: Evaluate = (context, game): EvaluationResult => {
         options,
         game.options.bonuses ?? false,
         game.options.doubleBest ?? 0,
+        holeMultiplier(game.options, hole),
       )
       if (!hp) {
         pending += 1

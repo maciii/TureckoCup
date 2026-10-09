@@ -22,7 +22,7 @@ import { getFirestore } from 'firebase-admin/firestore'
  *   GOOGLE_APPLICATION_CREDENTIALS=klíč.json VITE_FIREBASE_PROJECT_ID=turecko-cup
  */
 
-const TASKS = ['check', 'tees', 'games', 'index', 'schedule', 'bonuses']
+const TASKS = ['check', 'tees', 'games', 'index', 'schedule', 'bonuses', 'double']
 const task = process.argv[2]
 if (!TASKS.includes(task)) {
   console.error(`Použití: node scripts/live-admin.mjs <${TASKS.join('|')}>`)
@@ -144,6 +144,35 @@ async function games() {
   }
 }
 
+/** Dvojité body na 9. a 18. jamce u všech her živého kola, kde dávají smysl. */
+async function double() {
+  const kinds = [
+    'individual-stableford',
+    'individual-skins',
+    'team-skins',
+    'best-aggregate',
+  ]
+  for (const round of rounds) {
+    if (round.status !== 'live') continue
+    const games = round.games.map((g) =>
+      kinds.includes(g.kind) && !g.options?.doubleHoles
+        ? { ...g, options: { ...g.options, doubleHoles: true } }
+        : g,
+    )
+    if (games.every((g, i) => g === round.games[i])) {
+      console.log(`  ${round.id}: dvojité body už zapnuté`)
+      continue
+    }
+    await root.collection('rounds').doc(round.id).update({ games })
+    console.log(
+      `  ${round.id}: dvojité body na 9. a 18. zapnuty u ${games
+        .filter((g, i) => g !== round.games[i])
+        .map((g) => g.name ?? g.kind)
+        .join(', ')}`,
+    )
+  }
+}
+
 async function schedule() {
   for (const round of rounds) {
     const want = SCHEDULE[round.id]
@@ -203,5 +232,6 @@ if (task === 'tees') await tees()
 if (task === 'games') await games()
 if (task === 'index') await index()
 if (task === 'schedule') await schedule()
+if (task === 'double') await double()
 if (task === 'bonuses') await bonuses()
 if (task !== 'check') console.log('Hotovo.')

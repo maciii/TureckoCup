@@ -219,3 +219,32 @@ test('pevný hrací HCP po celý turnaj se promítne do kol', async ({ page }) =
   await expect(macHcp).toHaveText('9')
   expect(errors()).toEqual([])
 })
+
+test('dvojité body na 9. a 18. jamce jdou zapnout u hry s body na jamce', async ({
+  page,
+}) => {
+  const errors = collectErrors(page)
+  await setIdentity(page, 'admin')
+  await open(page, '#/admin/round/r1')
+  const cards = page.locator('.game-card')
+  // Stableford má přepínač, Singly pozic (jamka bez bodů) ne.
+  const toggle = cards
+    .first()
+    .getByRole('switch', { name: 'Dvojité body na 9. a 18. jamce' })
+  await expect(toggle).toHaveAttribute('aria-checked', 'false')
+  await expect(
+    cards.last().getByRole('switch', { name: 'Dvojité body na 9. a 18. jamce' }),
+  ).toHaveCount(0)
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-checked', 'true')
+  await expect(cards.first()).toContainText('násobí dvěma')
+  await page.reload()
+  await page.waitForSelector('.screen')
+  await expect(
+    page
+      .locator('.game-card')
+      .first()
+      .getByRole('switch', { name: 'Dvojité body na 9. a 18. jamce' }),
+  ).toHaveAttribute('aria-checked', 'true')
+  expect(errors()).toEqual([])
+})

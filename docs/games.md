@@ -145,6 +145,15 @@ jamky. Vyhrává dvojice s víc body, body do týmu jako u Four-ballu (výhra /
 remíza po dohrání). V zápisu je u každé dvojice Best, Součet a body na jamce
 a průběžné skóre zápasu.
 
+## Dvojité body na 9. a 18. jamce (`options.doubleHoles`)
+
+Volba u hry (Stableford, Skins, Team Skins, Best + Součet): na devítce a
+osmnáctce (`DOUBLE_HOLES`, podle čísla jamky, ne pořadí hraní) se násobí
+dvěma vše, co jamka nese - Stablefordové body, hodnota skinu (dělená
+dvojitá jamka přenáší dva skiny) a všechny body dvojice v Best + Součet
+(Best, Součet, birdie, Double Best i extra body). Jamkovka a duely na rány
+volbu nemají - jamka tam nemá body. V zápisu ukáže karta dvojic chip ×2.
+
 ## Zvednutá jamka ve hře na rány (centrální pravidlo)
 
 `tournament.pickup` = `timesPar × par + plus` (+ rány z handicapu na jamce

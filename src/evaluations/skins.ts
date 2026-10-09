@@ -1,6 +1,7 @@
 import type { GameConfig, PlayerId, TeamId } from '../model/types'
 import { TEAM_IDS } from '../model/types'
 import {
+  holeMultiplier,
   CONCEDED,
   gameHoles,
   grossTotal,
@@ -41,6 +42,7 @@ export const individualSkins: Evaluate = (context, game): EvaluationResult => {
       holeOrder: order,
       sideCount: group.length,
       carry: game.options.carry ?? true,
+      holeValue: (hole) => holeMultiplier(game.options, hole),
       scoreOf: (side, hole) => netScoreAt(round, group[side] ?? '', hole, options),
     })
     group.forEach((id, side) => totals.set(id, result.totals[side] ?? 0))
@@ -96,6 +98,7 @@ export const teamSkins: Evaluate = (context, game): EvaluationResult => {
     holeOrder: order,
     sideCount: sides.length,
     carry: game.options.carry ?? true,
+    holeValue: (hole) => holeMultiplier(game.options, hole),
     scoreOf: (side, hole) =>
       teamBestBall(context, sides[side]?.players ?? [], hole, options),
   })
@@ -155,7 +158,7 @@ export function skinsAtStake(result: EvaluationResult, hole: number): number {
   const outcome = result.holes.find((h) => h.hole === hole)
   if (!outcome) return 0
   if (outcome.decided) return outcome.value ?? 0
-  return (outcome.carry ?? 0) + 1
+  return (outcome.carry ?? 0) + holeMultiplier(result.game.options, hole)
 }
 
 export function isSkinsGame(game: GameConfig): boolean {

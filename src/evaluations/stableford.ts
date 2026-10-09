@@ -1,5 +1,12 @@
 import type { PlayerId, TeamId, TournamentRound } from '../model/types'
-import { gameHoles, grossTotal, netScoreAt, parAt, teamOf } from '../model/round'
+import {
+  gameHoles,
+  grossTotal,
+  holeMultiplier,
+  netScoreAt,
+  parAt,
+  teamOf,
+} from '../model/round'
 import { stablefordPoints } from '../scoring/whs'
 import type { Evaluate, EvaluationResult, HoleOutcome } from './types'
 import { rankRows } from './types'
@@ -33,7 +40,9 @@ export const individualStableford: Evaluate = (
       if (net === undefined) continue
       played += 1
       if (!Number.isFinite(net)) continue
-      points += stablefordPoints((net as number) - parAt(round, hole))
+      points +=
+        stablefordPoints((net as number) - parAt(round, hole)) *
+        holeMultiplier(game.options, hole)
     }
     return {
       id,
@@ -60,10 +69,12 @@ export function stablefordAt(
   round: TournamentRound,
   playerId: PlayerId,
   hole: number,
-  options: { net: boolean; allowance: number },
+  options: { net: boolean; allowance: number; doubleHoles?: boolean },
 ): number | undefined {
   const net = netScoreAt(round, playerId, hole, options)
   if (net === undefined) return undefined
   if (!Number.isFinite(net)) return 0
-  return stablefordPoints((net as number) - parAt(round, hole))
+  return (
+    stablefordPoints((net as number) - parAt(round, hole)) * holeMultiplier(options, hole)
+  )
 }

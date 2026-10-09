@@ -315,3 +315,15 @@ export function playOrder(round: TournamentRound, flight: Flight): PlayerId[] {
   const seen = new Set(ordered)
   return [...ordered, ...flight.players.filter((id) => !seen.has(id))]
 }
+
+/** Jamky s dvojitými body, když to má hra zapnuté (indexy: devítka a osmnáctka). */
+export const DOUBLE_HOLES = [8, 17]
+
+/**
+ * Násobek bodů hry na jamce: 2 na devítce a osmnáctce s `options.doubleHoles`,
+ * jinak 1. Platí tam, kde má jamka body nebo hodnotu (Stableford, skiny,
+ * Best + Součet); jamkovka a duely na rány ho neberou.
+ */
+export function holeMultiplier(options: { doubleHoles?: boolean }, hole: number): number {
+  return options.doubleHoles && DOUBLE_HOLES.includes(hole) ? 2 : 1
+}

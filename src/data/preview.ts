@@ -222,8 +222,8 @@ function gamesForDay(day: number, positions: Record<TeamId, PlayerId[]>): GameCo
           'best-aggregate',
           'best-aggregate',
           'preview.game.bestAggregate',
-          // Den 3 ukáže extra body v bodech dvojice.
-          { allowance: 0.9, net: true, bonuses: true },
+          // Den 3 ukáže extra body v bodech dvojice a dvojité body na 9. a 18.
+          { allowance: 0.9, net: true, bonuses: true, doubleHoles: true },
           { win: 1, halve: 0.5 },
           { countsForTeam: true, sides: pairSides(positions) },
         ),

@@ -7,6 +7,7 @@ import { summarizeTournament } from './tournament'
 import type { BonusConfig } from '../model/types'
 import { DEFAULT_BONUS_CONFIG, availableBonuses } from '../model/bonuses'
 import { bonusAwardsAt, bonusPointsAt, bonusSummary } from './bonuses'
+import { stablefordAt } from './stableford'
 
 /**
  * Evaluace nad reálnými daty prvního kola (Aspendos, bílá odpaliště)
@@ -396,5 +397,41 @@ describe('pevný hrací HCP po celý turnaj', () => {
     delete round.courseHandicapOverride.p1
     round.handicapMode = 'course'
     expect(courseHandicapOf(round, 'p1')).toBe(9)
+  })
+})
+
+describe('dvojité body na 9. a 18. jamce', () => {
+  it('Stableford: body za devítku a osmnáctku ×2, ostatní jamky beze změny', () => {
+    const round = round1()
+    enter(round, 'p1', [4, null, null, null, null, null, null, null, 5])
+    const options = { net: false, allowance: 1 }
+    expect(stablefordAt(round, 'p1', 0, options)).toBe(2)
+    expect(stablefordAt(round, 'p1', 8, options)).toBe(2)
+    expect(stablefordAt(round, 'p1', 0, { ...options, doubleHoles: true })).toBe(2)
+    expect(stablefordAt(round, 'p1', 8, { ...options, doubleHoles: true })).toBe(4)
+    const result = evaluateGame(round, SEED_PLAYERS, {
+      id: 's',
+      kind: 'individual-stableford',
+      options: { ...options, doubleHoles: true },
+      countsForTeam: false,
+      teamPoints: {},
+    })
+    expect(result.rows.find((r) => r.id === 'p1')!.value).toBe(6)
+  })
+
+  it('Skins: devítka je za dva skiny, i přes všech osm', () => {
+    const round = round1()
+    for (const id of round.playerIds) {
+      round.scores[id]!['8'] = id === 'p1' ? 4 : 6
+    }
+    const result = evaluateGame(round, SEED_PLAYERS, {
+      id: 'k',
+      kind: 'individual-skins',
+      options: { net: false, allowance: 1, scope: 'all', carry: true, doubleHoles: true },
+      countsForTeam: false,
+      teamPoints: {},
+    })
+    expect(result.rows.find((r) => r.id === 'p1')!.value).toBe(2)
+    expect(result.holes.find((h) => h.hole === 8)!.value).toBe(2)
   })
 })

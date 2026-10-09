@@ -49,6 +49,14 @@ import {
   DecimalInput,
 } from './common'
 
+/** Hry, kde jde zapnout dvojité body na 9. a 18. jamce. */
+const DOUBLE_HOLE_KINDS: GameKind[] = [
+  'individual-stableford',
+  'individual-skins',
+  'team-skins',
+  'best-aggregate',
+]
+
 const STATUSES: RoundStatus[] = ['planned', 'live', 'finished']
 const FORMATS: DuelFormat[] = ['strokes-gross', 'strokes-net', 'stableford', 'match-play']
 
@@ -865,6 +873,20 @@ function GameEditor({
       )}
       {game.kind === 'best-aggregate' && (
         <p className="hint">{t('admin.gameDoubleBestHint')}</p>
+      )}
+      {/* Dvojité body mají smysl tam, kde má jamka body nebo hodnotu; jamkovka
+          a duely na rány je nemají. */}
+      {DOUBLE_HOLE_KINDS.includes(game.kind) && (
+        <>
+          <Switch
+            label={t('admin.gameDoubleHoles')}
+            on={options.doubleHoles ?? false}
+            onChange={(doubleHoles) => setOptions({ doubleHoles })}
+          />
+          {(options.doubleHoles ?? false) && (
+            <p className="hint">{t('admin.gameDoubleHolesHint')}</p>
+          )}
+        </>
       )}
       {(game.countsForTeam || game.kind === 'best-aggregate') && (
         <>

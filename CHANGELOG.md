@@ -3,6 +3,16 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.21.0] – 2026-10-09
+
+### Přidáno
+
+- **Dvojité body na 9. a 18. jamce** - volba u hry (Stableford, Skins,
+  Team Skins, Best + Součet): na devítce a osmnáctce se násobí dvěma
+  Stablefordové body, hodnota skinu (dělená jamka přenáší dva) a všechny
+  body dvojice v Best + Součet. Karta dvojic v zápisu ukáže chip ×2.
+  Testovací verze den 3; Live admin úloha `double` ji zapne u her živého kola.
+
 ## [0.20.4] – 2026-10-09
 
 ### Změněno

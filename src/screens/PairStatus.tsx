@@ -1,5 +1,5 @@
 import type { EvaluationResult } from '../evaluations'
-import { CONCEDED } from '../model/round'
+import { CONCEDED, holeMultiplier } from '../model/round'
 import type { Flight, Player, PlayerId } from '../model/types'
 import { t } from '../i18n'
 import { TeamBadge, sideLabel } from './common'
@@ -23,6 +23,7 @@ export default function PairStatus({ result, players, flight, hole }: Props) {
   )
   if (!duel || duel.sides.length < 2) return null
   const points = duel.holePoints?.[String(hole)]
+  const multiplier = holeMultiplier(result.game.options, hole)
   const label = (index: number) => sideLabel(players, duel.sides[index]!.players)
   const format = (value: number | null) =>
     value === null
@@ -77,6 +78,9 @@ export default function PairStatus({ result, players, flight, hole }: Props) {
                   <span className="chip win">
                     {t('bonus.short')} +{own.extra}
                   </span>
+                )}
+                {multiplier > 1 && (
+                  <span className="chip win">{t('best.doubleHole')}</span>
                 )}
                 <span className="chip total">
                   {t('best.points', { count: own.total })}

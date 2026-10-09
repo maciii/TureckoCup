@@ -46,11 +46,14 @@ export interface SkinsInput {
   sideCount: number
   /** Dělená jamka přenáší skin dál (výchozí ano). */
   carry?: boolean
+  /** Kolik skinů jamka sama nese (výchozí 1; dvojitá jamka 2). */
+  holeValue?: (hole: number) => number
 }
 
 export function computeSkins(input: SkinsInput): SkinsOutcome {
   const { holeOrder, scoreOf, sideCount } = input
   const carryOver = input.carry ?? true
+  const holeValue = input.holeValue ?? (() => 1)
   const totals = Array<number>(sideCount).fill(0)
   const holes: SkinHoleResult[] = []
   let carry = 0
@@ -72,13 +75,13 @@ export function computeSkins(input: SkinsInput): SkinsOutcome {
 
     if (leaders.length === 1 && Number.isFinite(lowest)) {
       const winner = leaders[0] ?? 0
-      const skins = carry + 1
+      const skins = carry + holeValue(hole)
       totals[winner] = (totals[winner] ?? 0) + skins
       carry = 0
       holes.push({ hole, decided: true, winner, skins, carry: 0 })
     } else {
       // Dělená jamka (nebo všichni zvedli): skin se přenáší, nebo propadá.
-      carry = carryOver ? carry + 1 : 0
+      carry = carryOver ? carry + holeValue(hole) : 0
       holes.push({ hole, decided: true, winner: null, skins: 0, carry })
     }
   }

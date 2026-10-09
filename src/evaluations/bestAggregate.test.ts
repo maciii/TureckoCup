@@ -136,4 +136,35 @@ describe('Best + Součet', () => {
     expect(won.duels![0]!.notation).toBe('3 : 0')
     expect(won.teamPoints).toEqual({ A: 1, B: 0 })
   })
+
+  it('dvojité body na 9. a 18. jamce násobí vše, co dvojice na jamce získala', () => {
+    const round = round1()
+    // Jamka 9 (index 8, par 5): B lepší míč 4 < 5, nižší součet 10 < 11 a birdie.
+    for (const [id, score] of Object.entries({ p3: 5, p1: 6, p2: 4, p6: 6 })) {
+      round.scores[id]!['8'] = score
+      round.scores[id]!['0'] = score
+    }
+    const plain = evaluateGame(round, SEED_PLAYERS, game()).duels![0]!
+    expect(plain.holePoints!['8']![1]).toMatchObject({
+      best: 1,
+      aggregate: 1,
+      bonus: 1,
+      total: 3,
+    })
+    const doubled = evaluateGame(round, SEED_PLAYERS, {
+      ...game(),
+      options: { ...game().options, doubleHoles: true, doubleBest: 1 },
+    }).duels![0]!
+    // Double Best (6 > 4? ne: horší míč B je 6, lepší míč A 5 -> žádný double) - jen trojnásobek bodů ×2.
+    expect(doubled.holePoints!['8']![1]).toMatchObject({
+      best: 2,
+      aggregate: 2,
+      bonus: 2,
+      doubleBest: 0,
+      total: 6,
+    })
+    // Jamka 1 (par 4, čtyřka není birdie) zůstává jednoduchá: Best + Součet = 2.
+    expect(doubled.holePoints!['0']![1]!.total).toBe(2)
+    expect(doubled.sides.map((s) => s.value)).toEqual([0, 8])
+  })
 })
