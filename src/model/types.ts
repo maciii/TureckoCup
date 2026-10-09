@@ -206,7 +206,10 @@ export interface GameConfig {
   kind: GameKind
   /** Vlastní název do výsledků; bez něj název podle druhu hry. */
   name?: string
-  /** Strany (dvojice, týmy); u her jednotlivců chybí. */
+  /**
+   * Zastaralé: dvojice se už nenastavují u hry, plynou z flightů
+   * (`flightPairs`). Starší data pole ještě nesou, vyhodnocení ho nečte.
+   */
   sides?: GameSide[]
   /** Rozsah jamek (indexy od nuly, včetně obou); chybí = celé kolo. */
   holes?: { from: number; to: number }
@@ -237,7 +240,7 @@ export type ScoreMap = Record<PlayerId, Record<HoleKey, number>>
 export type BonusMap = Record<PlayerId, Record<HoleKey, string[]>>
 
 /**
- * Dubly ve Four-ball Skins: hráč × jamka → id her, ve kterých jeho dvojice
+ * Double ve Four-ball Skins: hráč × jamka → id her, ve kterých jeho dvojice
  * na jamce dublovala. Stejná buňka jako extra body (rules, log úprav);
  * dvojice dublovala, když to má kterýkoli její hráč.
  */
@@ -275,7 +278,7 @@ export interface TournamentRound {
   games: GameConfig[]
   scores: ScoreMap
   bonuses: BonusMap
-  /** Dubly Four-ball Skins; chybí u kol založených dřív. */
+  /** Double Four-ball Skins; chybí u kol založených dřív. */
   doubles?: DoubleMap
   lastEdit?: LastEdit
   note?: string
@@ -301,7 +304,7 @@ export interface EditRecord {
   /** Extra body před a po (id bonusů) - log říká, kdo komu kdy který přiznal. */
   bonusFrom?: string[]
   bonusTo?: string[]
-  /** Dubl Four-ball Skins před a po (id her). */
+  /** Double Four-ball Skins před a po (id her). */
   doubleFrom?: string[]
   doubleTo?: string[]
   by: string

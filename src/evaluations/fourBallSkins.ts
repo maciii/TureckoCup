@@ -1,5 +1,12 @@
 import type { DoubleBy, GameSide, PlayerId } from '../model/types'
-import { gameHoles, holeMultiplier, holeOrder, sideDoubled, teamOf } from '../model/round'
+import {
+  gameHoles,
+  holeMultiplier,
+  holeOrder,
+  matchSides,
+  sideDoubled,
+  teamOf,
+} from '../model/round'
 import { computeSkins } from '../scoring/skinsCore'
 import type { SkinsState } from '../scoring/skinsCore'
 import { finishDuels } from './duels'
@@ -19,14 +26,14 @@ import type {
  * skin dál (`carry`). Dvojice s víc skiny po dohrání vyhrává zápas a bere
  * `win` bodů do týmu, remíza `halve` - za každý zápas zvlášť.
  *
- * Dubl: oprávněná dvojice může jamku dublovat - jamka pak nese dva skiny
+ * Double: oprávněná dvojice může jamku dublovat - jamka pak nese dva skiny
  * místo jednoho (dvojitá 9 a 18 čtyři), přenesené skiny z banku se jen
  * přičtou. Kdo smí dublovat, říká `options.doubleBy`:
  *   behind     dvojice, která v zápase prohrává (při rovnosti nikdo)
  *   lastLoser  dvojice, která ztratila poslední rozhodnutou jamku
  *   anyone     kterákoli
- *   off        dubly se nehrají
- * Dubl je surová buňka (`round.doubles`, hráč × jamka, id hry) a jde
+ *   off        double se nehrají
+ * Double je surová buňka (`round.doubles`, hráč × jamka, id hry) a jde
  * přepnout kdykoli; zápis u neoprávněné dvojice se nepočítá - vyhodnocení
  * ho zná (`mayDouble`), ať to zápis ukáže.
  */
@@ -53,7 +60,7 @@ export const fourBallSkins: Evaluate = (context, game): EvaluationResult => {
   const holes = gameHoles(round, game)
   const options = { net: game.options.net ?? true, allowance: game.options.allowance }
   const doubleBy = game.options.doubleBy ?? 'behind'
-  const sides = game.sides ?? []
+  const sides = matchSides(round, players)
   const duels: DuelResult[] = []
   const outcomes: HoleOutcome[] = []
   let carryLeft = 0

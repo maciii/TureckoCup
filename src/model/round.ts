@@ -2,13 +2,15 @@ import type {
   CourseTee,
   Flight,
   GameConfig,
+  GameKind,
+  GameSide,
   HoleKey,
   Player,
   PlayerId,
   TeamId,
   TournamentRound,
 } from './types'
-import { PICKED_UP } from './types'
+import { PICKED_UP, TEAM_IDS } from './types'
 import {
   normalizeStrokeIndex,
   playerCourseHandicap,
@@ -295,22 +297,68 @@ export function assignPosition(
   return list
 }
 
+/** Hry, které hrají dvojice (strany) z flightů. */
+export const SIDED_KINDS: GameKind[] = ['team-match', 'best-aggregate', 'four-ball-skins']
+
+/** Dvojice flightu: hráči jednoho týmu ve flightu, v pořadí flightu. */
+export interface FlightPairs {
+  index: number
+  flight: Flight
+  byTeam: Record<TeamId, PlayerId[]>
+  /** Dvojice jdou sestavit jen z flightu se dvěma hráči každého týmu. */
+  valid: boolean
+  /** Strany zápasu (tým A vlevo), když jsou platné. */
+  sides: [GameSide, GameSide] | null
+}
+
 /**
- * Pořadí hráčů flightu v zápisu a scorekartě: podle dvojic hry se stranami
- * (Four-ball, Best + Součet), jak je admin nastavil - partneři pod sebou,
- * ať sedí s kartou dvojic. Bez takové hry pořadí flightu; hráč mimo strany
- * jde na konec.
+ * Dvojice pro hry dvojic (Four-ball, Best + Součet, Four-ball Skins) se
+ * neskládají u hry, ale plynou z flightů: dva hráči téhož týmu ve flightu
+ * jsou dvojice, flight = jeden zápas A proti B. Admin tedy skládá jen
+ * flighty; flight bez dvou a dvou hráčů zápas nemá.
  */
-export function playOrder(round: TournamentRound, flight: Flight): PlayerId[] {
-  const sided = round.games.find(
-    (game) =>
-      (game.kind === 'team-match' || game.kind === 'best-aggregate') &&
-      (game.sides?.length ?? 0) > 0,
-  )
+export function flightPairs(round: TournamentRound, players: Player[]): FlightPairs[] {
+  return round.flights.map((flight, index) => {
+    const byTeam: Record<TeamId, PlayerId[]> = { A: [], B: [] }
+    for (const id of flight.players) {
+      const team = teamOf(players, id)
+      if (team) byTeam[team].push(id)
+    }
+    const valid = byTeam.A.length === 2 && byTeam.B.length === 2
+    return {
+      index,
+      flight,
+      byTeam,
+      valid,
+      sides: valid
+        ? [
+            { id: `f${index}a`, players: byTeam.A },
+            { id: `f${index}b`, players: byTeam.B },
+          ]
+        : null,
+    }
+  })
+}
+
+/** Strany zápasů kola po dvou (A, B za každý platný flight) - vstup evaluací her dvojic. */
+export function matchSides(round: TournamentRound, players: Player[]): GameSide[] {
+  return flightPairs(round, players).flatMap((pair) => pair.sides ?? [])
+}
+
+/**
+ * Pořadí hráčů flightu v zápisu a scorekartě: hraje-li se hra dvojic,
+ * partneři pod sebou (tým A, pak tým B) jako v kartě zápasu; jinak pořadí
+ * flightu. Hráč bez týmu jde na konec.
+ */
+export function playOrder(
+  round: TournamentRound,
+  flight: Flight,
+  players: Player[],
+): PlayerId[] {
+  const sided = round.games.some((game) => SIDED_KINDS.includes(game.kind))
   if (!sided) return flight.players
-  const inFlight = new Set(flight.players)
-  const ordered = (sided.sides ?? []).flatMap((side) =>
-    side.players.filter((id) => inFlight.has(id)),
+  const ordered = TEAM_IDS.flatMap((team) =>
+    flight.players.filter((id) => teamOf(players, id) === team),
   )
   const seen = new Set(ordered)
   return [...ordered, ...flight.players.filter((id) => !seen.has(id))]
@@ -348,7 +396,7 @@ export function sideDoubled(
   return players.some((id) => doublesAt(round, id, hole).includes(gameId))
 }
 
-/** Který hráč strany nese zápis dublu (pro jeho zrušení); `undefined` = nikdo. */
+/** Který hráč strany nese zápis double (pro jeho zrušení); `undefined` = nikdo. */
 export function doubleHolder(
   round: TournamentRound,
   gameId: string,

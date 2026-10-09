@@ -71,11 +71,13 @@ Dvojice proti dvojici, rána strany = lepší míč, formát jako u duelů
 (výchozí jamkovka). Přepínač **Netto** hry rozhoduje, zda se lepší míč bere
 z netto ran (s `allowance`, typicky 85-90 %) nebo brutto; v jamkovce se
 plné rány všech hráčů na stejné jamce vykrátí, takže netto se 100 %
-odpovídá hře „od nejnižšího“. Strany (`sides`) jsou
-čtyři dvojice po dvou zápasech: strany 1 a 2 hrají zápas 1, strany 3 a 4
-zápas 2. Admin je nastaví v editoru hry (výchozí „Dvojice z flightů“: první
-dvojice flightu proti druhé, tedy A1+A2 vs B1+B2 a A3+A4 vs B3+B4). Body
-`win`/`halve` do týmového skóre, výchozí `countsForTeam: true`.
+odpovídá hře „od nejnižšího“. **Dvojice plynou z flightů** (`flightPairs`,
+`matchSides`): dva hráči téhož týmu ve flightu jsou dvojice, flight je
+jeden zápas A proti B (tým A vlevo), v pořadí flightu. U hry se nic
+nenastavuje; flight bez dvou a dvou hráčů zápas nemá a admin to vidí u
+flightů. Stejné dvojice mají Best + Součet a Four-ball Skins. (Starší
+data nesou `sides` u hry; vyhodnocení je nečte.) Body `win`/`halve` do
+týmového skóre, výchozí `countsForTeam: true`.
 
 ## Four-ball Skins (`four-ball-skins`)
 
@@ -87,17 +89,17 @@ Po dohrání vyhrává dvojice s víc skiny: `win` bodů do týmu, remíza `halv
 **za každý zápas zvlášť** (výchozí 1 / 0,5). Dvojitá 9 a 18
 (`doubleHoles`) a extra body do hry (`bonuses`) jako u ostatních her.
 
-**Dubl.** Oprávněná dvojice může jamku dublovat: jamka pak nese dva skiny
+**Double.** Oprávněná dvojice může jamku dublovat: jamka pak nese dva skiny
 (dvojitá 9 a 18 čtyři), přenesené skiny z banku se jen přičtou, dělená
 dublovaná jamka přenáší oba. Kdo smí dublovat, říká `options.doubleBy`:
 `behind` prohrávající dvojice (při rovnosti nikdo, výchozí), `lastLoser`
 dvojice, která ztratila poslední rozhodnutou jamku, `anyone` kterákoli,
-`off` nehraje se. Dubl je **surová buňka** jako extra body:
+`off` nehraje se. Double je **surová buňka** jako extra body:
 `round.doubles[hráč][jamka]` = seznam id her, zapisuje ho `setDouble`
 (jedna buňka, `lastEdit`, log úprav), dvojice dublovala, když to má
-kterýkoli její hráč. Jde přepnout kdykoli, i po zápisu ran; dubl u dvojice,
+kterýkoli její hráč. Jde přepnout kdykoli, i po zápisu ran; double u dvojice,
 která dublovat nesměla, vyhodnocení ignoruje a zápis to ukáže. Zápis má
-kartu zápasu: stav, o kolik skinů se hraje, kdo jamku vzal, tlačítko Dubl.
+kartu zápasu: stav, o kolik skinů se hraje, kdo jamku vzal, tlačítko Double.
 
 ## Extra body (centrální, v každém kole)
 

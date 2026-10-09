@@ -57,7 +57,7 @@ export default function HoleStatus({
       lines.push({
         key: result.game.id,
         name: label,
-        onHole: playOrder(round, flight)
+        onHole: playOrder(round, flight, players)
           .map((id) => {
             const points = stablefordAt(round, id, hole, result.game.options)
             return `${name(id)} ${points === undefined ? t('common.dash') : points}`
@@ -126,7 +126,7 @@ export default function HoleStatus({
     }
   }
 
-  const awards = playOrder(round, flight).flatMap((id) =>
+  const awards = playOrder(round, flight, players).flatMap((id) =>
     bonusAwardsAt(round, bonusConfig, id, hole)
       .filter((award) => !award.void || award.forfeit)
       .map((award) =>
@@ -139,7 +139,7 @@ export default function HoleStatus({
           : `${name(id)} ${award.bonus.mark}${award.points > 0 ? `+${award.points}` : ''}`,
       ),
   )
-  const bonusTotals = playOrder(round, flight)
+  const bonusTotals = playOrder(round, flight, players)
     .map((id) => ({ id, total: bonusTotal(round, bonusConfig, id) }))
     .filter((entry) => entry.total > 0)
   if (awards.length > 0 || bonusTotals.length > 0) {

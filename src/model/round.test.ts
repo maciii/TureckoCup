@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { findInvalidValue } from '../data/ops'
-import { assignPosition, normalizePositions, playOrder } from './round'
-import { seedRounds } from '../data/seed'
+import {
+  assignPosition,
+  flightPairs,
+  matchSides,
+  normalizePositions,
+  playOrder,
+} from './round'
+import { SEED_PLAYERS, seedRounds } from '../data/seed'
 
 describe('assignPosition', () => {
   it('doplní prázdné pozice, nikdy nenechá díru v poli', () => {
@@ -47,39 +53,70 @@ describe('normalizePositions', () => {
 describe('playOrder', () => {
   const round = seedRounds()[0]!
   const flight = round.flights[0]!
+  const [a1, a2, b1, b2] = flight.players as [string, string, string, string]
+  const sided = {
+    ...round,
+    games: [
+      ...round.games,
+      {
+        id: 'best',
+        kind: 'best-aggregate' as const,
+        options: { allowance: 1, net: true },
+        countsForTeam: true,
+        teamPoints: { win: 1, halve: 0.5 },
+      },
+    ],
+  }
 
-  it('bez hry se stranami drží pořadí flightu', () => {
-    expect(playOrder(round, flight)).toEqual(flight.players)
+  it('bez hry dvojic drží pořadí flightu', () => {
+    const mixed = { ...flight, players: [a1, b1, a2, b2] }
+    expect(playOrder(round, mixed, SEED_PLAYERS)).toEqual([a1, b1, a2, b2])
   })
 
-  it('podle dvojic hry: partneři pod sebou, hráč mimo strany na konci', () => {
-    const [a1, a2, b1, b2] = flight.players as [string, string, string, string]
-    const sided = {
+  it('s hrou dvojic partneři pod sebou: tým A, pak tým B, bez týmu na konec', () => {
+    const mixed = { ...flight, players: [a1, b1, a2, b2] }
+    expect(playOrder(sided, mixed, SEED_PLAYERS)).toEqual([a1, a2, b1, b2])
+    const stranger = { ...flight, players: [b1, 'px', a1] }
+    expect(playOrder(sided, stranger, SEED_PLAYERS)).toEqual([a1, b1, 'px'])
+  })
+})
+
+describe('flightPairs', () => {
+  const round = seedRounds()[0]!
+
+  it('dvojice jsou dva hráči téhož týmu ve flightu, tým A vlevo', () => {
+    const pairs = flightPairs(round, SEED_PLAYERS)
+    expect(pairs).toHaveLength(2)
+    expect(pairs[0]!.valid).toBe(true)
+    expect(pairs[0]!.sides![0]).toEqual({
+      id: 'f0a',
+      players: round.flights[0]!.players.slice(0, 2),
+    })
+    expect(pairs[0]!.sides![1]).toEqual({
+      id: 'f0b',
+      players: round.flights[0]!.players.slice(2, 4),
+    })
+    expect(matchSides(round, SEED_PLAYERS).map((s) => s.id)).toEqual([
+      'f0a',
+      'f0b',
+      'f1a',
+      'f1b',
+    ])
+  })
+
+  it('flight bez dvou a dvou hráčů zápas nemá', () => {
+    const [a1, a2, b1, b2] = round.flights[0]!.players
+    const [a3] = round.flights[1]!.players
+    const odd = {
       ...round,
-      games: [
-        ...round.games,
-        {
-          id: 'best',
-          kind: 'best-aggregate' as const,
-          options: { allowance: 1, net: true },
-          countsForTeam: true,
-          teamPoints: { win: 1, halve: 0.5 },
-          // Dvojice napříč: A1 + B2 proti B1 + A2 (jako Mac + Honza vs Ferry + Soldík).
-          sides: [
-            { id: 's1', players: [a1, b2] },
-            { id: 's2', players: [b1, a2] },
-          ],
-        },
+      flights: [
+        { ...round.flights[0]!, players: [a1!, a2!, a3!, b1!] },
+        { ...round.flights[1]!, players: [b2!] },
       ],
     }
-    expect(playOrder(sided, flight)).toEqual([a1, b2, b1, a2])
-    // Druhý flight nemá ve stranách nikoho - zůstává v pořadí flightu.
-    expect(playOrder(sided, round.flights[1]!)).toEqual(round.flights[1]!.players)
-    // Hráč, kterého strany nezmiňují, jde na konec.
-    const partial = {
-      ...sided,
-      games: [{ ...sided.games.at(-1)!, sides: [{ id: 's1', players: [b2, a1] }] }],
-    }
-    expect(playOrder(partial, flight)).toEqual([b2, a1, a2, b1])
+    const pairs = flightPairs(odd, SEED_PLAYERS)
+    expect(pairs.map((p) => p.valid)).toEqual([false, false])
+    expect(pairs[0]!.byTeam).toEqual({ A: [a1, a2, a3], B: [b1] })
+    expect(matchSides(odd, SEED_PLAYERS)).toEqual([])
   })
 })

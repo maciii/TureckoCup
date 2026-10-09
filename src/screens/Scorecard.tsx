@@ -133,7 +133,7 @@ export default function Scorecard({
             <td className="par-cell">{parSum}</td>
           </tr>
           {flights.flatMap((flight, fi) =>
-            playOrder(round, flight).map((id, pi) => (
+            playOrder(round, flight, players).map((id, pi) => (
               <tr key={id} className={fi > 0 && pi === 0 ? 'flight-gap' : undefined}>
                 <th className="player-label" title={shortName(players, id)}>
                   <span
@@ -207,7 +207,7 @@ export default function Scorecard({
             )}
           </tr>
           {flights.flatMap((flight) =>
-            playOrder(round, flight).map((id) => {
+            playOrder(round, flight, players).map((id) => {
               const played = holesCompleted(round, id)
               const gross = grossTotal(round, id)
               const toPar = gross - parForPlayedHoles(round, id)

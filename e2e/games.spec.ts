@@ -74,21 +74,25 @@ test('zvednutá jamka ve hře na rány podle pravidla turnaje', async ({ page })
   expect(errors()).toEqual([])
 })
 
-test('four-ball: přidání hry, dvojice z flightů a jejich úprava', async ({ page }) => {
+test('four-ball: dvojice plynou z flightů, u hry se nenastavují', async ({ page }) => {
   const errors = collectErrors(page)
   await startRound(page)
   await open(page, '#/admin/round/r1')
+  // U flightů je vidět, kdo s kým hraje: dva hráči téhož týmu.
+  const pairs = page.locator('.flight-pairs')
+  await expect(pairs).toHaveCount(2)
+  await expect(pairs.first()).toContainText('Ota + Mac')
+  await expect(pairs.first()).toContainText('Pavlos + Ferry')
   await page.getByRole('button', { name: '+ Přidat hru' }).click()
   const card = page.locator('.game-card').nth(4)
   await expect(card.getByLabel('Hry kola')).toHaveValue('team-match')
-  await expect(card.getByLabel('Zápas 1 A 1')).toHaveValue('p3')
-  await expect(card.getByLabel('Zápas 1 A 2')).toHaveValue('p1')
-  await expect(card.getByLabel('Zápas 1 B 1')).toHaveValue('p2')
-  await expect(card.getByLabel('Zápas 2 B 2')).toHaveValue('p8')
+  await expect(card).toContainText(
+    'Zápasy podle flightů: Flight 1: Ota + Mac – Pavlos + Ferry',
+  )
+  await expect(card.getByLabel(/Zápas/)).toHaveCount(0)
   await expect(
     card.getByRole('switch', { name: 'Počítá se do týmového skóre' }),
   ).toHaveAttribute('aria-checked', 'true')
-  await card.getByLabel('Zápas 1 A 2').selectOption('p5')
   await expectNoHorizontalOverflow(page)
 
   await open(page, '#/round/r1')
@@ -96,14 +100,18 @@ test('four-ball: přidání hry, dvojice z flightů a jejich úprava', async ({ 
     has: page.getByRole('heading', { name: 'Four-ball' }),
   })
   await expect(section.locator('.duel')).toHaveCount(2)
-  await expect(section.locator('.duel').first()).toContainText('Ota + Jarin')
+  await expect(section.locator('.duel').first()).toContainText('Ota + Mac')
   await expect(section.locator('.section-note')).toContainText('Jamkovka')
 
+  // Přesun hráče mezi flighty změní dvojice; flight se třemi hráči týmu zápas nemá.
   await open(page, '#/admin/round/r1')
-  await card.getByRole('button', { name: 'Dvojice z flightů' }).click()
-  await expect(card.getByLabel('Zápas 1 A 2')).toHaveValue('p1')
+  const flight1 = page.locator('.chip-row').first()
+  await flight1.getByRole('button', { name: 'Jarin' }).click()
+  await expect(page.locator('.hint.warn').first()).toContainText('3 hráče týmu A')
+  await flight1.getByRole('button', { name: 'Mac' }).click()
+  await expect(pairs.first()).toContainText('Ota + Jarin')
   await open(page, '#/round/r1')
-  await expect(section.locator('.duel').first()).toContainText('Ota + Mac')
+  await expect(section.locator('.duel').first()).toContainText('Ota + Jarin')
   expect(errors()).toEqual([])
 })
 
@@ -209,7 +217,7 @@ test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky
   expect(errors()).toEqual([])
 })
 
-test('Four-ball Skins: dubl v kartě zápasu, přenos dvou skinů a výsledek kola', async ({
+test('Four-ball Skins: double v kartě zápasu, přenos dvou skinů a výsledek kola', async ({
   page,
 }) => {
   const errors = collectErrors(page)
@@ -218,7 +226,7 @@ test('Four-ball Skins: dubl v kartě zápasu, přenos dvou skinů a výsledek ko
   await page.getByRole('button', { name: '+ Přidat hru' }).click()
   const card = page.locator('.game-card').nth(4)
   await card.getByLabel('Hry kola').selectOption('four-ball-skins')
-  await expect(card.getByLabel('Zápas 1 A 1')).toHaveValue('p3')
+  await expect(card).toContainText('Zápasy podle flightů')
   await expect(card.getByRole('switch', { name: 'Přenos banku' })).toHaveAttribute(
     'aria-checked',
     'true',
@@ -235,9 +243,9 @@ test('Four-ball Skins: dubl v kartě zápasu, přenos dvou skinů a výsledek ko
   const match = page.locator('.skins-match')
   await expect(match).toContainText('Four-ball Skins')
   await expect(match).toContainText('ve hře 1 skin')
-  // Dubl první dvojice: jamka za dva skiny.
-  await match.getByRole('button', { name: 'Dubl' }).first().click()
-  await expect(match).toContainText('Dubl: Ota + Mac')
+  // Double první dvojice: jamka za dva skiny.
+  await match.getByRole('button', { name: 'Double' }).first().click()
+  await expect(match).toContainText('Double: Ota + Mac')
   await expect(match).toContainText('ve hře 2 skiny')
   // Všichni par: dělená, dva skiny do banku; na druhé jamce se hraje o tři.
   await enterPar(page, [0, 1, 2, 3])

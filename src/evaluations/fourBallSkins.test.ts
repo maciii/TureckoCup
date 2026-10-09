@@ -62,7 +62,7 @@ describe('Four-ball Skins', () => {
     expect(result.teamPoints).toEqual({ A: 0, B: 0 })
   })
 
-  it('dubl prohrávající dvojice: jamka za dva skiny, bank se přičte, dvojitá jamka za čtyři', () => {
+  it('double prohrávající dvojice: jamka za dva skiny, bank se přičte, dvojitá jamka za čtyři', () => {
     const round = round1()
     enter(round, { p3: [4, 4, 4], p1: [5, 5, 5], p2: [5, 3, 4], p6: [5, 5, 5] })
     // Po jamce 1 vede A 1:0; na dvojce smí dublovat jen B.
@@ -73,13 +73,13 @@ describe('Four-ball Skins', () => {
     expect(duel.doubles).toEqual({ '1': 1 })
     expect(duel.stakes!['1']).toBe(2)
     expect(duel.sides.map((s) => s.value)).toEqual([1, 2])
-    // Dubl u vedoucí dvojice se nepočítá (jen záznam, vyhodnocení ho ignoruje).
+    // Double u vedoucí dvojice se nepočítá (jen záznam, vyhodnocení ho ignoruje).
     round.doubles!.p2!['1'] = []
     round.doubles!.p3!['1'] = ['fbs']
     duel = evaluateGame(round, SEED_PLAYERS, game()).duels![0]!
     expect(duel.doubles).toEqual({})
     expect(duel.sides.map((s) => s.value)).toEqual([1, 1])
-    // Dubl na dělené jamce přenáší dva; dvojitá devítka s dublem je za čtyři.
+    // Double na dělené jamce přenáší dva; dvojitá devítka s double je za čtyři.
     const carry = round1()
     enter(carry, { p3: [4, 4], p1: [5, 5], p2: [5, 4], p6: [5, 5] })
     carry.doubles!.p2!['1'] = ['fbs']
@@ -101,7 +101,7 @@ describe('Four-ball Skins', () => {
     expect(allowedDoublers('lastLoser', { ...behind, lastWinner: null })).toEqual([])
     expect(allowedDoublers('anyone', behind)).toEqual([0, 1])
     expect(allowedDoublers('off', behind)).toEqual([])
-    // Dubl bez oprávnění (nastavení „nikdo“) hru nezmění.
+    // Double bez oprávnění (nastavení „nikdo“) hru nezmění.
     const round = round1()
     enter(round, { p3: [4], p1: [5], p2: [5], p6: [5] })
     round.doubles!.p2!['0'] = ['fbs']

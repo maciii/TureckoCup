@@ -94,7 +94,7 @@ export default function LiveNow({ round, results }: Props) {
                 )}
               </span>
               <span className="row-meta">
-                {playOrder(round, flight)
+                {playOrder(round, flight, state.players)
                   .map((id) => shortName(state.players, id))
                   .join(', ')}
               </span>

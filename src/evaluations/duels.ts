@@ -4,6 +4,7 @@ import {
   CONCEDED,
   gameHoles,
   holeOrder,
+  matchSides,
   parAt,
   playingHandicap,
   strokesReceived,
@@ -275,7 +276,8 @@ export const teamMatch: Evaluate = (context, game): EvaluationResult => {
   const { round } = context
   const format = game.options.format ?? 'match-play'
   const holes = gameHoles(round, game)
-  const sides = game.sides ?? []
+  // Dvojice plynou z flightů (dva hráči týmu ve flightu), ne z nastavení hry.
+  const sides = matchSides(round, context.players)
   const duels: DuelResult[] = []
   for (let i = 0; i + 1 < sides.length; i += 2) {
     duels.push(

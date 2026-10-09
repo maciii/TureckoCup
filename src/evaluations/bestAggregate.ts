@@ -2,6 +2,7 @@ import type { GameSide, PlayerId } from '../model/types'
 import { PICKED_UP } from '../model/types'
 import {
   holeMultiplier,
+  matchSides,
   CONCEDED,
   gameHoles,
   holeOrder,
@@ -154,7 +155,7 @@ export const bestAggregate: Evaluate = (context, game): EvaluationResult => {
   const { round, players } = context
   const holes = gameHoles(round, game)
   const options = { net: game.options.net ?? true, allowance: game.options.allowance }
-  const sides = game.sides ?? []
+  const sides = matchSides(round, players)
   const duels: DuelResult[] = []
   for (let i = 0; i + 1 < sides.length; i += 2) {
     const left = sides[i]!

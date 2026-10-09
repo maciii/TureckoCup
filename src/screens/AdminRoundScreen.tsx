@@ -14,7 +14,6 @@ import type {
   DuelFormat,
   GameConfig,
   GameKind,
-  GameSide,
   PlayerId,
   RoundStatus,
   TournamentRound,
@@ -23,6 +22,7 @@ import { TEAM_IDS } from '../model/types'
 import {
   assignPosition,
   courseHandicapOf,
+  flightPairs,
   normalizePositions,
   hasHandicap,
   playerName,
@@ -53,6 +53,7 @@ import {
   formatDate,
   formatDateTime,
   gameTitle,
+  sideLabel,
   teamName,
   DecimalInput,
 } from './common'
@@ -137,6 +138,7 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
 
   const noWriters = Object.keys(state.access?.playerEmails ?? {}).length === 0
   const tournamentBonuses = bonusConfigOf(state.tournament?.bonuses)
+  const hasSidedGame = round.games.some((game) => hasSides(game.kind))
 
   const tabs = (
     options: { id: string; label: string }[],
@@ -361,6 +363,29 @@ export default function AdminRoundScreen({ roundId }: { roundId: string }) {
                     )
                   })}
                 </div>
+                {/* Dvojice her dvojic plynou z flightu: dva hráči téhož týmu. */}
+                {(() => {
+                  const pair = flightPairs(round, state.players)[index]!
+                  return pair.valid ? (
+                    <p className="flight-pairs">
+                      <span className="hint">{t('admin.flightPairs')}</span>
+                      <TeamBadge teamId="A" />
+                      <span>{sideLabel(state.players, pair.byTeam.A)}</span>
+                      <span className="vs">vs</span>
+                      <TeamBadge teamId="B" />
+                      <span>{sideLabel(state.players, pair.byTeam.B)}</span>
+                    </p>
+                  ) : (
+                    hasSidedGame && (
+                      <p className="hint warn">
+                        {t('admin.flightPairsInvalid', {
+                          a: pair.byTeam.A.length,
+                          b: pair.byTeam.B.length,
+                        })}
+                      </p>
+                    )
+                  )
+                })()}
               </div>
             ))}
           </div>
@@ -566,25 +591,11 @@ function EditsLog({ roundId }: { roundId: string }) {
 }
 
 /** Strany týmového zápasu z flightů: první dvojice flightu proti druhé. */
-function flightSides(round: TournamentRound): GameSide[] {
-  return round.flights.flatMap((flight, index) => [
-    { id: `f${index}a`, players: flight.players.slice(0, 2) },
-    { id: `f${index}b`, players: flight.players.slice(2, 4) },
-  ])
-}
-
-/** Zápasy po dvou stranách, jak je páruje evaluace (1 vs 2, 3 vs 4 …). */
-function matchPairs(sides: GameSide[]): GameSide[][] {
-  const pairs: GameSide[][] = []
-  for (let i = 0; i + 1 < sides.length; i += 2) pairs.push([sides[i]!, sides[i + 1]!])
-  return pairs
-}
-
 /**
- * Změna druhu hry: vlastní název popisoval původní hru, proto se zahodí;
- * týmový zápas bez stran by nic nevyhodnotil, dostane dvojice z flightů.
+ * Změna druhu hry: vlastní název popisoval původní hru, proto se zahodí.
+ * Dvojice her dvojic plynou z flightů, u hry se nenastavují.
  */
-function withKind(game: GameConfig, round: TournamentRound, kind: GameKind): GameConfig {
+function withKind(game: GameConfig, kind: GameKind): GameConfig {
   const { name: _name, ...rest } = game
   if (hasSides(kind)) {
     // Týmová hra bez bodů týmu by zápas hrála zbytečně: výchozí 1 / 0,5 a počítá se.
@@ -597,7 +608,6 @@ function withKind(game: GameConfig, round: TournamentRound, kind: GameKind): Gam
       kind,
       countsForTeam: true,
       teamPoints,
-      ...(game.sides?.length ? {} : { sides: flightSides(round) }),
     }
   }
   return { ...rest, kind }
@@ -634,25 +644,7 @@ function newGame(round: TournamentRound): GameConfig {
     options: { allowance: 1, net: true, format: 'match-play' },
     countsForTeam: hasSides(kind),
     teamPoints: { win: 1, halve: 0.5 },
-    ...(hasSides(kind) ? { sides: flightSides(round) } : {}),
   }
-}
-
-/** Hráč na místě `slot` strany `sideIndex`; ostatní strany si ho nechají (admin rozhodne). */
-function withSidePlayer(
-  game: GameConfig,
-  sideIndex: number,
-  slot: number,
-  playerId: PlayerId,
-): GameConfig {
-  const sides = (game.sides ?? []).map((side, index) => {
-    if (index !== sideIndex) return side
-    const players = [...side.players]
-    while (players.length < 2) players.push('')
-    players[slot] = playerId
-    return { ...side, players: players.filter((id) => id !== '') }
-  })
-  return { ...game, sides }
 }
 
 /**
@@ -836,6 +828,7 @@ function GameEditor({
     game.kind === 'four-ball-skins'
   const holeNumbers = Array.from({ length: round.course.holeCount }, (_, i) => i)
   const holes = game.holes ?? { from: 0, to: round.course.holeCount - 1 }
+  const pairs = flightPairs(round, state.players)
 
   return (
     <div
@@ -848,7 +841,7 @@ function GameEditor({
           aria-label={t('admin.games')}
           value={game.kind}
           style={{ flex: 1 }}
-          onChange={(e) => onChange(withKind(game, round, e.target.value as GameKind))}
+          onChange={(e) => onChange(withKind(game, e.target.value as GameKind))}
         >
           {GAME_KINDS.map((kind) => (
             <option key={kind} value={kind}>
@@ -1089,60 +1082,19 @@ function GameEditor({
             />
           </div>
           {hasSides(game.kind) && (
-            <div
-              className="field"
-              style={{ flexDirection: 'column', alignItems: 'stretch' }}
-            >
-              <div className="field-row">
-                <span className="field-label">{t('admin.gameSides')}</span>
-                <button
-                  type="button"
-                  className="link-button"
-                  onClick={() => onChange({ ...game, sides: flightSides(round) })}
-                >
-                  {t('admin.pairsFromFlights')}
-                </button>
-              </div>
-              {matchPairs(game.sides ?? []).map((pair, matchIndex) => (
-                <div key={matchIndex} className="pair-row">
-                  <span className="hint" style={{ width: '100%' }}>
-                    {t('admin.gameSidesHint', { number: matchIndex + 1 })}
-                  </span>
-                  {pair.map((side, sideOffset) =>
-                    [0, 1].map((slot) => {
-                      const sideIndex = matchIndex * 2 + sideOffset
-                      const value = side.players[slot] ?? ''
-                      return (
-                        <span key={`${side.id}-${slot}`} style={{ display: 'contents' }}>
-                          {sideOffset === 1 && slot === 0 && (
-                            <span className="vs">vs</span>
-                          )}
-                          <select
-                            className="input sm"
-                            aria-label={`${t('admin.gameSidesHint', { number: matchIndex + 1 })} ${
-                              sideOffset === 0 ? 'A' : 'B'
-                            } ${slot + 1}`}
-                            value={value}
-                            onChange={(e) =>
-                              onChange(
-                                withSidePlayer(game, sideIndex, slot, e.target.value),
-                              )
-                            }
-                          >
-                            <option value="">{t('common.dash')}</option>
-                            {round.playerIds.map((id) => (
-                              <option key={id} value={id}>
-                                {shortName(state.players, id)}
-                              </option>
-                            ))}
-                          </select>
-                        </span>
+            <p className="hint">
+              {pairs.some((pair) => pair.valid)
+                ? t('admin.gameMatchesNote', {
+                    matches: pairs
+                      .filter((pair) => pair.valid)
+                      .map(
+                        (pair) =>
+                          `${t('round.flight', { number: pair.index + 1 })}: ${sideLabel(state.players, pair.byTeam.A)} – ${sideLabel(state.players, pair.byTeam.B)}`,
                       )
-                    }),
-                  )}
-                </div>
-              ))}
-            </div>
+                      .join(' · '),
+                  })
+                : t('admin.gameMatchesNone')}
+            </p>
           )}
         </>
       )}

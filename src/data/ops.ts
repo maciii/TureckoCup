@@ -39,7 +39,7 @@ export type Op =
       value: string[]
     }
   | {
-      /** Dubl Four-ball Skins: dvojice hráče na jamce hraje o dva skiny (buňka hráč × jamka, seznam id her). */
+      /** Double Four-ball Skins: dvojice hráče na jamce hraje o dva skiny (buňka hráč × jamka, seznam id her). */
       kind: 'setDouble'
       roundId: string
       playerId: PlayerId
@@ -250,7 +250,7 @@ export function opToWrites(op: Op, meta: OpMeta, state: TournamentState): Write[
       ]
     }
     case 'setDouble': {
-      // Dubl je surová buňka jako extra body: hráč × jamka, lastEdit a log úprav.
+      // Double je surová buňka jako extra body: hráč × jamka, lastEdit a log úprav.
       const key = holeKey(op.hole)
       const round = state.rounds.find((r) => r.id === op.roundId)
       const doubleFrom = round?.doubles?.[op.playerId]?.[key] ?? []
@@ -316,7 +316,7 @@ export function requiresAdmin(op: Op): boolean {
   return !isCellOp(op)
 }
 
-/** Zápis do buňky kola (skóre, extra body, dubl) - smí ho zapisovatel. */
+/** Zápis do buňky kola (skóre, extra body, double) - smí ho zapisovatel. */
 export function isCellOp(
   op: Op,
 ): op is Extract<Op, { kind: 'setScore' | 'setBonuses' | 'setDouble' }> {

@@ -107,18 +107,9 @@ function game(
 }
 
 /** Dvojice proti dvojici v každém flightu: A1+A2 vs B1+B2 a A3+A4 vs B3+B4. */
-function pairSides(positions: Record<TeamId, PlayerId[]>): GameConfig['sides'] {
-  const pair = (team: TeamId, from: number) => positions[team].slice(from, from + 2)
-  return [
-    { id: 'a12', players: pair('A', 0) },
-    { id: 'b12', players: pair('B', 0) },
-    { id: 'a34', players: pair('A', 2) },
-    { id: 'b34', players: pair('B', 2) },
-  ]
-}
 
 /** Hry každého dne - pokaždé jiná kombinace druhů, formátů a bodování. */
-function gamesForDay(day: number, positions: Record<TeamId, PlayerId[]>): GameConfig[] {
+function gamesForDay(day: number): GameConfig[] {
   switch (day) {
     case 1:
       return [
@@ -211,7 +202,7 @@ function gamesForDay(day: number, positions: Record<TeamId, PlayerId[]>): GameCo
           'preview.game.fourBall',
           { allowance: 0.85, net: true, format: 'match-play' },
           { win: 1, halve: 0.5 },
-          { countsForTeam: true, sides: pairSides(positions) },
+          { countsForTeam: true },
         ),
         game(
           'positions',
@@ -227,7 +218,7 @@ function gamesForDay(day: number, positions: Record<TeamId, PlayerId[]>): GameCo
           // Den 3 ukáže extra body v bodech dvojice a dvojité body na 9. a 18.
           { allowance: 0.9, net: true, bonuses: true, doubleHoles: true },
           { win: 1, halve: 0.5 },
-          { countsForTeam: true, sides: pairSides(positions) },
+          { countsForTeam: true },
         ),
       ]
     default:
@@ -259,7 +250,7 @@ function gamesForDay(day: number, positions: Record<TeamId, PlayerId[]>): GameCo
           'four-ball-skins',
           'four-ball-skins',
           'preview.game.fourBallSkins',
-          // Den 4 a 5: skiny dvojic s dubly prohrávající dvojice, dvojitá 9 a 18.
+          // Den 4 a 5: skiny dvojic s double prohrávající dvojice, dvojitá 9 a 18.
           {
             allowance: 0.9,
             net: true,
@@ -268,7 +259,7 @@ function gamesForDay(day: number, positions: Record<TeamId, PlayerId[]>): GameCo
             doubleHoles: true,
           },
           { win: 1, halve: 0.5 },
-          { countsForTeam: true, sides: pairSides(positions) },
+          { countsForTeam: true },
         ),
       ]
   }
@@ -383,7 +374,7 @@ export function previewRounds(seed = PREVIEW_SEED): TournamentRound[] {
         },
       ],
       departure: plan.departure,
-      games: day <= 4 ? gamesForDay(day, positions) : base.games,
+      games: day <= 4 ? gamesForDay(day) : base.games,
       ...emptyScoreMaps(base.playerIds),
     }
     if (plan.status === 'planned') return round
@@ -424,7 +415,7 @@ export function previewRounds(seed = PREVIEW_SEED): TournamentRound[] {
         }
       }
     }
-    // Dubly Four-ball Skins: den 4 má jeden u dvojice, která zrovna prohrávala.
+    // Double Four-ball Skins: den 4 má jeden u dvojice, která zrovna prohrávala.
     round.doubles = Object.fromEntries(round.playerIds.map((id) => [id, {}]))
     const skinsGame = round.games.find((g) => g.kind === 'four-ball-skins')
     if (skinsGame && index === 3) {

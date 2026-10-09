@@ -17,8 +17,8 @@ interface Props {
 
 /**
  * Four-ball Skins při zápisu: stav zápasu dvojic flightu, o kolik skinů se
- * na jamce hraje, kdo ji vzal, a tlačítko Dubl u dvojice, která smí dublovat.
- * Dubl jde přepnout kdykoli (i zpětně), vyhodnocení se přepočítá.
+ * na jamce hraje, kdo ji vzal, a tlačítko Double u dvojice, která smí dublovat.
+ * Double jde přepnout kdykoli (i zpětně), vyhodnocení se přepočítá.
  */
 export default function SkinsMatchStatus({
   round,

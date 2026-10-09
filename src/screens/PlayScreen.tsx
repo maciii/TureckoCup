@@ -367,7 +367,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
           ))}
 
         <ul className="player-list">
-          {playOrder(round, flightEntry).map((playerId) => {
+          {playOrder(round, flightEntry, state.players).map((playerId) => {
             const score = scoreAt(round, playerId, hole)
             const strokes = strokesReceived(round, playerId, hole)
             const completed = holesCompleted(round, playerId)
@@ -541,7 +541,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
         <BonusSheet
           round={round}
           config={bonusConfig}
-          playerIds={playOrder(round, flightEntry)}
+          playerIds={playOrder(round, flightEntry, state.players)}
           playerId={bonusFor}
           onSelect={setBonusFor}
           hole={hole}

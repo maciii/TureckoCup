@@ -2114,7 +2114,27 @@ a.menu-item {
   gap: 6px;
 }
 
-/* Four-ball Skins v zápisu: stav jamky a tlačítko Dubl v kartě dvojice. */
+/* Dvojice flightu v editoru kola (odvozené z týmů, jen ke čtení). */
+.flight-pairs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.flight-pairs .vs {
+  color: var(--ink-3);
+  font-weight: 600;
+}
+
+.hint.warn {
+  color: var(--red);
+}
+
+/* Four-ball Skins v zápisu: stav jamky a tlačítko Double v kartě dvojice. */
 .skins-match-hole {
   display: flex;
   flex-wrap: wrap;
