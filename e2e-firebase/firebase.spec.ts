@@ -290,7 +290,7 @@ test('zápis bez signálu čeká ve frontě a po návratu signálu se odešle', 
   await rows.nth(0).locator('.step-button').last().click()
   await expect(rows.nth(0).locator('.mark')).toHaveText('5')
   // Zápis se nečeká: obrazovka ho ukazuje hned a hlásí neodeslaný stav.
-  await expect(admin.locator('.tag', { hasText: /neodeslan/ })).toBeVisible()
+  await expect(admin.getByRole('status', { name: /neodeslan/ })).toBeVisible()
   await admin.waitForTimeout(1500)
   const offlineDoc = await readDoc(request, 'tournaments/tc26/rounds/r1')
   expect(
@@ -316,7 +316,7 @@ test('zápis bez signálu čeká ve frontě a po návratu signálu se odešle', 
       { timeout: 45_000 },
     )
     .toBe('5')
-  await expect(admin.locator('.tag', { hasText: /neodeslan/ })).toHaveCount(0, {
+  await expect(admin.getByRole('status', { name: /neodeslan/ })).toHaveCount(0, {
     timeout: 30_000,
   })
   await expect(admin.locator('.notice.error')).toHaveCount(0)
