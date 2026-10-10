@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { demoVariant, useData } from '../data'
-import { evaluateRound } from '../evaluations'
+import { evaluateRound, hasSides } from '../evaluations'
+import { matchOfFlight } from '../evaluations/fourBallSkins'
+import { DuelRow } from './GameResults'
 import type { EvaluationResult } from '../evaluations'
 import { stablefordAt } from '../evaluations/stableford'
 import { t } from '../i18n'
@@ -46,6 +48,7 @@ import {
   TeamBadge,
   flightProgressLabel,
   formatToPar,
+  gameTitle,
   sideLabel,
 } from './common'
 import Scorecard from './Scorecard'
@@ -309,27 +312,51 @@ export default function PlayScreen({ roundId, flight }: Props) {
           <span className="sep">·</span>
           {t('play.holeOf', { index: orderIndex + 1, count })}
         </div>
-        {/* Skiny ve hře říká panel stavu her; tady zbývá náhled flightů a čekající zápisy. */}
-        {(meta.pending > 0 || others.length > 0) && (
+        {/* Skiny ve hře říká panel stavu her; tady zbývají čekající zápisy. */}
+        {meta.pending > 0 && (
           <div className="stakes">
-            {meta.pending > 0 && (
-              <span className="tag gold">
-                {t('play.pendingWrites', { count: meta.pending })}
-              </span>
-            )}
-            {others.map(({ entry, index }) => (
+            <span className="tag gold">
+              {t('play.pendingWrites', { count: meta.pending })}
+            </span>
+          </div>
+        )}
+        {/* Druhý flight: kde je a jak stojí jeho zápasy (hry dvojic) - výrazně,
+            ať hráči vidí stav druhého zápasu bez přepínání. */}
+        {others.map(({ entry, index }) => {
+          const matches = results
+            .filter((r) => hasSides(r.game.kind))
+            .map((r) => ({ result: r, duel: matchOfFlight(r, entry.players) }))
+            .filter((m) => m.duel && m.duel.sides.length === 2)
+          return (
+            <section
+              key={index}
+              className="other-flight-card"
+              aria-label={t('round.flight', { number: index + 1 })}
+            >
               <button
-                key={index}
                 type="button"
-                className="tag other-flight"
+                className="other-flight-head"
                 onClick={() => setOtherFlight(index)}
               >
                 {t('round.flight', { number: index + 1 })} ·{' '}
-                {flightProgressLabel(round, entry)} ›
+                {flightProgressLabel(round, entry)}
+                <span className="chev">›</span>
               </button>
-            ))}
-          </div>
-        )}
+              {matches.map(({ result, duel }) => (
+                <ul key={result.game.id} className="list other-flight-match">
+                  {matches.length > 1 && (
+                    <li className="other-flight-game">{gameTitle(result.game)}</li>
+                  )}
+                  <DuelRow
+                    duel={duel!}
+                    players={state.players}
+                    format={result.game.options.format ?? 'strokes-net'}
+                  />
+                </ul>
+              ))}
+            </section>
+          )
+        })}
 
         <HoleStatus
           round={round}

@@ -3,6 +3,15 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.24.2] – 2026-10-10
+
+### Změněno
+
+- **Stav druhého flightu v zápisu výrazně.** Místo štítku je nad stavem her
+  karta druhého flightu: na které jamce je a stav jeho zápasů (Four-ball,
+  Best + Součet, Four-ball Skins) jako řádek s dvojicemi a skóre. Klepnutí
+  otevře náhled flightu jako dřív.
+
 ## [0.24.1] – 2026-10-10
 
 ### Opraveno

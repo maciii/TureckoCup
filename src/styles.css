@@ -2224,6 +2224,61 @@ a.menu-item {
   cursor: pointer;
 }
 
+/* Karta druhého flightu v zápisu: kde je a stav jeho zápasu (řádek jako ve výsledcích). */
+.other-flight-card {
+  margin: 8px var(--pad) 0;
+  padding: 6px 12px 2px;
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.other-flight-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  padding: 4px 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.other-flight-head .chev {
+  color: var(--ink-3);
+}
+
+.other-flight-match {
+  list-style: none;
+  margin: 0;
+}
+
+.other-flight-match .duel {
+  padding: 6px 0 8px;
+  border-top: none;
+  grid-template-columns: 1fr 76px 1fr;
+}
+
+/* Jména dvojic se na úzkém displeji zalomí, nezkracují. */
+.other-flight-match .duel-side .nm > span {
+  white-space: normal;
+  overflow: visible;
+  line-height: 1.2;
+}
+
+.other-flight-game {
+  padding-top: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  text-align: center;
+}
+
 .other-flight-list .row-title {
   gap: 6px;
 }

@@ -264,6 +264,14 @@ test('Four-ball Skins: double v kartě zápasu, přenos dvou skinů a výsledek 
   await expect(match.locator('.pair-status-score')).toContainText('3')
   await expectNoHorizontalOverflow(page)
 
+  // Druhý flight vidí stav prvního zápasu výrazně v kartě nad zápisem.
+  await open(page, '#/play/r1/1')
+  const otherCard = page.locator('.other-flight-card')
+  await expect(otherCard).toContainText('Flight 1 · 3. jamka')
+  await expect(otherCard.locator('.duel')).toContainText('Ota + Mac')
+  await expect(otherCard.locator('.duel-center')).toContainText('3 : 0')
+  await expectNoHorizontalOverflow(page)
+
   await open(page, '#/round/r1')
   const section = page.locator('section', {
     has: page.getByRole('heading', { name: 'Four-ball Skins' }),
