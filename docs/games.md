@@ -199,6 +199,35 @@ dvojitá jamka přenáší dva skiny) a všechny body dvojice v Best + Součet
 (Best, Součet, birdie, Double Best i extra body). Jamkovka a duely na rány
 volbu nemají - jamka tam nemá body. V zápisu ukáže karta dvojic chip ×2.
 
+## Odznaky zájezdu (individuální statistiky)
+
+Nejsou hra ani se neukládají: `evaluations/awards.ts` je počítá při zobrazení
+z raw skóre všech kol, která nejsou jen naplánovaná (rozehraná i dohraná).
+Každý odznak má držitele = všechny hráče na prvním místě s hodnotou > 0;
+při shodě jsou držitelé všichni. Klepnutí na medaili ukáže tabulku všech
+osmi hráčů s pořadím (shodné hodnoty sdílí pořadí).
+
+| Odznak        | Co počítá                                                                             |
+| ------------- | ------------------------------------------------------------------------------------- |
+| STBák zájezdu | součet Stableford bodů netto (volby hry Stableford v kole, jinak netto s allowance 1) |
+| Birdie Man    | birdie brutto                                                                         |
+| Orel          | eagle a lépe brutto                                                                   |
+| Parista       | pary brutto                                                                           |
+| Žhavá série   | nejdelší souvislá řada jamek na par a lépe (brutto) v pořadí hraní                    |
+| Skinař        | vyhrané skiny v individuálních Skins                                                  |
+| Dlouhán       | potvrzené Longesty                                                                    |
+| Ostrostřelec  | potvrzené Nearesty                                                                    |
+| Bogie Man     | bogey brutto                                                                          |
+| 2 Bogie Man   | double bogey                                                                          |
+| 3 Bogie Man   | triple bogey                                                                          |
+| Nenažranec    | čtyřbogey a hůř; zvednutá jamka se počítá                                             |
+| No Stable Man | jamky bez jediného STB bodu (zvednutá jamka = 0 bodů)                                 |
+
+Gratulace: přihlášený hráč, který odznak drží, ji vidí po načtení aplikace
+jednou pro každý odznak; „viděno“ se drží v `localStorage` podle podpisu
+odznaku (držitelé + hodnota), takže změna hodnoty nebo nový držitel gratulaci
+ukáže znovu. Návštěvník gratulaci nevidí.
+
 ## Zvednutá jamka ve hře na rány (centrální pravidlo)
 
 `tournament.pickup` = `timesPar × par + plus` (+ rány z handicapu na jamce

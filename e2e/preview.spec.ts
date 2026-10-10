@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
-import { collectErrors, expectNoHorizontalOverflow, open } from './helpers'
+import { collectErrors, expectNoHorizontalOverflow, open, dismissAwards } from './helpers'
 
 /**
  * Testovací verze (`?demo=4dny`): vymyšlený turnaj po čtyřech dnech. Každé
@@ -60,6 +60,7 @@ const DAYS: { round: string; games: string[]; team: boolean }[] = [
 async function openPreview(page: Page, hash = '#/'): Promise<void> {
   await page.goto(`/?demo=4dny${hash}`)
   await page.waitForSelector('.screen')
+  await dismissAwards(page)
 }
 
 async function setPreviewIdentity(
@@ -72,6 +73,7 @@ async function setPreviewIdentity(
   )
   await page.reload()
   await page.waitForSelector('.screen')
+  await dismissAwards(page)
 }
 
 async function teamScore(page: Page): Promise<string> {

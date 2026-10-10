@@ -10,6 +10,19 @@ export const IDENTITY_KEY = 'tc26.demoIdentity.v1'
 export async function open(page: Page, hash = '#/'): Promise<void> {
   await page.goto(`/?demo=1${hash}`)
   await page.waitForSelector('.screen')
+  await dismissAwards(page)
+}
+
+/**
+ * Gratulace k odznakům překryje celou obrazovku; testy, které ji netestují,
+ * ji odklepnou (nejvýš tolikrát, kolik je odznaků).
+ */
+export async function dismissAwards(page: Page): Promise<void> {
+  const button = page.locator('.award-intro-btn')
+  for (let i = 0; i < 14; i += 1) {
+    if ((await button.count()) === 0) return
+    await button.click()
+  }
 }
 
 export async function setIdentity(
@@ -22,6 +35,7 @@ export async function setIdentity(
   )
   await page.reload()
   await page.waitForSelector('.screen')
+  await dismissAwards(page)
 }
 
 /**

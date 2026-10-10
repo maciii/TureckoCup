@@ -166,6 +166,112 @@ export const cs = {
   'overview.positionsHint': 'Bilance výher přes odehraná kola',
   'overview.balance': '{a} : {b}',
   'overview.balanceHalves': '{a} : {b} ({halves}×½)',
+  'awards.title': 'Odznaky zájezdu',
+  'awards.hint':
+    'Individuální statistiky ze zapsaných ran přes odehraná kola. Klepnutím na odznak uvidíš celou tabulku.',
+  'awards.after': {
+    one: 'po {count} kole',
+    few: 'po {count} kolech',
+    other: 'po {count} kolech',
+  },
+  'awards.unclaimed': 'zatím nikdo',
+  'awards.yours': 'ty',
+  'awards.intro.lead': 'Nový odznak',
+  'awards.intro.title': 'Gratulujeme, {name}!',
+  'awards.intro.shared': 'dělíš se s: {names}',
+  'awards.intro.count': '{index} z {total}',
+  'awards.intro.next': 'Další odznak',
+  'awards.intro.close': 'Super, díky',
+  'award.stb.name': 'STBák zájezdu',
+  'award.stb.description':
+    'Nejvíc Stablefordových bodů přes všechna kola (netto, plný hrací HCP kola, i v kole bez hry Stableford). Sleduje každého.',
+  'award.stb.count': { one: '{count} bod', few: '{count} body', other: '{count} bodů' },
+  'award.birdie.name': 'Birdie Man',
+  'award.birdie.description': 'Nejvíc birdie (brutto, ze skutečných ran).',
+  'award.birdie.count': {
+    one: '{count} birdie',
+    few: '{count} birdie',
+    other: '{count} birdie',
+  },
+  'award.eagle.name': 'Orel',
+  'award.eagle.description': 'Nejvíc eaglů a lepších (brutto).',
+  'award.eagle.count': {
+    one: '{count} eagle',
+    few: '{count} eagly',
+    other: '{count} eaglů',
+  },
+  'award.par.name': 'Parista',
+  'award.par.description': 'Nejvíc parů (brutto).',
+  'award.par.count': { one: '{count} par', few: '{count} pary', other: '{count} parů' },
+  'award.streak.name': 'Žhavá série',
+  'award.streak.description':
+    'Nejdelší řada jamek za sebou na par a lépe (brutto, v jednom kole).',
+  'award.streak.count': {
+    one: '{count} jamka v řadě',
+    few: '{count} jamky v řadě',
+    other: '{count} jamek v řadě',
+  },
+  'award.skins.name': 'Skinař',
+  'award.skins.description':
+    'Nejvíc vyhraných skinů ve Skins jednotlivců přes kola, kde se hrály.',
+  'award.skins.count': {
+    one: '{count} skin',
+    few: '{count} skiny',
+    other: '{count} skinů',
+  },
+  'award.longest.name': 'Dlouhán',
+  'award.longest.description':
+    'Nejvíc uznaných Longest (potvrzených parem podle pravidel kola).',
+  'award.longest.count': {
+    one: '{count} longest',
+    few: '{count} longesty',
+    other: '{count} longestů',
+  },
+  'award.nearest.name': 'Ostrostřelec',
+  'award.nearest.description':
+    'Nejvíc uznaných Nearest (potvrzených parem podle pravidel kola).',
+  'award.nearest.count': {
+    one: '{count} nearest',
+    few: '{count} nearesty',
+    other: '{count} nearestů',
+  },
+  'award.bogey.name': 'Bogie Man',
+  'award.bogey.description': 'Nejvíc bogey (brutto). Někdo to dělat musí.',
+  'award.bogey.count': {
+    one: '{count} bogey',
+    few: '{count} bogey',
+    other: '{count} bogey',
+  },
+  'award.double.name': '2 Bogie Man',
+  'award.double.description': 'Nejvíc double bogey (brutto).',
+  'award.double.count': {
+    one: '{count} double bogey',
+    few: '{count} double bogey',
+    other: '{count} double bogey',
+  },
+  'award.triple.name': '3 Bogie Man',
+  'award.triple.description': 'Nejvíc triple bogey (brutto).',
+  'award.triple.count': {
+    one: '{count} triple bogey',
+    few: '{count} triple bogey',
+    other: '{count} triple bogey',
+  },
+  'award.glutton.name': 'Nenažranec',
+  'award.glutton.description':
+    'Nejvíc quadruple bogey a horších; zvednutá jamka se počítá taky.',
+  'award.glutton.count': {
+    one: '{count}× quadruple a hůř',
+    few: '{count}× quadruple a hůř',
+    other: '{count}× quadruple a hůř',
+  },
+  'award.nostable.name': 'No Stable Man',
+  'award.nostable.description':
+    'Nejvíc jamek bez jediného Stablefordova bodu (netto, zvednutá jamka se počítá).',
+  'award.nostable.count': {
+    one: '{count} jamka bez bodu',
+    few: '{count} jamky bez bodu',
+    other: '{count} jamek bez bodu',
+  },
   'overview.installApp': 'Přidat na plochu',
   'overview.installHint':
     'V Safari: Sdílet → Přidat na plochu. Přihlášení pak udělej v nainstalované aplikaci.',

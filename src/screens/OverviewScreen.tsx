@@ -27,6 +27,8 @@ import { bonusConfigOf } from '../model/bonuses'
 import BonusResults from './BonusResults'
 import MenuSheet from './MenuSheet'
 import LiveNow from './LiveNow'
+import { AwardIntro, AwardsSection } from './Awards'
+import { computeAwards } from '../evaluations/awards'
 import { flightHolesStarted } from '../model/round'
 
 /**
@@ -50,6 +52,11 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
       bonusConfig,
     ],
   )
+  const awards = useMemo(
+    () => computeAwards(state.rounds, state.players, bonusConfig),
+    [state.rounds, state.players, bonusConfig],
+  )
+  const me = meta.account?.playerId ?? null
   const live = state.rounds.find((r) => r.status === 'live')
   const current =
     live ??
@@ -171,6 +178,10 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
               {summary.provisional ? ` · ${t('overview.provisional')}` : ''}
             </p>
           </>
+        )}
+
+        {state.tournament && (
+          <AwardsSection summary={awards} players={state.players} me={me} />
         )}
 
         {state.rounds.length > 0 && (
@@ -345,6 +356,10 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
           </div>
         )}
       </main>
+
+      {state.tournament && meta.status !== 'loading' && (
+        <AwardIntro summary={awards} players={state.players} me={me} />
+      )}
 
       {menuOpen && (
         <MenuSheet

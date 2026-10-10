@@ -2489,3 +2489,393 @@ a.menu-item {
   padding-left: 14px;
   padding-right: 14px;
 }
+
+/* --- odznaky zájezdu (vzor Apple awards) --------------------------------------- */
+
+.awards {
+  margin-top: 6px;
+}
+
+.awards-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px 4px;
+  margin: 0;
+  padding: 6px var(--pad) 0;
+  list-style: none;
+}
+
+.award-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 6px 2px 4px;
+  border-radius: 14px;
+  text-align: center;
+  animation: award-pop 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+  animation-delay: calc(var(--i, 0) * 50ms);
+}
+
+.award-btn:active .award {
+  transform: scale(0.94);
+}
+
+/* Medaile: plastický kotouč s vnitřním prstencem a putujícím odleskem. */
+.award {
+  --award-hi: #fff2c2;
+  --award-mid: #e2b64a;
+  --award-lo: #8a6316;
+  --award-ink: #3a2a05;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  overflow: hidden;
+  color: var(--award-ink);
+  background: radial-gradient(
+    circle at 32% 28%,
+    var(--award-hi) 0%,
+    var(--award-mid) 48%,
+    var(--award-lo) 100%
+  );
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.6),
+    inset 0 -5px 10px rgba(0, 0, 0, 0.28),
+    0 10px 20px -10px rgba(11, 29, 58, 0.55);
+  transition: transform 0.15s ease;
+}
+
+.award::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+}
+
+.award::after {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(
+    115deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.55) 48%,
+    transparent 58%
+  );
+  transform: translateX(-130%);
+  animation: award-shine 4.5s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 300ms);
+}
+
+.award-mark {
+  position: relative;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.award.lg {
+  width: 150px;
+  height: 150px;
+}
+
+.award.lg .award-mark {
+  font-size: 50px;
+}
+
+.award.gold {
+  --award-hi: #fff2c2;
+  --award-mid: #e2b64a;
+  --award-lo: #8a6316;
+  --award-ink: #3a2a05;
+}
+
+.award.silver {
+  --award-hi: #ffffff;
+  --award-mid: #c9ced6;
+  --award-lo: #6f7784;
+  --award-ink: #1f2530;
+}
+
+.award.bronze {
+  --award-hi: #f6d9bf;
+  --award-mid: #c57f4a;
+  --award-lo: #6e3d18;
+  --award-ink: #2d1707;
+}
+
+.award.red {
+  --award-hi: #ffb9b9;
+  --award-mid: #c62828;
+  --award-lo: #6a0c0c;
+  --award-ink: #ffffff;
+}
+
+.award.green {
+  --award-hi: #cdf2db;
+  --award-mid: #2e8b57;
+  --award-lo: #124b2c;
+  --award-ink: #ffffff;
+}
+
+.award.navy {
+  --award-hi: #cfe0f4;
+  --award-mid: #1c4f79;
+  --award-lo: #0b1d3a;
+  --award-ink: #ffffff;
+}
+
+.award.empty {
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+
+.award.empty::after {
+  animation: none;
+}
+
+.award.mine {
+  box-shadow:
+    0 0 0 3px var(--bg),
+    0 0 0 6px var(--gold-bright),
+    inset 0 2px 4px rgba(255, 255, 255, 0.6),
+    inset 0 -5px 10px rgba(0, 0, 0, 0.28),
+    0 10px 20px -10px rgba(11, 29, 58, 0.55);
+}
+
+.award-name {
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.award-holder {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--ink-2);
+}
+
+.award-value {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.award-sheet-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 4px var(--pad) 10px;
+  text-align: center;
+}
+
+.award-sheet-head h2 {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.award-sheet-head .hint {
+  margin: 0;
+}
+
+.award-table {
+  list-style: none;
+  margin: 0;
+}
+
+.award-table .row.me {
+  background: var(--gold-soft);
+}
+
+.award-table-value {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* Gratulace: celá obrazovka, medaile se roztočí, konfety padají. */
+.award-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  overflow: hidden;
+  text-align: center;
+  color: var(--on-dark);
+  background: radial-gradient(circle at 50% 28%, var(--navy) 0%, var(--brand) 70%);
+  animation: intro-fade 0.4s ease-out both;
+}
+
+.award-intro .award.lg {
+  margin: 10px 0 14px;
+  animation: award-spin 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.award-intro-eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  animation: intro-up 0.6s 0.3s both;
+}
+
+.award-intro-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  animation: intro-up 0.6s 1s both;
+}
+
+.award-intro-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--gold-bright);
+  animation: intro-up 0.6s 1.2s both;
+}
+
+.award-intro-detail {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0.9;
+  animation: intro-up 0.6s 1.35s both;
+}
+
+.award-intro-desc {
+  margin: 4px 0 0;
+  max-width: 320px;
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0.75;
+  animation: intro-up 0.6s 1.5s both;
+}
+
+.award-intro-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 22px;
+  animation: intro-up 0.6s 1.8s both;
+}
+
+.award-intro-count {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.award-intro-btn {
+  background: var(--gold-bright);
+  color: var(--team-a-ink);
+}
+
+.confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.confetti span {
+  position: absolute;
+  top: -16px;
+  left: var(--x);
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--c);
+  opacity: 0.9;
+  transform: rotate(var(--r));
+  animation: confetti-fall 3s linear infinite;
+  animation-delay: var(--d);
+}
+
+@keyframes award-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6) rotateY(80deg);
+  }
+}
+
+@keyframes award-shine {
+  0%,
+  60% {
+    transform: translateX(-130%);
+  }
+  85%,
+  100% {
+    transform: translateX(130%);
+  }
+}
+
+@keyframes award-spin {
+  0% {
+    opacity: 0;
+    transform: rotateY(540deg) scale(0.3);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes intro-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes intro-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes confetti-fall {
+  to {
+    transform: translateY(110vh) rotate(calc(var(--r) + 720deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .award-btn,
+  .award::after,
+  .award-intro,
+  .award-intro .award.lg,
+  .award-intro-eyebrow,
+  .award-intro-title,
+  .award-intro-name,
+  .award-intro-detail,
+  .award-intro-desc,
+  .award-intro-actions,
+  .confetti span {
+    animation: none;
+  }
+}
