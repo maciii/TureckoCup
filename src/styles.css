@@ -148,6 +148,31 @@ a {
   color: var(--on-dark);
 }
 
+/* Odznak neodeslaných zápisů přes ikonu v hlavičce - mimo tok obsahu. */
+.header-tools {
+  position: relative;
+  display: inline-flex;
+}
+
+.pending-dot {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--gold);
+  color: var(--team-a-ink);
+  font-size: 11px;
+  font-weight: 800;
+  pointer-events: none;
+}
+
 .app-header :focus-visible {
   outline-color: var(--gold-bright);
 }

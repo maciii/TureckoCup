@@ -245,19 +245,33 @@ export default function PlayScreen({ roundId, flight }: Props) {
         title={`${t('round.title', { number: round.number })} · ${t('round.flight', { number: (flight ?? 0) + 1 })}`}
         subtitle={round.course.name}
         right={
-          <button
-            type="button"
-            className="icon-button"
-            onClick={() => navigate({ view: 'play', roundId, flight: null }, true)}
-            aria-label={t('play.switchFlight')}
-            title={t('play.switchFlight')}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="9" cy="8" r="3" />
-              <circle cx="17" cy="9" r="2.4" />
-              <path d="M3 20v-1a5 5 0 015-5h1a5 5 0 015 5v1" />
-            </svg>
-          </button>
+          /* Neodeslané zápisy jako odznak přes ikonu: nic v obsahu se neposouvá,
+             štítek v toku stránky při každém zápisu skákal se zápisem. */
+          <span className="header-tools">
+            {meta.pending > 0 && (
+              <span
+                className="pending-dot"
+                role="status"
+                aria-label={t('play.pendingWrites', { count: meta.pending })}
+                title={t('play.pendingWrites', { count: meta.pending })}
+              >
+                {meta.pending}
+              </span>
+            )}
+            <button
+              type="button"
+              className="icon-button"
+              onClick={() => navigate({ view: 'play', roundId, flight: null }, true)}
+              aria-label={t('play.switchFlight')}
+              title={t('play.switchFlight')}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="9" cy="8" r="3" />
+                <circle cx="17" cy="9" r="2.4" />
+                <path d="M3 20v-1a5 5 0 015-5h1a5 5 0 015 5v1" />
+              </svg>
+            </button>
+          </span>
         }
       />
 
@@ -312,14 +326,6 @@ export default function PlayScreen({ roundId, flight }: Props) {
           <span className="sep">·</span>
           {t('play.holeOf', { index: orderIndex + 1, count })}
         </div>
-        {/* Skiny ve hře říká panel stavu her; tady zbývají čekající zápisy. */}
-        {meta.pending > 0 && (
-          <div className="stakes">
-            <span className="tag gold">
-              {t('play.pendingWrites', { count: meta.pending })}
-            </span>
-          </div>
-        )}
 
         <HoleStatus
           round={round}
