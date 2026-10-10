@@ -121,11 +121,11 @@ export function DuelRow({
 }) {
   const [left, right] = duel.sides
   if (!left || !right) return null
-  const started = duel.sides.some((s) => s.holes > 0)
+  const started = duel.sides.some((s) => s.holes > 0 || s.value > 0)
   const leaderTeam =
     duel.leader === null ? null : (duel.sides[duel.leader]?.teamId ?? null)
   const valueOf = (value: number, holes: number) =>
-    holes === 0 || format === 'match-play' ? '' : String(value)
+    (holes === 0 && value === 0) || format === 'match-play' ? '' : String(value)
   const meta = [
     duel.position !== undefined ? `${t('overview.positionShort')} ${duel.position}` : '',
     duel.finished

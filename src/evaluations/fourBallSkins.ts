@@ -37,7 +37,7 @@ import type {
  * místo jednoho (dvojitá 9 a 18 čtyři), přenesené skiny z banku se jen
  * přičtou. Kdo smí dublovat, říká `options.doubleBy`:
  *   behind     dvojice, která v zápase prohrává (při rovnosti nikdo)
- *   lastLoser  dvojice, která ztratila poslední rozhodnutou jamku
+ *   lastLoser  dvojice, která prohrála poslední vyhranou jamku (dělená nic nemění)
  *   anyone     kterákoli
  *   off        double se nehrají
  * Double je surová buňka (`round.doubles`, hráč × jamka, id hry) a jde
@@ -81,47 +81,69 @@ export const fourBallSkins: Evaluate = (context, game): EvaluationResult => {
       round.flights.find((f) => f.players.includes(left.players[0] ?? '')),
     ).filter((hole) => holes.includes(hole))
     const mayDouble: Record<string, (0 | 1)[]> = {}
-    const doubles: Record<string, 0 | 1> = {}
+    const doubles: Record<string, (0 | 1)[]> = {}
     const stakes: Record<string, number> = {}
 
+    // Bod za birdie: brutto birdie a lepší kteréhokoli partnera, hned po zápisu
+    // rány (nenásobí se dvojitou jamkou ani Double). Součty před jamkou vstupují
+    // do oprávnění k Double - prohrává ten, kdo má méně ve skóre zápasu.
+    const birdies: Record<string, number[]> = {}
+    const birdieBefore = new Map<number, [number, number]>()
+    const birdieTotals: [number, number] = [0, 0]
+    for (const hole of order) {
+      birdieBefore.set(hole, [...birdieTotals])
+      if (!game.options.birdieBonus) continue
+      const points = pair.map((side) =>
+        side.players.reduce((sum, id) => {
+          const score = scoreAt(round, id, hole)
+          return score !== undefined &&
+            score !== PICKED_UP &&
+            score - parAt(round, hole) <= -1
+            ? sum + 1
+            : sum
+        }, 0),
+      )
+      if (points[0]! > 0 || points[1]! > 0) birdies[String(hole)] = points
+      birdieTotals[0] += points[0]!
+      birdieTotals[1] += points[1]!
+    }
+
+    // Jamky za první nezapsanou čekají: bank i oprávnění k Double na ní závisí,
+    // takže by se po jejím doplnění zpětně měnily.
+    const bestBall = (side: 0 | 1, hole: number) =>
+      teamBestBall(context, pair[side].players, hole, options)
+    const firstPending = order.findIndex(
+      (hole) => bestBall(0, hole) === undefined || bestBall(1, hole) === undefined,
+    )
+    const played = firstPending < 0 ? order : order.slice(0, firstPending + 1)
+    const waiting = firstPending < 0 ? [] : order.slice(firstPending + 1)
+
     const result = computeSkins({
-      holeOrder: order,
+      holeOrder: played,
       sideCount: 2,
       carry: game.options.carry ?? true,
       holeValue: (hole, state) => {
-        const allowed = allowedDoublers(doubleBy, state)
+        const before = birdieBefore.get(hole) ?? [0, 0]
+        const allowed = allowedDoublers(doubleBy, {
+          ...state,
+          totals: [
+            (state.totals[0] ?? 0) + before[0],
+            (state.totals[1] ?? 0) + before[1],
+          ],
+        })
         mayDouble[String(hole)] = allowed
-        const doubler = allowed.find((index) =>
+        // Oba Double naráz (jen u „kdokoli“): každý zdvojnásobí, jamka je ×4.
+        const doublers = allowed.filter((index) =>
           sideDoubled(round, game.id, pair[index].players, hole),
         )
-        if (doubler !== undefined) doubles[String(hole)] = doubler
-        const value = holeMultiplier(game.options, hole) * (doubler === undefined ? 1 : 2)
+        doubles[String(hole)] = doublers
+        const value = holeMultiplier(game.options, hole) * 2 ** doublers.length
         stakes[String(hole)] = state.carry + value
         return value
       },
-      scoreOf: (side, hole) => teamBestBall(context, pair[side]!.players, hole, options),
+      scoreOf: (side, hole) => bestBall(side as 0 | 1, hole),
     })
 
-    // Bod za birdie: brutto birdie a lepší kteréhokoli partnera, hned po zápisu rány.
-    const birdies: Record<string, number[]> = {}
-    const birdieTotals: [number, number] = [0, 0]
-    if (game.options.birdieBonus) {
-      for (const hole of order) {
-        const points = pair.map((side) =>
-          side.players.reduce((sum, id) => {
-            const score = scoreAt(round, id, hole)
-            return score !== undefined &&
-              score !== PICKED_UP &&
-              score - parAt(round, hole) <= -1
-              ? sum + 1
-              : sum
-          }, 0),
-        )
-        if (points[0]! > 0 || points[1]! > 0) birdies[String(hole)] = points
-        birdieTotals[0] += points[0]!
-        birdieTotals[1] += points[1]!
-      }
-    }
     const decided = result.holes.filter((h) => h.decided).length
     const describe = (side: GameSide, index: number) => ({
       id: side.id,
@@ -134,7 +156,8 @@ export const fourBallSkins: Evaluate = (context, game): EvaluationResult => {
       (result.totals[0] ?? 0) + birdieTotals[0]!,
       (result.totals[1] ?? 0) + birdieTotals[1]!,
     ]
-    const finished = result.pending === 0 && order.length > 0
+    const pending = result.pending + waiting.length
+    const finished = pending === 0 && order.length > 0
     duels.push({
       id: `${left.id}-${right.id}`,
       sides: [describe(left, 0), describe(right, 1)],
@@ -142,7 +165,7 @@ export const fourBallSkins: Evaluate = (context, game): EvaluationResult => {
       notation: `${a} : ${b}`,
       decided: finished,
       finished,
-      pending: result.pending,
+      pending,
       holeWinners: Object.fromEntries(
         result.holes
           .filter((h) => h.decided)
@@ -157,9 +180,11 @@ export const fourBallSkins: Evaluate = (context, game): EvaluationResult => {
         result.holes.filter((h) => h.decided).map((h) => [String(h.hole), h.skins]),
       ),
       holeCarry: Object.fromEntries(result.holes.map((h) => [String(h.hole), h.carry])),
+      ...(firstPending < 0 ? {} : { waitingHole: order[firstPending]! }),
       ...(game.options.birdieBonus ? { birdies } : {}),
     })
     carryLeft += result.carry
+    const group = [...left.players, ...right.players]
     for (const h of result.holes) {
       outcomes.push({
         hole: h.hole,
@@ -167,6 +192,17 @@ export const fourBallSkins: Evaluate = (context, game): EvaluationResult => {
         winners: h.winner === null ? [] : pair[h.winner]!.players,
         value: h.skins,
         carry: h.carry,
+        group,
+      })
+    }
+    for (const hole of waiting) {
+      outcomes.push({
+        hole,
+        decided: false,
+        winners: [],
+        value: 0,
+        carry: result.carry,
+        group,
       })
     }
   }

@@ -55,6 +55,7 @@ export const individualSkins: Evaluate = (context, game): EvaluationResult => {
         winners: outcome.winner === null ? [] : [group[outcome.winner] ?? ''],
         value: outcome.skins,
         carry: outcome.carry,
+        group,
       })
     }
   }
@@ -153,9 +154,25 @@ export function teamBestBall(
   return best
 }
 
+/** Výsledek jamky pro skupinu (flight): skins ve flightu mají jamku za každou skupinu zvlášť. */
+export function outcomeFor(
+  result: EvaluationResult,
+  hole: number,
+  groupPlayers: readonly PlayerId[],
+): HoleOutcome | undefined {
+  return result.holes.find(
+    (h) =>
+      h.hole === hole && (!h.group || h.group.some((id) => groupPlayers.includes(id))),
+  )
+}
+
 /** Pomocník pro hlavičku zápisu: kolik skinů je právě ve hře na jamce flightu. */
-export function skinsAtStake(result: EvaluationResult, hole: number): number {
-  const outcome = result.holes.find((h) => h.hole === hole)
+export function skinsAtStake(
+  result: EvaluationResult,
+  hole: number,
+  groupPlayers: readonly PlayerId[],
+): number {
+  const outcome = outcomeFor(result, hole, groupPlayers)
   if (!outcome) return 0
   if (outcome.decided) return outcome.value ?? 0
   return (outcome.carry ?? 0) + holeMultiplier(result.game.options, hole)

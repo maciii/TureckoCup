@@ -97,9 +97,16 @@ birdie není. Skóre zápasu = skiny + birdie body.
 **Double.** Oprávněná dvojice může jamku dublovat: jamka pak nese dva skiny
 (dvojitá 9 a 18 čtyři), přenesené skiny z banku se jen přičtou, dělená
 dublovaná jamka přenáší oba. Kdo smí dublovat, říká `options.doubleBy`:
-`behind` prohrávající dvojice (při rovnosti nikdo, výchozí), `lastLoser`
-dvojice, která ztratila poslední rozhodnutou jamku, `anyone` kterákoli,
-`off` nehraje se. Double je **surová buňka** jako extra body:
+`behind` prohrávající dvojice - méně ve **skóre zápasu včetně bodů za
+birdie** (při rovnosti nikdo, výchozí), `lastLoser` dvojice, která prohrála
+poslední vyhranou jamku (dělená jamka nic nemění), `anyone` kterákoli - když
+dublují obě, každý Double zdvojnásobí a jamka je ×4, `off` nehraje se.
+Bod za birdie se dvojitou jamkou ani Double nenásobí.
+
+**Nezapsaná jamka uprostřed.** Bank i právo dublovat závisí na předchozích
+jamkách, proto se jamky za první nezapsanou (`waitingHole`) nevyhodnocují,
+dokud se nedoplní - karta ukáže „čeká na zápis N. jamky“. Body za birdie
+se počítají hned ze zapsaných ran. Double je **surová buňka** jako extra body:
 `round.doubles[hráč][jamka]` = seznam id her, zapisuje ho `setDouble`
 (jedna buňka, `lastEdit`, log úprav), dvojice dublovala, když to má
 kterýkoli její hráč. Jde přepnout kdykoli, i po zápisu ran; double u dvojice,

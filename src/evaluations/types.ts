@@ -38,6 +38,8 @@ export interface HoleOutcome {
   value?: number
   /** Skiny čekající v banku po jamce. */
   carry?: number
+  /** Hráči skupiny/zápasu, jehož je výsledek (skins ve flightu, Four-ball Skins): jamky více skupin se nemíchají. */
+  group?: PlayerId[]
 }
 
 /** Stav jednoho duelu (pozice) nebo zápasu (hlavní hra). */
@@ -68,8 +70,10 @@ export interface DuelResult {
   holePoints?: Record<string, SidePoints[]>
   /** Four-ball Skins: strany, které směly na jamce dublovat (stav před jamkou). */
   mayDouble?: Record<string, (0 | 1)[]>
-  /** Four-ball Skins: započítaný dubl na jamce (která strana). */
-  doubles?: Record<string, 0 | 1>
+  /** Four-ball Skins: započítané double na jamce (strany; obě = jamka ×4). */
+  doubles?: Record<string, (0 | 1)[]>
+  /** Four-ball Skins: první nezapsaná jamka v pořadí - jamky za ní čekají (bank i double závisí na ní). */
+  waitingHole?: number
   /** Four-ball Skins: o kolik skinů se na jamce hrálo (bank + hodnota jamky). */
   stakes?: Record<string, number>
   /** Four-ball Skins s bodem za birdie: body za birdie obou stran na jamce (jen kde nějaké jsou). */

@@ -13,6 +13,7 @@ import {
 } from '../model/bonuses'
 import { bonusAwardsAt, bonusPointsAt, bonusSummary } from './bonuses'
 import { stablefordAt } from './stableford'
+import { outcomeFor, skinsAtStake } from './skins'
 
 /**
  * Evaluace nad reálnými daty prvního kola (Aspendos, bílá odpaliště)
@@ -520,5 +521,24 @@ describe('Longest a Nearest podle nastavení kola', () => {
     for (const id of round.playerIds) round.scores[id]!['4'] = 5
     expect(bonusPointsAt(round, config, 'p1', 4)).toBe(0)
     expect(availableBonuses(config, round, 4).map((b) => b.id)).not.toContain('longest')
+  })
+})
+
+describe('skins ve flightu: jamka každé skupiny zvlášť', () => {
+  it('bank a stav jamky se berou pro skupinu flightu, ne pro první skupinu v seznamu', () => {
+    const round = round1()
+    const [first, second] = round.flights
+    // První flight dělí jedničku (bank 1), druhý ještě nezačal.
+    for (const id of first!.players) round.scores[id]!['0'] = 4
+    const game = round.games.find((g) => g.kind === 'individual-skins')!
+    const result = evaluateGame(round, SEED_PLAYERS, {
+      ...game,
+      options: { ...game.options, net: false, scope: 'flight', carry: true },
+    })
+    expect(outcomeFor(result, 0, first!.players)?.decided).toBe(true)
+    expect(outcomeFor(result, 0, second!.players)?.decided).toBe(false)
+    expect(skinsAtStake(result, 1, first!.players)).toBe(2)
+    expect(skinsAtStake(result, 0, second!.players)).toBe(1)
+    expect(skinsAtStake(result, 1, second!.players)).toBe(1)
   })
 })

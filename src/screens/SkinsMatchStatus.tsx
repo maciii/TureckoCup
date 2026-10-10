@@ -2,7 +2,7 @@ import { useData } from '../data'
 import type { EvaluationResult } from '../evaluations'
 import { matchOfFlight } from '../evaluations/fourBallSkins'
 import { t } from '../i18n'
-import { doubleHolder, holeMultiplier, sideDoubled } from '../model/round'
+import { doublesAt, sideDoubled } from '../model/round'
 import type { Flight, Player, TournamentRound } from '../model/types'
 import { TeamBadge, sideLabel } from './common'
 
@@ -33,27 +33,38 @@ export default function SkinsMatchStatus({
   if (!duel || duel.sides.length < 2) return null
   const key = String(hole)
   // Jen data tohoto zápasu (`result.holes` míchá oba zápasy kola).
+  const inPlay = duel.stakes?.[key] !== undefined
+  const waitingFor = duel.waitingHole
+  // Jamka mimo rozsah hry: karta nemá co říct.
+  if (!inPlay && waitingFor === undefined) return null
   const winner = duel.holeWinners?.[key]
-  const stake = duel.stakes?.[key] ?? holeMultiplier(result.game.options, hole)
-  const allowed = duel.mayDouble?.[key] ?? []
-  const counted = duel.doubles?.[key]
+  const stake = duel.stakes?.[key] ?? 0
+  const allowed = inPlay ? (duel.mayDouble?.[key] ?? []) : []
+  const counted = duel.doubles?.[key] ?? []
   const label = (index: number) => sideLabel(players, duel.sides[index]!.players)
 
   function toggle(index: 0 | 1) {
     const side = duel!.sides[index]!
-    const holder = doubleHolder(round, result.game.id, side.players, hole)
-    store.dispatch({
-      kind: 'setDouble',
-      roundId: round.id,
-      playerId: holder ?? side.players[0]!,
-      hole,
-      gameId: result.game.id,
-      on: holder === undefined,
-    })
+    // Double může nést kterýkoli partner (dva telefony); vypnutí smaže všechny.
+    const holders = side.players.filter((id) =>
+      doublesAt(round, id, hole).includes(result.game.id),
+    )
+    const targets = holders.length > 0 ? holders : [side.players[0]!]
+    for (const playerId of targets) {
+      store.dispatch({
+        kind: 'setDouble',
+        roundId: round.id,
+        playerId,
+        hole,
+        gameId: result.game.id,
+        on: holders.length === 0,
+      })
+    }
   }
 
   let status: string
-  if (winner === undefined) status = t('skins.match.atStake', { count: stake })
+  if (!inPlay) status = t('skins.match.waiting', { number: (waitingFor ?? 0) + 1 })
+  else if (winner === undefined) status = t('skins.match.atStake', { count: stake })
   else if (winner === null)
     status = t('skins.match.carried', { count: duel.holeCarry?.[key] ?? 0 })
   else
@@ -81,16 +92,16 @@ export default function SkinsMatchStatus({
         <span className={`chip${winner !== undefined && winner !== null ? ' win' : ''}`}>
           {status}
         </span>
-        {counted !== undefined && (
-          <span className="chip win">
-            {t('skins.match.doubled', { name: label(counted) })}
+        {counted.map((index) => (
+          <span key={index} className="chip win">
+            {t('skins.match.doubled', { name: label(index) })}
           </span>
-        )}
+        ))}
       </p>
       {duel.sides.map((side, index) => {
         const doubled = sideDoubled(round, result.game.id, side.players, hole)
         const may = allowed.includes(index as 0 | 1)
-        const ignored = doubled && counted !== index
+        const ignored = doubled && inPlay && !may
         const birdie = duel.birdies?.[key]?.[index] ?? 0
         return (
           <div key={side.id} className={`pair-card${winner === index ? ' lead' : ''}`}>

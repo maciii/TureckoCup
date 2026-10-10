@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { EvaluationResult } from '../evaluations'
 import { bonusAwardsAt, bonusTotal } from '../evaluations/bonuses'
-import { skinsAtStake } from '../evaluations/skins'
+import { outcomeFor, skinsAtStake } from '../evaluations/skins'
 import { stablefordAt } from '../evaluations/stableford'
 import { t } from '../i18n'
 import type { BonusConfig } from '../model/types'
@@ -66,16 +66,15 @@ export default function HoleStatus({
         total: leaders(result, name),
       })
     } else if (kind === 'individual-skins') {
-      const flightOutcome = result.holes.find(
-        (h) => h.hole === hole && (h.winners.some((id) => inFlight.has(id)) || h.decided),
-      )
+      // Výsledek jamky skupiny tohoto flightu - jamky skupin se v seznamu střídají.
+      const flightOutcome = outcomeFor(result, hole, flight.players)
       lines.push({
         key: result.game.id,
         name: label,
         onHole: skinOutcome(
           flightOutcome ?? outcome,
           (id) => name(id),
-          skinsAtStake(result, hole),
+          skinsAtStake(result, hole, flight.players),
         ),
         total:
           result.rows
@@ -93,7 +92,7 @@ export default function HoleStatus({
             const team = teamOf(players, id)
             return team ? teamName(team, teams) : name(id)
           },
-          skinsAtStake(result, hole),
+          skinsAtStake(result, hole, flight.players),
         ),
         total: `${teamName('A', teams)} ${result.teamPoints.A} : ${result.teamPoints.B} ${teamName('B', teams)}`,
       })

@@ -73,14 +73,14 @@ describe('Four-ball Skins', () => {
     let duel = evaluateGame(round, SEED_PLAYERS, game()).duels![0]!
     expect(duel.mayDouble!['0']).toEqual([])
     expect(duel.mayDouble!['1']).toEqual([1])
-    expect(duel.doubles).toEqual({ '1': 1 })
+    expect(duel.doubles!['1']).toEqual([1])
     expect(duel.stakes!['1']).toBe(2)
     expect(duel.sides.map((s) => s.value)).toEqual([1, 2])
     // Double u vedoucí dvojice se nepočítá (jen záznam, vyhodnocení ho ignoruje).
     round.doubles!.p2!['1'] = []
     round.doubles!.p3!['1'] = ['fbs']
     duel = evaluateGame(round, SEED_PLAYERS, game()).duels![0]!
-    expect(duel.doubles).toEqual({})
+    expect(duel.doubles!['1']).toEqual([])
     expect(duel.sides.map((s) => s.value)).toEqual([1, 1])
     // Double na dělené jamce přenáší dva; dvojitá devítka s double je za čtyři.
     const carry = round1()
@@ -88,12 +88,16 @@ describe('Four-ball Skins', () => {
     carry.doubles!.p2!['1'] = ['fbs']
     const carried = evaluateGame(carry, SEED_PLAYERS, game()).duels![0]!
     expect(carried.stakes!['2']).toBe(3)
+    // Dvojitá devítka s double je za čtyři (+ bank sedmi dělených jamek).
     const nine = round1()
-    for (const id of ['p3', 'p1', 'p2', 'p6']) nine.scores[id]!['0'] = id === 'p3' ? 4 : 5
+    for (let hole = 0; hole < 9; hole++)
+      for (const id of ['p3', 'p1', 'p2', 'p6'])
+        nine.scores[id]![String(hole)] = id === 'p3' && (hole === 0 || hole === 8) ? 4 : 5
     nine.doubles!.p6!['8'] = ['fbs']
     const doubled = evaluateGame(nine, SEED_PLAYERS, game({ doubleHoles: true }))
       .duels![0]!
-    expect(doubled.stakes!['8']).toBe(4)
+    expect(doubled.stakes!['8']).toBe(7 + 4)
+    expect(doubled.holeSkins!['8']).toBe(11)
   })
 
   it('kdo smí dublovat podle nastavení hry', () => {
@@ -109,9 +113,11 @@ describe('Four-ball Skins', () => {
     enter(round, { p3: [4], p1: [5], p2: [5], p6: [5] })
     round.doubles!.p2!['0'] = ['fbs']
     round.doubles!.p3!['0'] = ['fbs']
-    expect(
-      evaluateGame(round, SEED_PLAYERS, game({ doubleBy: 'anyone' })).duels![0]!.doubles,
-    ).toEqual({ '0': 0 })
+    // „Kdokoli“ a double obou: každý zdvojnásobí, jamka je ×4.
+    const both = evaluateGame(round, SEED_PLAYERS, game({ doubleBy: 'anyone' }))
+      .duels![0]!
+    expect(both.doubles!['0']).toEqual([0, 1])
+    expect(both.stakes!['0']).toBe(4)
     expect(
       evaluateGame(round, SEED_PLAYERS, game({ doubleBy: 'off' })).duels![0]!.stakes![
         '0'
@@ -165,5 +171,38 @@ describe('Four-ball Skins', () => {
         '2'
       ],
     ).toEqual([1, 0])
+  })
+
+  it('prohrávající se počítá ze skóre zápasu včetně bodů za birdie', () => {
+    const round = round1()
+    // Jamka 1: B bere skin (4 vs 5), A má dvě birdie? Ne - A 5/5. Jamka 1: A 3/3 (dvě birdie,
+    // par 4) proti B 3/4: lepší míč shodný -> dělená, A vede 2:0 jen body za birdie.
+    enter(round, { p3: [3, 4], p1: [3, 4], p2: [3, 4], p6: [4, 4] })
+    const duel = evaluateGame(round, SEED_PLAYERS, game({ birdieBonus: true })).duels![0]!
+    expect(duel.sides.map((s) => s.value)).toEqual([2, 1])
+    // Na dvojce prohrává B (1 : 2 ve skóre), smí dublovat jen B.
+    expect(duel.mayDouble!['1']).toEqual([1])
+  })
+
+  it('jamky za první nezapsanou čekají: bank ani double se za ni nepočítají', () => {
+    const round = round1()
+    // Dvojka chybí Macovi; trojka je zapsaná celá.
+    enter(round, { p3: [4, 4, 4], p1: [5, null, 5], p2: [5, 5, 5], p6: [5, 5, 5] })
+    round.doubles!.p2!['2'] = ['fbs']
+    const duel = evaluateGame(round, SEED_PLAYERS, game()).duels![0]!
+    expect(duel.waitingHole).toBe(1)
+    expect(duel.holeSkins).toEqual({ '0': 1 })
+    expect(duel.stakes!['2']).toBeUndefined()
+    expect(duel.mayDouble!['2']).toBeUndefined()
+    expect(duel.pending).toBe(17)
+    expect(duel.sides.map((s) => s.value)).toEqual([1, 0])
+    // Po doplnění dvojky (A ji bere) se trojka vyhodnotí: B prohrává 0:2, jeho double platí.
+    round.scores.p1!['1'] = 5
+    const after = evaluateGame(round, SEED_PLAYERS, game()).duels![0]!
+    // Další nezapsaná je čtyřka.
+    expect(after.waitingHole).toBe(3)
+    expect(after.mayDouble!['2']).toEqual([1])
+    expect(after.stakes!['2']).toBe(2)
+    expect(after.holeSkins!['2']).toBe(2)
   })
 })
