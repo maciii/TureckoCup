@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GameConfig, TournamentRound } from '../model/types'
+import { PICKED_UP } from '../model/types'
 import { SEED_PLAYERS, seedRounds } from '../data/seed'
 import { evaluateGame } from './index'
 import { allowedDoublers } from './fourBallSkins'
@@ -137,5 +138,30 @@ describe('Four-ball Skins', () => {
     const won = evaluateGame(round, SEED_PLAYERS, { ...game(), sides })
     expect(won.duels![0]!.notation).toBe('18 : 0')
     expect(won.teamPoints).toEqual({ A: 1.5, B: 0.5 })
+  })
+
+  it('bod navíc za každé birdie partnerů jde do skóre zápasu vedle skinů', () => {
+    const round = round1()
+    // Jamka 1 (par 4): Ota birdie 3, Mac 5; B 4/4 -> A bere skin a birdie bod.
+    // Jamka 2 (par 4): A 4/4, B 3/3 -> B bere skin + dva birdie body.
+    enter(round, { p3: [3, 4], p1: [5, 4], p2: [4, 3], p6: [4, 3] })
+    const plain = evaluateGame(round, SEED_PLAYERS, game()).duels![0]!
+    expect(plain.sides.map((s) => s.value)).toEqual([1, 1])
+    expect(plain.birdies).toBeUndefined()
+    const bonus = evaluateGame(round, SEED_PLAYERS, game({ birdieBonus: true }))
+      .duels![0]!
+    expect(bonus.birdies).toEqual({ '0': [1, 0], '1': [0, 2] })
+    expect(bonus.sides.map((s) => s.value)).toEqual([2, 3])
+    expect(bonus.notation).toBe('2 : 3')
+    expect(bonus.leader).toBe(1)
+    // Birdie se počítá hned po zápisu rány, i když soupeř ještě nezapsal; zvednutá jamka ne.
+    // Trojka (par 3): Ota dvojka je birdie.
+    round.scores.p3!['2'] = 2
+    round.scores.p1!['2'] = PICKED_UP
+    expect(
+      evaluateGame(round, SEED_PLAYERS, game({ birdieBonus: true })).duels![0]!.birdies![
+        '2'
+      ],
+    ).toEqual([1, 0])
   })
 })

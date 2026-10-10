@@ -89,6 +89,11 @@ Po dohrání vyhrává dvojice s víc skiny: `win` bodů do týmu, remíza `halv
 **za každý zápas zvlášť** (výchozí 1 / 0,5). Dvojitá 9 a 18
 (`doubleHoles`) a extra body do hry (`bonuses`) jako u ostatních her.
 
+**Bod za birdie** (`options.birdieBonus`): za každé birdie a lepší
+kteréhokoli partnera (brutto, ze skutečných ran, hned po zápisu rány)
+dostane dvojice bod do skóre zápasu navíc ke skinům; zvednutá jamka
+birdie není. Skóre zápasu = skiny + birdie body.
+
 **Double.** Oprávněná dvojice může jamku dublovat: jamka pak nese dva skiny
 (dvojitá 9 a 18 čtyři), přenesené skiny z banku se jen přičtou, dělená
 dublovaná jamka přenáší oba. Kdo smí dublovat, říká `options.doubleBy`:

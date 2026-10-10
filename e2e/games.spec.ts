@@ -236,6 +236,8 @@ test('Four-ball Skins: double v kartě zápasu, přenos dvou skinů a výsledek 
     card.getByRole('button', { name: 'Prohrávající', pressed: true }),
   ).toHaveCount(1)
   await card.getByRole('button', { name: 'Kdokoli' }).click()
+  await card.getByRole('switch', { name: 'Bod navíc za každé birdie' }).click()
+  await expect(card).toContainText('birdie a lepší')
   await expectNoHorizontalOverflow(page)
 
   await setIdentity(page, 'writer')
@@ -261,7 +263,9 @@ test('Four-ball Skins: double v kartě zápasu, přenos dvou skinů a výsledek 
   await mac.locator('.step-button').first().click()
   await enterPar(page, [0, 2, 3])
   await expect(match).toContainText('Ota + Mac bere 3')
-  await expect(match.locator('.pair-status-score')).toContainText('3')
+  // Macovo birdie: bod navíc, skóre zápasu 4 : 0.
+  await expect(match).toContainText('Birdie +1')
+  await expect(match.locator('.pair-status-score')).toContainText('4')
   await expectNoHorizontalOverflow(page)
 
   // Druhý flight vidí stav prvního zápasu výrazně v kartě nad zápisem.
@@ -269,7 +273,7 @@ test('Four-ball Skins: double v kartě zápasu, přenos dvou skinů a výsledek 
   const otherCard = page.locator('.other-flight-card')
   await expect(otherCard).toContainText('Flight 1 · 3. jamka')
   await expect(otherCard.locator('.duel')).toContainText('Ota + Mac')
-  await expect(otherCard.locator('.duel-center')).toContainText('3 : 0')
+  await expect(otherCard.locator('.duel-center')).toContainText('4 : 0')
   await expectNoHorizontalOverflow(page)
 
   await open(page, '#/round/r1')
@@ -277,6 +281,6 @@ test('Four-ball Skins: double v kartě zápasu, přenos dvou skinů a výsledek 
     has: page.getByRole('heading', { name: 'Four-ball Skins' }),
   })
   await expect(section.locator('.duel')).toHaveCount(2)
-  await expect(section.locator('.duel').first()).toContainText('3 : 0')
+  await expect(section.locator('.duel').first()).toContainText('4 : 0')
   expect(errors()).toEqual([])
 })

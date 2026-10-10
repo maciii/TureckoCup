@@ -1,9 +1,12 @@
 import type { DoubleBy, GameSide, PlayerId } from '../model/types'
+import { PICKED_UP } from '../model/types'
 import {
   gameHoles,
   holeMultiplier,
   holeOrder,
   matchSides,
+  parAt,
+  scoreAt,
   sideDoubled,
   teamOf,
 } from '../model/round'
@@ -25,6 +28,10 @@ import type {
  * přepínače Netto a `allowance`). Vítěz bere skin, dělená jamka přenáší
  * skin dál (`carry`). Dvojice s víc skiny po dohrání vyhrává zápas a bere
  * `win` bodů do týmu, remíza `halve` - za každý zápas zvlášť.
+ *
+ * Bod za birdie (`options.birdieBonus`): za každé birdie a lepší partnerů
+ * (brutto, ze skutečných ran) dostane dvojice bod do skóre zápasu navíc
+ * ke skinům - skóre zápasu je tedy skiny + birdie body.
  *
  * Double: oprávněná dvojice může jamku dublovat - jamka pak nese dva skiny
  * místo jednoho (dvojitá 9 a 18 čtyři), přenesené skiny z banku se jen
@@ -95,15 +102,38 @@ export const fourBallSkins: Evaluate = (context, game): EvaluationResult => {
       scoreOf: (side, hole) => teamBestBall(context, pair[side]!.players, hole, options),
     })
 
+    // Bod za birdie: brutto birdie a lepší kteréhokoli partnera, hned po zápisu rány.
+    const birdies: Record<string, number[]> = {}
+    const birdieTotals: [number, number] = [0, 0]
+    if (game.options.birdieBonus) {
+      for (const hole of order) {
+        const points = pair.map((side) =>
+          side.players.reduce((sum, id) => {
+            const score = scoreAt(round, id, hole)
+            return score !== undefined &&
+              score !== PICKED_UP &&
+              score - parAt(round, hole) <= -1
+              ? sum + 1
+              : sum
+          }, 0),
+        )
+        if (points[0]! > 0 || points[1]! > 0) birdies[String(hole)] = points
+        birdieTotals[0] += points[0]!
+        birdieTotals[1] += points[1]!
+      }
+    }
     const decided = result.holes.filter((h) => h.decided).length
     const describe = (side: GameSide, index: number) => ({
       id: side.id,
       players: side.players,
       teamId: teamOf(players, side.players[0] ?? ''),
-      value: result.totals[index] ?? 0,
+      value: (result.totals[index] ?? 0) + birdieTotals[index]!,
       holes: decided,
     })
-    const [a, b] = [result.totals[0] ?? 0, result.totals[1] ?? 0]
+    const [a, b] = [
+      (result.totals[0] ?? 0) + birdieTotals[0]!,
+      (result.totals[1] ?? 0) + birdieTotals[1]!,
+    ]
     const finished = result.pending === 0 && order.length > 0
     duels.push({
       id: `${left.id}-${right.id}`,
@@ -121,6 +151,7 @@ export const fourBallSkins: Evaluate = (context, game): EvaluationResult => {
       mayDouble,
       doubles,
       stakes,
+      ...(game.options.birdieBonus ? { birdies } : {}),
     })
     carryLeft += result.carry
     for (const h of result.holes) {

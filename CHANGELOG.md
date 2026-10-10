@@ -3,6 +3,15 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.25.0] – 2026-10-10
+
+### Přidáno
+
+- Four-ball Skins: přepínač **Bod navíc za každé birdie** - za každé birdie
+  a lepší kteréhokoli partnera (brutto) dostane dvojice bod do skóre zápasu
+  navíc ke skinům. Karta zápasu ukáže „Birdie +1“. Live admin úloha `birdie`
+  ho zapne u dnešní hry; testovací verze dny 4 a 5.
+
 ## [0.24.2] – 2026-10-10
 
 ### Změněno

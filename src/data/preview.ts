@@ -257,6 +257,7 @@ function gamesForDay(day: number): GameConfig[] {
             carry: true,
             doubleBy: 'behind',
             doubleHoles: true,
+            birdieBonus: true,
           },
           { win: 1, halve: 0.5 },
           { countsForTeam: true },

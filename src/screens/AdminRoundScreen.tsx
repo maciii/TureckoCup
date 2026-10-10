@@ -1024,6 +1024,18 @@ function GameEditor({
               <p className="hint">{t('admin.gameDoubleByHint')}</p>
             </div>
           )}
+          {game.kind === 'four-ball-skins' && (
+            <>
+              <Switch
+                label={t('admin.gameBirdieBonus')}
+                on={options.birdieBonus ?? false}
+                onChange={(birdieBonus) => setOptions({ birdieBonus })}
+              />
+              {(options.birdieBonus ?? false) && (
+                <p className="hint">{t('admin.gameBirdieBonusHint')}</p>
+              )}
+            </>
+          )}
           {game.kind === 'team-skins' && (
             <div className="field">
               <span className="field-label">{t('admin.gamePerSkin')}</span>

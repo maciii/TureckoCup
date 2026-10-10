@@ -22,7 +22,16 @@ import { getFirestore } from 'firebase-admin/firestore'
  *   GOOGLE_APPLICATION_CREDENTIALS=klíč.json VITE_FIREBASE_PROJECT_ID=turecko-cup
  */
 
-const TASKS = ['check', 'tees', 'games', 'index', 'schedule', 'bonuses', 'double']
+const TASKS = [
+  'check',
+  'tees',
+  'games',
+  'index',
+  'schedule',
+  'bonuses',
+  'double',
+  'birdie',
+]
 const task = process.argv[2]
 if (!TASKS.includes(task)) {
   console.error(`Použití: node scripts/live-admin.mjs <${TASKS.join('|')}>`)
@@ -178,6 +187,26 @@ async function double() {
   }
 }
 
+/** Bod navíc za každé birdie u Four-ball Skins dnešního kola. */
+async function birdie() {
+  const today = new Date().toISOString().slice(0, 10)
+  for (const round of rounds) {
+    if (round.status === 'finished') continue
+    if (round.status !== 'live' && round.date !== today) continue
+    const games = round.games.map((g) =>
+      g.kind === 'four-ball-skins' && !g.options?.birdieBonus
+        ? { ...g, options: { ...g.options, birdieBonus: true } }
+        : g,
+    )
+    if (games.every((g, i) => g === round.games[i])) {
+      console.log(`  ${round.id}: bod za birdie už zapnutý nebo bez Four-ball Skins`)
+      continue
+    }
+    await root.collection('rounds').doc(round.id).update({ games })
+    console.log(`  ${round.id}: bod za birdie zapnut`)
+  }
+}
+
 async function schedule() {
   for (const round of rounds) {
     const want = SCHEDULE[round.id]
@@ -238,5 +267,6 @@ if (task === 'games') await games()
 if (task === 'index') await index()
 if (task === 'schedule') await schedule()
 if (task === 'double') await double()
+if (task === 'birdie') await birdie()
 if (task === 'bonuses') await bonuses()
 if (task !== 'check') console.log('Hotovo.')

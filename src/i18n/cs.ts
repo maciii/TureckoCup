@@ -107,6 +107,7 @@ export const cs = {
   },
   'skins.match.won': '{name} bere {count}',
   'skins.match.carried': 'dělená · v banku {count}',
+  'skins.match.birdie': 'Birdie +{count}',
   'skins.match.double': 'Double',
   'skins.match.doubled': 'Double: {name}',
   'skins.match.doubleIgnored': 'Double u {name} se nepočítá - nesměl dublovat.',
@@ -345,6 +346,9 @@ export const cs = {
   'admin.gameScopeFlight': 'Ve flightu',
   'admin.gameScopeAll': 'Všech 8',
   'admin.gameCarry': 'Přenos banku',
+  'admin.gameBirdieBonus': 'Bod navíc za každé birdie',
+  'admin.gameBirdieBonusHint':
+    'Za každé birdie a lepší kteréhokoli partnera (brutto, ze skutečných ran) dostane dvojice bod do skóre zápasu navíc ke skinům.',
   'admin.gameDoubleBy': 'Double (jamka o dva skiny) smí',
   'admin.gameDoubleBy.behind': 'Prohrávající',
   'admin.gameDoubleBy.lastLoser': 'Kdo ztratil jamku',

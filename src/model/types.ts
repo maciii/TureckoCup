@@ -182,6 +182,8 @@ export interface GameOptions {
   doubleHoles?: boolean
   /** Four-ball Skins: kdo smí na jamce dublovat (hrát o dva skiny); chybí = prohrávající dvojice. */
   doubleBy?: DoubleBy
+  /** Four-ball Skins: bod do skóre dvojice navíc za každé birdie a lepší partnerů (brutto). */
+  birdieBonus?: boolean
 }
 
 /** Four-ball Skins: kdo smí dublovat jamku. */

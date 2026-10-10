@@ -72,6 +72,8 @@ export interface DuelResult {
   doubles?: Record<string, 0 | 1>
   /** Four-ball Skins: o kolik skinů se na jamce hrálo (bank + hodnota jamky). */
   stakes?: Record<string, number>
+  /** Four-ball Skins s bodem za birdie: body za birdie obou stran na jamce (jen kde nějaké jsou). */
+  birdies?: Record<string, number[]>
 }
 
 /** Body jedné dvojice na jamce v Best + Součet a čísla, ze kterých vzešly. */

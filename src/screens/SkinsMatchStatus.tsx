@@ -104,12 +104,18 @@ export default function SkinsMatchStatus({
         const doubled = sideDoubled(round, result.game.id, side.players, hole)
         const may = allowed.includes(index as 0 | 1)
         const ignored = doubled && counted !== index
+        const birdie = duel.birdies?.[key]?.[index] ?? 0
         return (
           <div key={side.id} className={`pair-card${winner === index ? ' lead' : ''}`}>
             <span className="pair-name">
               <TeamBadge teamId={side.teamId} />
               <span>{sideLabel(players, side.players)}</span>
             </span>
+            {birdie > 0 && (
+              <span className="chip win">
+                {t('skins.match.birdie', { count: birdie })}
+              </span>
+            )}
             {(may || doubled) && (
               <span className="pair-chips">
                 <button
