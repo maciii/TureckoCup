@@ -320,43 +320,6 @@ export default function PlayScreen({ roundId, flight }: Props) {
             </span>
           </div>
         )}
-        {/* Druhý flight: kde je a jak stojí jeho zápasy (hry dvojic) - výrazně,
-            ať hráči vidí stav druhého zápasu bez přepínání. */}
-        {others.map(({ entry, index }) => {
-          const matches = results
-            .filter((r) => hasSides(r.game.kind))
-            .map((r) => ({ result: r, duel: matchOfFlight(r, entry.players) }))
-            .filter((m) => m.duel && m.duel.sides.length === 2)
-          return (
-            <section
-              key={index}
-              className="other-flight-card"
-              aria-label={t('round.flight', { number: index + 1 })}
-            >
-              <button
-                type="button"
-                className="other-flight-head"
-                onClick={() => setOtherFlight(index)}
-              >
-                {t('round.flight', { number: index + 1 })} ·{' '}
-                {flightProgressLabel(round, entry)}
-                <span className="chev">›</span>
-              </button>
-              {matches.map(({ result, duel }) => (
-                <ul key={result.game.id} className="list other-flight-match">
-                  {matches.length > 1 && (
-                    <li className="other-flight-game">{gameTitle(result.game)}</li>
-                  )}
-                  <DuelRow
-                    duel={duel!}
-                    players={state.players}
-                    format={result.game.options.format ?? 'strokes-net'}
-                  />
-                </ul>
-              ))}
-            </section>
-          )
-        })}
 
         <HoleStatus
           round={round}
@@ -536,6 +499,43 @@ export default function PlayScreen({ roundId, flight }: Props) {
         <p className="hint center px play-help" style={{ paddingTop: 10 }}>
           {t('play.clearHint', { par })}
         </p>
+        {/* Druhý flight až pod zápisem: kde je a jak stojí jeho zápasy (hry dvojic) -
+            výrazně, ale ať neodsouvá zadávání ran. */}
+        {others.map(({ entry, index }) => {
+          const matches = results
+            .filter((r) => hasSides(r.game.kind))
+            .map((r) => ({ result: r, duel: matchOfFlight(r, entry.players) }))
+            .filter((m) => m.duel && m.duel.sides.length === 2)
+          return (
+            <section
+              key={index}
+              className="other-flight-card"
+              aria-label={t('round.flight', { number: index + 1 })}
+            >
+              <button
+                type="button"
+                className="other-flight-head"
+                onClick={() => setOtherFlight(index)}
+              >
+                {t('round.flight', { number: index + 1 })} ·{' '}
+                {flightProgressLabel(round, entry)}
+                <span className="chev">›</span>
+              </button>
+              {matches.map(({ result, duel }) => (
+                <ul key={result.game.id} className="list other-flight-match">
+                  {matches.length > 1 && (
+                    <li className="other-flight-game">{gameTitle(result.game)}</li>
+                  )}
+                  <DuelRow
+                    duel={duel!}
+                    players={state.players}
+                    format={result.game.options.format ?? 'strokes-net'}
+                  />
+                </ul>
+              ))}
+            </section>
+          )
+        })}
       </main>
 
       <footer className="app-footer">

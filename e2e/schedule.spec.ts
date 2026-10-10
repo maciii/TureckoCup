@@ -142,10 +142,16 @@ test('zapisovatel nahlédne na druhý flight a vrátí se ke svému', async ({
   await expect(page.locator('.hole-info')).toContainText('Jamka 1 z 18')
   await expect(rows.nth(0).locator('.mark')).toHaveText('4')
 
-  // Čtyři hráči se pořád vejdou na displej bez rolování.
+  // Čtyři hráči se pořád vejdou na displej bez rolování (karta druhého
+  // flightu je až pod nimi a smí být mimo obrazovku).
   const fits = await page.evaluate(() => {
     const content = document.querySelector('.content')
-    return content ? content.scrollHeight <= content.clientHeight + 1 : false
+    const rows = document.querySelectorAll('.player-row')
+    const last = rows[rows.length - 1]
+    if (!content || !last) return false
+    return (
+      last.getBoundingClientRect().bottom <= content.getBoundingClientRect().bottom + 1
+    )
   })
   expect(fits).toBe(true)
   expect(errors()).toEqual([])

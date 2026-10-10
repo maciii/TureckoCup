@@ -2226,7 +2226,7 @@ a.menu-item {
 
 /* Karta druhého flightu v zápisu: kde je a stav jeho zápasu (řádek jako ve výsledcích). */
 .other-flight-card {
-  margin: 8px var(--pad) 0;
+  margin: 12px var(--pad) 8px;
   padding: 6px 12px 2px;
   background: var(--surface);
   border-radius: 14px;

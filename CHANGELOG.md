@@ -3,6 +3,13 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.25.1] – 2026-10-10
+
+### Změněno
+
+- Karta druhého flightu je v zápisu až úplně dole pod hráči, aby neodsouvala
+  zadávání ran.
+
 ## [0.25.0] – 2026-10-10
 
 ### Přidáno
