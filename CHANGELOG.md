@@ -3,6 +3,17 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.26.1] – 2026-10-10
+
+### Změněno
+
+- **Odznaky jako medaile ve stylu Apple Fitness.** Broušený zlatý okraj
+  s tloušťkou hrany, smaltovaný střed v barvě odznaku s raženým znakem
+  (ptáček, orel, plamen, míček, stehno; jinak text). Získané medaile se
+  pomalu otáčejí kolem své osy a ukazují rub se jménem držitele, počtem
+  a datem; nezískané stojí šedé. Gratulace: medaile přiletí z dálky
+  s trojitou otočkou, kolem vystřelí jiskry a padá konfeta.
+
 ## [0.26.0] – 2026-10-10
 
 ### Přidáno

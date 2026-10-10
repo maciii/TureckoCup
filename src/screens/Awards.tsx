@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import type { AwardResult, AwardsSummary } from '../evaluations/awards'
+import type { AwardId, AwardResult, AwardsSummary } from '../evaluations/awards'
 import { awardSignature, awardsOf } from '../evaluations/awards'
 import { dynamicKey, t } from '../i18n'
 import { shortName } from '../model/round'
 import type { Player, PlayerId } from '../model/types'
 import { STORAGE_PREFIX } from '../data/store'
-import { TeamBadge } from './common'
+import { TeamBadge, formatDate } from './common'
 
 /**
  * Odznaky zájezdu (vzor Apple awards): medaile s držitelem a hodnotou,
@@ -45,23 +45,93 @@ function holdersLabel(result: AwardResult, players: Player[]): string {
   return result.holders.map((id) => shortName(players, id)).join(' + ')
 }
 
-/** Medaile - čistě CSS, znak je text. */
+/** Ražené znaky; co nemá vlastní kresbu, nese text z definice odznaku. */
+const EMBLEMS: Partial<Record<AwardId, React.ReactNode>> = {
+  birdie: (
+    <svg viewBox="0 0 24 24">
+      <path d="M21 5l-6 2-3-3c-2 0-4 2-4 5v2l-5 3 1 1 4-1v2c0 2 2 4 4 4h3l-1-2c2 0 4-2 4-5V8l3-2z" />
+    </svg>
+  ),
+  eagle: (
+    <svg viewBox="0 0 24 24">
+      <path d="M12 4l2 3 8-1-6 4 2 2-4 1v6l-2-2-2 2v-6l-4-1 2-2-6-4 8 1z" />
+    </svg>
+  ),
+  streak: (
+    <svg viewBox="0 0 24 24">
+      <path d="M12 2c1 4 5 5 5 11a5 5 0 01-10 0c0-2 1-3 1-3s0 3 2 3c1 0 1-2 0-4 0-3 2-5 2-7z" />
+    </svg>
+  ),
+  skins: (
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" />
+      <g fill="rgba(0,0,0,0.35)">
+        <circle cx="9" cy="9" r="1.3" />
+        <circle cx="14" cy="8" r="1.3" />
+        <circle cx="12" cy="13" r="1.3" />
+        <circle cx="8" cy="14" r="1.3" />
+        <circle cx="16" cy="13" r="1.3" />
+      </g>
+    </svg>
+  ),
+  glutton: (
+    <svg viewBox="0 0 24 24">
+      <path d="M15 3a6 6 0 00-5.7 7.9L4 16.2 5.8 18l.9-.9 1.3 1.3L7 19.5 8.8 21l5.3-5.3A6 6 0 1015 3z" />
+    </svg>
+  ),
+}
+
+/**
+ * Medaile (vzor Apple Fitness): broušený zlatý okraj, tloušťka hrany
+ * z několika vrstev, smaltovaný střed s raženým znakem a rub se jménem,
+ * počtem a datem. Točí se kolem svislé osy; prázdná medaile stojí a je šedá.
+ */
 export function AwardMedal({
   result,
+  players,
+  date,
   size = 'md',
   mine = false,
 }: {
   result: AwardResult
+  players: Player[]
+  date: string | null
   size?: 'md' | 'lg'
   mine?: boolean
 }) {
   const empty = result.holders.length === 0
+  const emblem = EMBLEMS[result.award.id]
   return (
     <span
-      className={`award ${result.award.tone} ${size}${empty ? ' empty' : ''}${mine ? ' mine' : ''}`}
+      className={`medal ${size}${empty ? ' empty' : ''}${mine ? ' mine' : ''}`}
       aria-hidden="true"
     >
-      <span className="award-mark">{result.award.mark}</span>
+      <span className="medal-spin">
+        <span className={`medal-face front ${result.award.tone}`}>
+          <span className="medal-enamel">
+            {emblem ?? <span className="medal-mark">{result.award.mark}</span>}
+          </span>
+          <span className="medal-shine" />
+        </span>
+        <span className="medal-edge e1" />
+        <span className="medal-edge e2" />
+        <span className="medal-edge e3" />
+        <span className="medal-edge e4" />
+        <span className="medal-edge e5" />
+        <span className="medal-face rear">
+          <span className="medal-engraved">
+            {empty ? (
+              <span>{t('awards.unclaimed')}</span>
+            ) : (
+              <>
+                <b>{result.value}</b>
+                <span>{holdersLabel(result, players)}</span>
+                {date && <span>{formatDate(date)}</span>}
+              </>
+            )}
+          </span>
+        </span>
+      </span>
     </span>
   )
 }
@@ -102,7 +172,12 @@ export function AwardsSection({
                 onClick={() => setOpen(result)}
                 aria-label={`${t(dynamicKey('award', result.award.id, 'name'))}: ${holdersLabel(result, players)}`}
               >
-                <AwardMedal result={result} mine={mine} />
+                <AwardMedal
+                  result={result}
+                  players={players}
+                  date={summary.date}
+                  mine={mine}
+                />
                 <span className="award-name">
                   {t(dynamicKey('award', result.award.id, 'name'))}
                 </span>
@@ -119,6 +194,7 @@ export function AwardsSection({
         <AwardSheet
           result={open}
           players={players}
+          date={summary.date}
           me={me}
           onClose={() => setOpen(null)}
         />
@@ -131,11 +207,13 @@ export function AwardsSection({
 function AwardSheet({
   result,
   players,
+  date,
   me,
   onClose,
 }: {
   result: AwardResult
   players: Player[]
+  date: string | null
   me: PlayerId | null
   onClose: () => void
 }) {
@@ -149,7 +227,7 @@ function AwardSheet({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="award-sheet-head">
-          <AwardMedal result={result} size="lg" />
+          <AwardMedal result={result} players={players} date={date} size="lg" />
           <h2>{name}</h2>
           <p className="hint">{t(dynamicKey('award', result.award.id, 'description'))}</p>
         </div>
@@ -253,7 +331,26 @@ export function AwardIntro({
         ))}
       </div>
       <p className="award-intro-eyebrow">{t('awards.intro.lead')}</p>
-      <AwardMedal key={current.award.id} result={current} size="lg" />
+      <div className="award-intro-hero" key={current.award.id}>
+        <AwardMedal result={current} players={players} date={summary.date} size="lg" />
+        {Array.from({ length: 14 }, (_, i) => {
+          const angle = (i / 14) * Math.PI * 2
+          const radius = 84 + (i % 3) * 16
+          return (
+            <span
+              key={i}
+              className="spark"
+              style={
+                {
+                  '--x': `${Math.cos(angle) * radius}px`,
+                  '--y': `${Math.sin(angle) * radius}px`,
+                  '--d': `${(i % 4) * 0.08}s`,
+                } as React.CSSProperties
+              }
+            />
+          )
+        })}
+      </div>
       <h2 className="award-intro-title">
         {t('awards.intro.title', { name: shortName(players, me) })}
       </h2>
