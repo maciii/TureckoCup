@@ -39,10 +39,16 @@ test('admin spustí kolo, zapisovatel zapíše a visitor vidí výsledek', async
   const rows = page.locator('.player-row')
   await expect(rows).toHaveCount(4)
 
-  // Čtyři hráči se vejdou na displej bez rolování obsahu.
+  // Čtyři hráči se vejdou na displej bez rolování obsahu (karta druhého
+  // flightu pod nimi smí být mimo obrazovku).
   const fits = await page.evaluate(() => {
     const content = document.querySelector('.content')
-    return content ? content.scrollHeight <= content.clientHeight + 1 : false
+    const list = document.querySelectorAll('.player-row')
+    const last = list[list.length - 1]
+    if (!content || !last) return false
+    return (
+      last.getBoundingClientRect().bottom <= content.getBoundingClientRect().bottom + 1
+    )
   })
   expect(fits).toBe(true)
 

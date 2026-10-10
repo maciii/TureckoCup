@@ -2,7 +2,7 @@ import { useData } from '../data'
 import type { EvaluationResult } from '../evaluations'
 import { matchOfFlight } from '../evaluations/fourBallSkins'
 import { t } from '../i18n'
-import { doubleHolder, sideDoubled } from '../model/round'
+import { doubleHolder, holeMultiplier, sideDoubled } from '../model/round'
 import type { Flight, Player, TournamentRound } from '../model/types'
 import { TeamBadge, sideLabel } from './common'
 
@@ -32,22 +32,9 @@ export default function SkinsMatchStatus({
   const duel = matchOfFlight(result, flight.players)
   if (!duel || duel.sides.length < 2) return null
   const key = String(hole)
-  const outcome = result.holes.find(
-    (h) =>
-      h.hole === hole &&
-      (h.winners.some((id) => flight.players.includes(id)) ||
-        duel.sides.some((s) => s.players.some((id) => flight.players.includes(id)))),
-  )
-  // Výsledek téhle jamky patří zápasu flightu: hledá se podle hráčů stran.
-  const inMatch = new Set(duel.sides.flatMap((s) => s.players))
-  const holeOutcome =
-    result.holes.find(
-      (h) =>
-        h.hole === hole &&
-        (h.winners.length === 0 || h.winners.some((id) => inMatch.has(id))),
-    ) ?? outcome
+  // Jen data tohoto zápasu (`result.holes` míchá oba zápasy kola).
   const winner = duel.holeWinners?.[key]
-  const stake = duel.stakes?.[key] ?? 1
+  const stake = duel.stakes?.[key] ?? holeMultiplier(result.game.options, hole)
   const allowed = duel.mayDouble?.[key] ?? []
   const counted = duel.doubles?.[key]
   const label = (index: number) => sideLabel(players, duel.sides[index]!.players)
@@ -68,11 +55,11 @@ export default function SkinsMatchStatus({
   let status: string
   if (winner === undefined) status = t('skins.match.atStake', { count: stake })
   else if (winner === null)
-    status = t('skins.match.carried', { count: holeOutcome?.carry ?? 0 })
+    status = t('skins.match.carried', { count: duel.holeCarry?.[key] ?? 0 })
   else
     status = t('skins.match.won', {
       name: label(winner),
-      count: holeOutcome?.value ?? stake,
+      count: duel.holeSkins?.[key] ?? stake,
     })
 
   return (

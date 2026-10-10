@@ -151,6 +151,12 @@ export const fourBallSkins: Evaluate = (context, game): EvaluationResult => {
       mayDouble,
       doubles,
       stakes,
+      // Výsledek jamky patří zápasu - `result.holes` níž míchá oba zápasy kola
+      // a karta v zápisu z něj nesmí číst.
+      holeSkins: Object.fromEntries(
+        result.holes.filter((h) => h.decided).map((h) => [String(h.hole), h.skins]),
+      ),
+      holeCarry: Object.fromEntries(result.holes.map((h) => [String(h.hole), h.carry])),
       ...(game.options.birdieBonus ? { birdies } : {}),
     })
     carryLeft += result.carry

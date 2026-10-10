@@ -3,6 +3,17 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.25.2] – 2026-10-10
+
+### Opraveno
+
+- **Four-ball Skins: karta zápasu ukazovala „bere 0“** nebo cizí bank. Četla
+  výsledek jamky ze seznamu obou zápasů kola a při stejném čísle jamky mohla
+  chytit jamku druhého flightu. Skiny a bank jamky jsou teď součástí dat
+  zápasu a karta čte jen je.
+- E2E testy, které hlídají, že se čtyři hráči vejdou na displej, počítají
+  s kartou druhého flightu pod nimi.
+
 ## [0.25.1] – 2026-10-10
 
 ### Změněno

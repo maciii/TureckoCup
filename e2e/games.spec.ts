@@ -275,6 +275,14 @@ test('Four-ball Skins: double v kartě zápasu, přenos dvou skinů a výsledek 
   await expect(otherCard.locator('.duel')).toContainText('Ota + Mac')
   await expect(otherCard.locator('.duel-center')).toContainText('4 : 0')
   await expectNoHorizontalOverflow(page)
+  // Karta zápasu druhého flightu čte jen svůj zápas: první jamku flightu 1
+  // (dělenou) nesmí ukázat jako „bere 0“ u flightu 2.
+  const second = page.locator('.skins-match')
+  await expect(second).toContainText('ve hře 1 skin')
+  await enterPar(page, [0, 1, 2, 3])
+  await page.locator('.player-row').nth(0).locator('.step-button').last().click()
+  await page.locator('.player-row').nth(1).locator('.step-button').last().click()
+  await expect(second).toContainText('Soldík + Honza bere 1')
 
   await open(page, '#/round/r1')
   const section = page.locator('section', {

@@ -51,6 +51,8 @@ describe('Four-ball Skins', () => {
     expect(duel.leader).toBe(1)
     expect(duel.holeWinners).toEqual({ '0': 0, '1': null, '2': 1 })
     expect(duel.stakes).toMatchObject({ '0': 1, '1': 1, '2': 2, '3': 1 })
+    expect(duel.holeSkins).toEqual({ '0': 1, '1': 0, '2': 2 })
+    expect(duel.holeCarry).toMatchObject({ '0': 0, '1': 1, '2': 0, '3': 0 })
     expect(duel.pending).toBe(15)
     expect(duel.finished).toBe(false)
     expect(result.holes.find((h) => h.hole === 2)).toMatchObject({
