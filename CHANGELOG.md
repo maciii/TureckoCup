@@ -3,6 +3,12 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.28.1] – 2026-10-11
+
+### Opraveno
+
+- E2E menu: po přihlášení z menu se nejdřív odklepne uvítání dne.
+
 ## [0.28.0] – 2026-10-11
 
 ### Přidáno

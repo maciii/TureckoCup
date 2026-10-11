@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test'
-import { collectErrors, open, resetDemo, setIdentity, startRound } from './helpers'
+import {
+  collectErrors,
+  dismissAwards,
+  open,
+  resetDemo,
+  setIdentity,
+  startRound,
+} from './helpers'
 
 /**
  * Menu podle role: nepřihlášený má přihlášení nahoře a nevidí Admin, hráč
@@ -33,6 +40,8 @@ test('nepřihlášený se přihlásí z menu, hráč nevidí Admin a odhlásí s
 
   await signIn.click()
   await expect(page.locator('nav.menu-drawer')).toHaveCount(0)
+  // Po přihlášení hráče přijde uvítání dne (a případně odznaky) - odklepnout.
+  await dismissAwards(page)
   await page.getByRole('button', { name: 'Menu' }).click()
   // Ukázkový zapisovatel má e-mail Ferryho - menu ukáže jméno ze soupisky.
   await expect(page.locator('.menu-id .sub')).toHaveText('Ferry · Hráč')
