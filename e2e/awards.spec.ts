@@ -54,6 +54,9 @@ test('bez zapsaných ran odznaky nejsou; po birdie hráč dostane gratulaci jen 
   // Přímé načtení (bez pomocníka, který gratulaci odklepává).
   await page.goto('/?demo=1#/')
   await page.waitForSelector('.screen')
+  // Uvítání hráče jde první (jednou denně), gratulace k odznakům až po něm.
+  const welcome = page.locator('.welcome-intro-close')
+  if ((await welcome.count()) > 0) await welcome.click()
   const intro = page.locator('.award-intro')
   await expect(intro).toBeVisible()
   await expect(intro).toContainText('Gratulujeme, Ferry!')

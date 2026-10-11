@@ -6,6 +6,7 @@ import { shortName } from '../model/round'
 import type { Player, PlayerId } from '../model/types'
 import { STORAGE_PREFIX } from '../data/store'
 import { TeamBadge, formatDate } from './common'
+import { bleat } from './bleat'
 
 /**
  * Odznaky zájezdu (vzor Apple awards): medaile s držitelem a hodnotou,
@@ -75,9 +76,43 @@ const EMBLEMS: Partial<Record<AwardId, React.ReactNode>> = {
     </svg>
   ),
   glutton: (
-    <svg viewBox="0 0 24 24">
-      <path d="M15 3a6 6 0 00-5.7 7.9L4 16.2 5.8 18l.9-.9 1.3 1.3L7 19.5 8.8 21l5.3-5.3A6 6 0 1015 3z" />
-    </svg>
+    // Jehně na rožni: točí se nad ohněm (CSS), rožeň stojí.
+    <span className="lamb-scene">
+      <svg className="lamb-fire" viewBox="0 0 40 20">
+        <path
+          className="f1"
+          d="M8 20c-4-4-2-9 2-12-1 4 2 5 3 8 1-3 3-4 2-8 5 3 5 9 1 12z"
+        />
+        <path
+          className="f2"
+          d="M20 20c-5-5-3-11 2-15-1 5 3 6 4 10 1-4 4-5 2-10 6 4 6 11 0 15z"
+        />
+        <path
+          className="f3"
+          d="M32 20c-4-4-2-8 1-11 0 3 2 4 3 7 1-2 2-3 2-7 4 3 4 8 0 11z"
+        />
+      </svg>
+      <span className="lamb-spin">
+        <svg viewBox="0 0 48 28">
+          <ellipse cx="24" cy="14" rx="15" ry="8" />
+          <circle cx="42" cy="11" r="4.5" />
+          <path d="M44 7l2-3 1 4z" />
+          <path
+            d="M14 20l-3 6M20 21l-2 6M28 21l2 6M34 20l3 6"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            fill="none"
+          />
+          <path d="M9 12c-3-1-5 1-5 3 2 0 4 0 5-1z" />
+        </svg>
+      </span>
+      <svg className="lamb-spit" viewBox="0 0 56 6">
+        <rect x="0" y="2" width="56" height="2" rx="1" />
+        <rect x="0" y="0" width="3" height="6" rx="1" />
+        <rect x="53" y="0" width="3" height="6" rx="1" />
+      </svg>
+    </span>
   ),
 }
 
@@ -169,7 +204,11 @@ export function AwardsSection({
               <button
                 type="button"
                 className={`award-btn${mine ? ' mine' : ''}`}
-                onClick={() => setOpen(result)}
+                onClick={() => {
+                  // Nenažranec: žalostné bečení jehněte na rožni.
+                  if (result.award.id === 'glutton') bleat()
+                  setOpen(result)
+                }}
                 aria-label={`${t(dynamicKey('award', result.award.id, 'name'))}: ${holdersLabel(result, players)}`}
               >
                 <AwardMedal

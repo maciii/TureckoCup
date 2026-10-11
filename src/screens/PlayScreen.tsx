@@ -13,6 +13,8 @@ import { isValidTime } from '../model/schedule'
 import { pickupRuleOf } from '../model/pickup'
 import HoleStatus from './HoleStatus'
 import MatchHead, { duelGroups } from './MatchHead'
+import { readScope, writeScope } from './Welcome'
+import type { PlayScope } from './Welcome'
 import PairStatus from './PairStatus'
 import SkinsMatchStatus from './SkinsMatchStatus'
 import type { BonusDefinition } from '../model/bonuses'
@@ -78,6 +80,9 @@ export default function PlayScreen({ roundId, flight }: Props) {
   const [showCard, setShowCard] = useState(false)
   const [otherFlight, setOtherFlight] = useState<number | null>(null)
   const [bonusFor, setBonusFor] = useState<PlayerId | null>(null)
+  // Singly pozic ve flightu: zapisovat jen svůj zápas (druhý sbalený), nebo celý flight.
+  const [scope, setScope] = useState<PlayScope>(() => readScope())
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
   const longPress = useRef<{ timer: number | null; fired: boolean }>({
     timer: null,
     fired: false,
@@ -242,6 +247,13 @@ export default function PlayScreen({ roundId, flight }: Props) {
 
   // Singly pozic ve flightu: hráči seskupení po duelech, nahoře stav zápasu.
   const matchGroups = duelGroups(results, flightEntry, state.players, round)
+  const me = meta.account?.playerId ?? null
+  const myGroup = me ? matchGroups.find((group) => group.players.includes(me)) : undefined
+  const scopeChoice = matchGroups.length > 1 && myGroup !== undefined
+  const chooseScope = (next: PlayScope) => {
+    writeScope(next)
+    setScope(next)
+  }
 
   // Řádek hráče: sdílí ho plochý seznam i seznam seskupený podle duelů.
   const renderRow = (playerId: PlayerId) => {
@@ -504,24 +516,65 @@ export default function PlayScreen({ roundId, flight }: Props) {
 
         {matchGroups.length > 0 ? (
           <div className="match-list">
-            {matchGroups.map((group) => (
-              <section key={group.key} className="match-group" aria-label={group.label}>
-                {group.duel && (
-                  <MatchHead
-                    duel={group.duel}
-                    players={state.players}
-                    hole={hole}
-                    format={group.format}
-                  />
-                )}
-                <ul className="player-list">{group.players.map(renderRow)}</ul>
-              </section>
-            ))}
+            {matchGroups.map((group) => {
+              const foreign = scopeChoice && scope === 'match' && group !== myGroup
+              const collapsed = foreign && !expanded.has(group.key)
+              const toggle = (open: boolean) =>
+                setExpanded((current) => {
+                  const next = new Set(current)
+                  if (open) next.add(group.key)
+                  else next.delete(group.key)
+                  return next
+                })
+              return (
+                <section
+                  key={group.key}
+                  className={`match-group${collapsed ? ' collapsed' : ''}`}
+                  aria-label={group.label}
+                >
+                  {group.duel && (
+                    <MatchHead
+                      duel={group.duel}
+                      players={state.players}
+                      hole={hole}
+                      format={group.format}
+                    />
+                  )}
+                  {!collapsed && (
+                    <ul className="player-list">{group.players.map(renderRow)}</ul>
+                  )}
+                  {foreign && (
+                    <button
+                      type="button"
+                      className="match-expand"
+                      onClick={() => toggle(collapsed)}
+                    >
+                      {collapsed
+                        ? `${t('play.scope.expand')} ›`
+                        : t('play.scope.collapse')}
+                    </button>
+                  )}
+                </section>
+              )
+            })}
           </div>
         ) : (
           <ul className="player-list">
             {playOrder(round, flightEntry, state.players).map(renderRow)}
           </ul>
+        )}
+        {/* Rozsah zápisu až pod seznamem, ať čtyři hráči zůstanou na displeji bez rolování. */}
+        {scopeChoice && (
+          <p className="center px scope-link-row">
+            <button
+              type="button"
+              className="scope-link"
+              onClick={() => chooseScope(scope === 'match' ? 'flight' : 'match')}
+            >
+              {scope === 'match' ? t('play.scope.showFlight') : t('play.scope.showMatch')}{' '}
+              ›
+            </button>
+          </p>
         )}
         <p className="hint center px play-help" style={{ paddingTop: 10 }}>
           {t('play.clearHint', { par })}

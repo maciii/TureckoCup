@@ -18,6 +18,9 @@ export async function open(page: Page, hash = '#/'): Promise<void> {
  * ji odklepnou (nejvýš tolikrát, kolik je odznaků).
  */
 export async function dismissAwards(page: Page): Promise<void> {
+  // Nejdřív uvítání hráče (jednou denně), pak odznaky jeden po druhém.
+  const welcome = page.locator('.welcome-intro-close')
+  if ((await welcome.count()) > 0) await welcome.click()
   const button = page.locator('.award-intro-btn')
   for (let i = 0; i < 14; i += 1) {
     if ((await button.count()) === 0) return

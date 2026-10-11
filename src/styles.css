@@ -3129,3 +3129,436 @@ a.menu-item {
   color: var(--ink-3);
   white-space: nowrap;
 }
+
+/* --- uvítání hráče: karta na úvodu a celoobrazovkové přivítání ---------------- */
+
+.welcome-card {
+  margin: 12px var(--pad) 0;
+  padding: 14px 16px 14px;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow:
+    0 0 0 1px var(--line),
+    inset 4px 0 0 var(--gold);
+}
+
+.welcome-hello {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.welcome-day {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.welcome-line {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+
+.welcome-match {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.welcome-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.welcome-actions .btn {
+  flex: 1;
+  min-width: 0;
+  padding-inline: 10px;
+}
+
+.welcome-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px;
+  overflow: auto;
+  text-align: center;
+  color: var(--on-dark);
+  background: radial-gradient(circle at 50% 22%, var(--navy) 0%, var(--brand) 70%);
+  animation: intro-fade 0.4s ease-out both;
+}
+
+.welcome-crest {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 6px;
+  animation: welcome-crest 0.9s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.welcome-eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  animation: intro-up 0.6s 0.25s both;
+}
+
+.welcome-intro-hello {
+  margin: 0 0 8px;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  animation: intro-up 0.6s 0.4s both;
+}
+
+.welcome-intro-body {
+  display: grid;
+  gap: 4px;
+  max-width: 340px;
+  animation: intro-up 0.6s 0.6s both;
+}
+
+.welcome-intro-body .welcome-day {
+  font-size: 17px;
+  color: var(--on-dark);
+}
+
+.welcome-intro-body .welcome-line {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.welcome-intro-body .welcome-match {
+  color: var(--gold-bright);
+  font-size: 15px;
+}
+
+.welcome-intro-hint {
+  max-width: 320px;
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0.75;
+  animation: intro-up 0.6s 0.8s both;
+}
+
+.welcome-intro-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 340px;
+  margin-top: 18px;
+  animation: intro-up 0.6s 1s both;
+}
+
+.welcome-intro .welcome-actions {
+  margin-top: 0;
+}
+
+.welcome-intro .btn.ghost {
+  color: var(--on-dark);
+  border-color: rgba(255, 255, 255, 0.4);
+  background: transparent;
+}
+
+.welcome-intro .btn.primary {
+  background: var(--gold-bright);
+  color: var(--team-a-ink);
+}
+
+@keyframes welcome-crest {
+  from {
+    opacity: 0;
+    transform: scale(0.6) rotate(-8deg);
+  }
+}
+
+/* --- rány na soupeře: tabulka 18 jamek × spoluhráči ---------------------------- */
+
+.strokes-sheet {
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-head h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.sheet-head .hint {
+  margin: 0;
+}
+
+.strokes-scroll {
+  overflow: auto;
+  margin: 8px 0 0;
+  padding: 0 var(--pad);
+  flex: 1;
+  min-height: 0;
+}
+
+.strokes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.strokes-table th,
+.strokes-table td {
+  padding: 5px 4px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+}
+
+.strokes-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--ink-2);
+  vertical-align: bottom;
+}
+
+.strokes-table th.num,
+.strokes-table td.num {
+  width: 34px;
+  color: var(--ink-3);
+  font-weight: 700;
+}
+
+.strokes-table td.hole {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.strokes-table .who-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+
+.strokes-table .who-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 2px;
+  font-weight: 700;
+}
+
+.strokes-table th.duel,
+.strokes-table th.opponent {
+  background: var(--gold-soft);
+}
+
+.strokes-table td.cell {
+  font-weight: 900;
+}
+
+.strokes-table td.gain {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+.strokes-table td.loss {
+  color: var(--red);
+  background: var(--red-soft);
+}
+
+.strokes-table td.even {
+  color: var(--ink-3);
+}
+
+.strokes-table tfoot th {
+  text-align: left;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.strokes-table td.sum {
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1.25;
+  background: none;
+}
+
+.strokes-table td.sum span {
+  display: block;
+}
+
+.strokes-table td.sum .gain {
+  color: var(--green);
+}
+
+.strokes-table td.sum .loss {
+  color: var(--red);
+}
+
+.strokes-legend {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+}
+
+.sheet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  padding-bottom: 6px;
+}
+
+/* --- rozsah zápisu: jen můj zápas / celý flight ------------------------------ */
+
+.scope-link-row {
+  margin: 6px 0 0;
+}
+
+.scope-link {
+  padding: 6px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--navy);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+.match-group.collapsed .match-head {
+  border-bottom: 0;
+}
+
+.match-expand {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--navy);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+.match-group.collapsed .match-expand {
+  border-top: 0;
+}
+
+/* --- Nenažranec: jehně na rožni nad ohněm ------------------------------------ */
+
+.lamb-scene {
+  position: relative;
+  display: block;
+  width: 78%;
+  height: 78%;
+  perspective: 160px;
+}
+
+.lamb-scene svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  filter: none;
+}
+
+.lamb-fire {
+  left: 10%;
+  right: 10%;
+  bottom: -4%;
+  width: 80% !important;
+  height: 42% !important;
+  fill: #ff8a1f;
+}
+
+.lamb-fire path {
+  transform-origin: 50% 100%;
+  animation: flicker 0.45s ease-in-out infinite alternate;
+}
+
+.lamb-fire .f2 {
+  fill: #ffb21f;
+  animation-delay: -0.15s;
+}
+
+.lamb-fire .f3 {
+  animation-delay: -0.3s;
+}
+
+.lamb-spin {
+  position: absolute;
+  top: 18%;
+  left: 4%;
+  right: 4%;
+  height: 46%;
+  transform-style: preserve-3d;
+  animation: lamb-turn 2.6s linear infinite;
+  color: #5b3a1e;
+}
+
+.lamb-spin svg {
+  fill: #e5a861;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.35)) !important;
+}
+
+.lamb-spit {
+  top: 36%;
+  left: -8%;
+  width: 116% !important;
+  height: 12% !important;
+  fill: #4a3526;
+}
+
+@keyframes lamb-turn {
+  from {
+    transform: rotateX(0deg);
+  }
+  to {
+    transform: rotateX(360deg);
+  }
+}
+
+@keyframes flicker {
+  from {
+    transform: scaleY(0.85) scaleX(0.95);
+    opacity: 0.85;
+  }
+  to {
+    transform: scaleY(1.1) scaleX(1.05);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-intro,
+  .welcome-crest,
+  .welcome-eyebrow,
+  .welcome-intro-hello,
+  .welcome-intro-body,
+  .welcome-intro-hint,
+  .welcome-intro-actions,
+  .lamb-spin,
+  .lamb-fire path {
+    animation: none;
+  }
+}

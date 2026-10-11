@@ -329,3 +329,49 @@ test('zápis singlů pozic: soupeři pod sebou se stavem zápasu a barvou týmu'
   await expectNoHorizontalOverflow(page)
   expect(errors()).toEqual([])
 })
+
+test('uvítání hráče: program dne, rány na soupeře a volba rozsahu zápisu', async ({
+  page,
+}) => {
+  const errors = collectErrors(page)
+  await page.clock.setFixedTime(new Date('2026-10-12T08:00:00'))
+  await page.goto('/?demo=4dny#/')
+  await page.waitForSelector('.screen')
+  await page.evaluate(
+    ([key, value]) => localStorage.setItem(key!, value!),
+    [IDENTITY_KEY, 'writer'],
+  )
+  await page.reload()
+  await page.waitForSelector('.screen')
+  const intro = page.locator('.welcome-intro')
+  await expect(intro).toBeVisible()
+  await expect(intro).toContainText('Ahoj, Ferry!')
+  await expect(intro).toContainText('Kolo 4')
+  // Náhled scorekarty: 18 jamek, tři spoluhráči flightu, soupeři první.
+  await intro.locator('.welcome-strokes-btn').click()
+  const sheet = page.getByRole('dialog', { name: 'Rány na soupeře' })
+  await expect(sheet.locator('tbody tr')).toHaveCount(18)
+  await expect(sheet.locator('th.who')).toHaveCount(3)
+  await expect(sheet.locator('th.who').first()).toContainText('soupeř')
+  await expect(sheet.locator('th.who').last()).toContainText('parťák')
+  await expectNoHorizontalOverflow(page)
+  await sheet.getByRole('button', { name: 'Zavřít' }).click()
+  await intro.locator('.welcome-intro-close').click()
+  await expect(intro).toHaveCount(0)
+  // Karta zůstává; po obnovení se uvítání ten den už neukáže.
+  await expect(page.locator('.welcome-card')).toContainText('Ahoj, Ferry!')
+  await page.reload()
+  await page.waitForSelector('.screen')
+  await expect(page.locator('.welcome-intro')).toHaveCount(0)
+  // Singly uvnitř flightu: „jen můj zápas“ sbalí druhý single, jde rozbalit i přepnout.
+  await page.evaluate(() => localStorage.setItem('tc26.preview.playScope.v1', 'match'))
+  await openPreview(page, '#/play/r1/0')
+  await expect(page.locator('.match-group.collapsed')).toHaveCount(1)
+  await page.getByRole('button', { name: /Rozbalit/ }).click()
+  await expect(page.locator('.match-group.collapsed')).toHaveCount(0)
+  await page.getByRole('button', { name: /Zapisovat celý flight/ }).click()
+  await expect(page.locator('.match-expand')).toHaveCount(0)
+  await expect(page.locator('.scope-link')).toContainText('jen můj zápas')
+  await expect(page.locator('.player-row')).toHaveCount(4)
+  expect(errors()).toEqual([])
+})

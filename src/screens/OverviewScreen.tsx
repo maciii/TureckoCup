@@ -28,6 +28,7 @@ import BonusResults from './BonusResults'
 import MenuSheet from './MenuSheet'
 import LiveNow from './LiveNow'
 import { AwardIntro, AwardsSection } from './Awards'
+import Welcome, { welcomeSeen, markWelcomeSeen } from './Welcome'
 import { computeAwards } from '../evaluations/awards'
 import { flightHolesStarted } from '../model/round'
 
@@ -57,6 +58,7 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
     [state.rounds, state.players, bonusConfig],
   )
   const me = meta.account?.playerId ?? null
+  const [welcomeClosed, setWelcomeClosed] = useState(false)
   const live = state.rounds.find((r) => r.status === 'live')
   const current =
     live ??
@@ -64,6 +66,15 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
     state.rounds.find((r) => r.status === 'planned')
   const today = localToday()
   const upcoming = upcomingRound(state.rounds, today)
+  // Uvítání hráče: kolo, které ho dnes čeká (rozehrané nebo nejbližší plánované).
+  const welcomeRound = upcoming
+  const welcomeIntro =
+    me !== null &&
+    welcomeRound !== undefined &&
+    meta.status !== 'loading' &&
+    !welcomeClosed &&
+    !welcomeSeen(me, welcomeRound, today)
+  const canWrite = meta.role === 'admin' || meta.role === 'writer'
   const currentEvaluation = summary.rounds.find((entry) => entry.round.id === current?.id)
   const teams = state.tournament?.teams
   const played = summary.rounds.filter((e) => e.round.status === 'finished').length
@@ -140,6 +151,19 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
           <p className="hint center px">{t('app.noTournamentHint')}</p>
         )}
 
+        {me && welcomeRound && (
+          <Welcome
+            round={welcomeRound}
+            players={state.players}
+            me={me}
+            canWrite={canWrite}
+            intro={welcomeIntro}
+            onIntroClose={() => {
+              markWelcomeSeen(me, welcomeRound, today)
+              setWelcomeClosed(true)
+            }}
+          />
+        )}
         {live && currentEvaluation && (
           <LiveNow round={live} results={currentEvaluation.results} />
         )}
@@ -357,7 +381,7 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
         )}
       </main>
 
-      {state.tournament && meta.status !== 'loading' && (
+      {state.tournament && meta.status !== 'loading' && !welcomeIntro && (
         <AwardIntro summary={awards} players={state.players} me={me} />
       )}
 

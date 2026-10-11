@@ -3,6 +3,27 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.28.0] – 2026-10-11
+
+### Přidáno
+
+- **Osobní uvítání hráče.** Přihlášený hráč vidí po otevření aplikace jednou
+  denně celoobrazovkové přivítání a na úvodní obrazovce kartu: co dnes
+  hraje (kolo, hřiště, flight, tee time, spoluhráči, hry) a jeho zápas
+  (single pozic nebo dvojice proti dvojici), tlačítko **Rány na soupeře**
+  a **Zapsat skóre** rovnou do vlastního flightu.
+- **Rány na soupeře** - náhled scorekarty před zápasem: u všech 18 jamek
+  (par, SI), proti každému z flightu, kde má hráč ránu navíc (zeleně +1) a
+  kde ji má soupeř na něj (červeně −1); soupeř ze zápasu první, parťák
+  poslední, dole součet jamek. Počítá se z přidělených ran kola (hrací HCP
+  × allowance hry singlů), tedy stejně jako netto hry.
+- **Rozsah zápisu u singlů ve flightu:** „Jen můj zápas“ (druhý single
+  zůstane sbalený na hlavičku se stavem, rozbalí se klepnutím) nebo „Celý
+  flight“. Volba je při vstupu z uvítání i přepínačem v zápisu a pamatuje
+  se na zařízení.
+- **Nenažranec** má na medaili jehně otáčející se na rožni nad ohněm a při
+  klepnutí žalostně zabečí (zvuk syntetizovaný v telefonu, bez stahování).
+
 ## [0.27.1] – 2026-10-11
 
 ### Opraveno
