@@ -3,6 +3,17 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.27.0] – 2026-10-11
+
+### Změněno
+
+- **Zápis seskupený po duelech.** Když se singly pozic hrají uvnitř flightu,
+  stojí soupeři pod sebou v jedné kartě s hlavičkou zápasu: tým A vlevo,
+  tým B vpravo, uprostřed stav v barvě vedoucího týmu („Vrbič 1 UP“,
+  u součtových formátů i průběžné součty obou stran) a komu připadla
+  právě zapisovaná jamka. Řádky hráčů mají proužek v barvě týmu. Řádek
+  „Singly pozic“ ve stavu her nahoře se pak neopakuje.
+
 ## [0.26.1] – 2026-10-10
 
 ### Změněno

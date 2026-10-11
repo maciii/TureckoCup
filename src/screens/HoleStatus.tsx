@@ -18,6 +18,8 @@ interface Props {
   flight: Flight
   hole: number
   bonusConfig: BonusConfig
+  /** Duely jsou v zápisu rozkreslené jako skupiny - řádek hry by je opakoval. */
+  skipDuels?: boolean
 }
 
 interface Line {
@@ -42,6 +44,7 @@ export default function HoleStatus({
   flight,
   hole,
   bonusConfig,
+  skipDuels = false,
 }: Props) {
   const [expanded, setExpanded] = useState(false)
   const name = (id: PlayerId) => shortName(players, id)
@@ -51,6 +54,7 @@ export default function HoleStatus({
   for (const result of results) {
     const kind = result.game.kind
     if (kind === 'best-aggregate' || kind === 'four-ball-skins') continue
+    if (kind === 'position-duel' && skipDuels) continue
     const label = result.game.name ?? t(`games.${kind}.name`)
     const outcome = result.holes.find((h) => h.hole === hole)
     if (kind === 'individual-stableford') {

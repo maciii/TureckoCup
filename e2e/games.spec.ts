@@ -4,6 +4,7 @@ import {
   collectErrors,
   expectNoHorizontalOverflow,
   open,
+  playerRow,
   resetDemo,
   setIdentity,
   startRound,
@@ -18,10 +19,9 @@ test.beforeEach(async ({ page }) => {
   await resetDemo(page)
 })
 
-/** Flight 1 kola 1: Ota (A1), Mac (A2), Pavlos (B1), Ferry (B2). */
-async function enterPar(page: Page, rows: number[]) {
-  for (const row of rows)
-    await page.locator('.player-row').nth(row).locator('.score-value').click()
+/** Flight 1 kola 1: Ota (A1), Mac (A2), Pavlos (B1), Ferry (B2); flight 2: Jarin, Vrbič, Soldík, Honza. */
+async function enterPar(page: Page, names: string[]) {
+  for (const name of names) await playerRow(page, name).locator('.score-value').click()
 }
 
 test('zvednutá jamka ve hře na rány podle pravidla turnaje', async ({ page }) => {
@@ -44,8 +44,8 @@ test('zvednutá jamka ve hře na rány podle pravidla turnaje', async ({ page })
   await setIdentity(page, 'writer')
   await open(page, '#/play/r1/0')
   // Ota (A1) jedničku zvedl, Pavlos (B1) zahrál par 4.
-  await page.locator('.player-row').nth(0).locator('.pickup-button').click()
-  await enterPar(page, [2])
+  await playerRow(page, 'Ota').locator('.pickup-button').click()
+  await enterPar(page, ['Pavlos'])
 
   await open(page, '#/round/r1')
   const duel = page
@@ -136,9 +136,8 @@ test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky
 
   await setIdentity(page, 'writer')
   await open(page, '#/play/r1/0')
-  const rows = page.locator('.player-row')
-  const mac = rows.nth(1)
-  const pavlos = rows.nth(2)
+  const mac = playerRow(page, 'Mac')
+  const pavlos = playerRow(page, 'Pavlos')
   // Jamka 1 (par 4): hvězdička nabízí všech šest ručních bonusů - Longest
   // i Nearest jdou zaškrtnout na kterékoli jamce, kde se hrají, rozhodne flight.
   await mac.getByRole('button', { name: 'Extra body: Mac' }).click()
@@ -147,17 +146,19 @@ test('extra body: centrální nastavení, zápis u jamky, scorekarta a výsledky
   await expect(sheet.getByRole('button', { name: /Longest/ })).toHaveCount(1)
   await expect(sheet.getByRole('button', { name: /Nearest/ })).toHaveCount(1)
   await sheet.getByRole('button', { name: 'Zavřít' }).click()
-  await enterPar(page, [0, 1, 2, 3])
+  await enterPar(page, ['Ota', 'Mac', 'Pavlos', 'Ferry'])
   // Stav her na jamce: po zápisu všech čtyř je Stableford i duel rozhodnutý.
   const stabRow = page.locator('.hole-status-row', { hasText: 'Stableford' })
   await expect(stabRow).not.toContainText('–')
-  const duelRow = page.locator('.hole-status-row', { hasText: 'Singly pozic' })
-  await expect(duelRow).not.toContainText('čeká na zápis')
+  // Singly pozic jsou rozkreslené po duelech: hlavička zápasu zná výsledek jamky.
+  await expect(page.locator('.match-group .match-hole').first()).not.toContainText(
+    'čeká na zápis',
+  )
   await page
     .getByRole('button', { name: /Další jamka/ })
     .last()
     .click()
-  await enterPar(page, [0, 1, 2, 3])
+  await enterPar(page, ['Ota', 'Mac', 'Pavlos', 'Ferry'])
   await page
     .getByRole('button', { name: /Další jamka/ })
     .last()
@@ -250,7 +251,7 @@ test('Four-ball Skins: double v kartě zápasu, přenos dvou skinů a výsledek 
   await expect(match).toContainText('Double: Ota + Mac')
   await expect(match).toContainText('ve hře 2 skiny')
   // Všichni par: dělená, dva skiny do banku; na druhé jamce se hraje o tři.
-  await enterPar(page, [0, 1, 2, 3])
+  await enterPar(page, ['Ota', 'Mac', 'Pavlos', 'Ferry'])
   await expect(match).toContainText('dělená · v banku 2')
   await page
     .getByRole('button', { name: /Další jamka/ })
@@ -258,10 +259,10 @@ test('Four-ball Skins: double v kartě zápasu, přenos dvou skinů a výsledek 
     .click()
   await expect(match).toContainText('ve hře 3 skiny')
   // Mac birdie: Ota + Mac berou tři.
-  const mac = page.locator('.player-row').nth(1)
+  const mac = playerRow(page, 'Mac')
   await mac.locator('.score-value').click()
   await mac.locator('.step-button').first().click()
-  await enterPar(page, [0, 2, 3])
+  await enterPar(page, ['Ota', 'Pavlos', 'Ferry'])
   await expect(match).toContainText('Ota + Mac bere 3')
   // Macovo birdie: bod navíc, skóre zápasu 4 : 0.
   await expect(match).toContainText('Birdie +1')
@@ -279,9 +280,9 @@ test('Four-ball Skins: double v kartě zápasu, přenos dvou skinů a výsledek 
   // (dělenou) nesmí ukázat jako „bere 0“ u flightu 2.
   const second = page.locator('.skins-match')
   await expect(second).toContainText('ve hře 1 skin')
-  await enterPar(page, [0, 1, 2, 3])
-  await page.locator('.player-row').nth(0).locator('.step-button').last().click()
-  await page.locator('.player-row').nth(1).locator('.step-button').last().click()
+  await enterPar(page, ['Jarin', 'Vrbič', 'Soldík', 'Honza'])
+  await playerRow(page, 'Jarin').locator('.step-button').last().click()
+  await playerRow(page, 'Vrbič').locator('.step-button').last().click()
   await expect(second).toContainText('Soldík + Honza bere 1')
 
   await open(page, '#/round/r1')

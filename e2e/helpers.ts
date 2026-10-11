@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test'
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 
 /**
  * Společné kroky e2e testů v ukázkovém režimu (`?demo=1`, data v localStorage).
@@ -84,4 +84,14 @@ export async function startRound(page: Page, roundId = 'r1'): Promise<void> {
     'aria-pressed',
     'true',
   )
+}
+
+/**
+ * Řádek hráče v zápisu podle jména: pořadí řádků závisí na hrách kola
+ * (singly pozic ve flightu řadí soupeře pod sebe), index by lhal.
+ */
+export function playerRow(page: Page, name: string): Locator {
+  return page.locator('.player-row', {
+    has: page.locator('.player-name-text', { hasText: new RegExp(`^${name}$`) }),
+  })
 }

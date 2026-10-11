@@ -170,10 +170,15 @@ test('zapisovatel dohraje rozehrané čtvrté kolo', async ({ page }) => {
   await expect(page.locator('.hole-info')).toContainText('Jamka 15 z 18')
   const rows = page.locator('.player-row')
   await expect(rows).toHaveCount(4)
-  await expect(rows.nth(0).locator('.mark')).not.toHaveText('–')
-  await expect(rows.nth(2).locator('.mark')).toHaveText('–')
-  await rows.nth(2).locator('.score-value').click()
-  await rows.nth(3).locator('.score-value').click()
+  // Dvojice týmu A patnáctku zapsala, tým B ještě ne (řádky nesou barvu týmu).
+  const teamA = page.locator('.player-row.team-a')
+  const teamB = page.locator('.player-row.team-b')
+  await expect(teamA).toHaveCount(2)
+  await expect(teamB).toHaveCount(2)
+  await expect(teamA.first().locator('.mark')).not.toHaveText('–')
+  await expect(teamB.first().locator('.mark')).toHaveText('–')
+  await teamB.nth(0).locator('.score-value').click()
+  await teamB.nth(1).locator('.score-value').click()
   for (const hole of [16, 17, 18]) {
     await page
       .getByRole('button', { name: /Další jamka/ })
@@ -301,4 +306,26 @@ test('Best + Součet: karta dvojic v zápisu ukazuje Best, Součet a body', asyn
   )
   const rowNames = await page.locator('.player-row .player-name-text').allInnerTexts()
   expect(rowNames.map((name) => name.trim())).toEqual(expected)
+})
+
+test('zápis singlů pozic: soupeři pod sebou se stavem zápasu a barvou týmu', async ({
+  page,
+}) => {
+  const errors = collectErrors(page)
+  await setPreviewIdentity(page, 'writer')
+  await openPreview(page, '#/play/r1/0')
+  const groups = page.locator('.match-group')
+  await expect(groups).toHaveCount(2)
+  // Hlavička: tým A vlevo, stav uprostřed, tým B vpravo; řádky nesou barvu týmu.
+  const first = groups.first()
+  await expect(first.locator('.match-side.left .team-badge')).toHaveText('A')
+  await expect(first.locator('.match-side.right .team-badge')).toHaveText('B')
+  await expect(first.locator('.match-pill')).not.toBeEmpty()
+  await expect(first.locator('.match-hole')).not.toBeEmpty()
+  await expect(first.locator('.player-row.team-a')).toHaveCount(1)
+  await expect(first.locator('.player-row.team-b')).toHaveCount(1)
+  // Stav her nahoře duely neopakuje.
+  await expect(page.locator('.hole-status-row dt', { hasText: 'Singly' })).toHaveCount(0)
+  await expectNoHorizontalOverflow(page)
+  expect(errors()).toEqual([])
 })

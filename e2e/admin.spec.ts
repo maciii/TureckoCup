@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test'
-import { collectErrors, open, resetDemo, setIdentity, startRound } from './helpers'
+import {
+  collectErrors,
+  open,
+  resetDemo,
+  setIdentity,
+  startRound,
+  playerRow,
+} from './helpers'
 
 /** Administrace: pozice, oprávnění, log úprav a hranice rolí. */
 
@@ -278,11 +285,7 @@ test('Longest a Nearest jdou u kola vypnout a přepnout potvrzení na netto', as
   // V zápisu Nearest zmizel, Longest zůstal.
   await setIdentity(page, 'writer')
   await open(page, '#/play/r1/0')
-  await page
-    .locator('.player-row')
-    .nth(1)
-    .getByRole('button', { name: 'Extra body: Mac' })
-    .click()
+  await playerRow(page, 'Mac').getByRole('button', { name: 'Extra body: Mac' }).click()
   const sheet = page.getByRole('dialog', { name: 'Extra body' })
   await expect(sheet.getByRole('button', { name: /Nearest/ })).toHaveCount(0)
   await expect(sheet.getByRole('button', { name: /Longest/ })).toHaveCount(1)

@@ -12,6 +12,7 @@ import type { PlayerId, TournamentRound } from '../model/types'
 import { isValidTime } from '../model/schedule'
 import { pickupRuleOf } from '../model/pickup'
 import HoleStatus from './HoleStatus'
+import MatchHead, { duelGroups } from './MatchHead'
 import PairStatus from './PairStatus'
 import SkinsMatchStatus from './SkinsMatchStatus'
 import type { BonusDefinition } from '../model/bonuses'
@@ -239,6 +240,144 @@ export default function PlayScreen({ roundId, flight }: Props) {
     .map((entry, index) => ({ entry, index }))
     .filter(({ index, entry }) => index !== flight && entry.players.length > 0)
 
+  // Singly pozic ve flightu: hráči seskupení po duelech, nahoře stav zápasu.
+  const matchGroups = duelGroups(results, flightEntry, state.players, round)
+
+  // Řádek hráče: sdílí ho plochý seznam i seznam seskupený podle duelů.
+  const renderRow = (playerId: PlayerId) => {
+    const score = scoreAt(round, playerId, hole)
+    const strokes = strokesReceived(round, playerId, hole)
+    const completed = holesCompleted(round, playerId)
+    const toPar = grossTotal(round, playerId) - parForPlayedHoles(round, playerId)
+    const points =
+      stablefordGame && score !== undefined
+        ? stablefordAt(round, playerId, hole, stablefordGame.options)
+        : undefined
+    const player = state.players.find((p) => p.id === playerId)
+    const name = shortName(state.players, playerId)
+    const awards = bonusAwardsAt(round, bonusConfig, playerId, hole)
+    return (
+      <li
+        key={playerId}
+        className={`player-row${player?.teamId ? ` team-${player.teamId.toLowerCase()}` : ''}`}
+      >
+        <div className="player-info">
+          <span className="player-name">
+            <TeamBadge teamId={player?.teamId} />
+            <span className="player-name-text">{name}</span>
+            {strokes > 0 && (
+              <span
+                className="player-mark strokes"
+                title={t('play.strokesReceived', { count: strokes })}
+              >
+                {'•'.repeat(strokes)}
+              </span>
+            )}
+            {!hasHandicap(round, playerId) && <span className="player-mark warn">?</span>}
+          </span>
+          {/* Druhý řádek je u zapisovatele tlačítko s hvězdičkou (extra body
+      jako v Golfgames); záporné okraje drží výšku řádku, aby se čtyři
+      hráči vešli na displej. */}
+          {(() => {
+            const totalLine = (
+              <>
+                {completed === 0 && holesPlayed(round, playerId) === 0
+                  ? t('play.noScore')
+                  : t('play.total', {
+                      strokes: grossTotal(round, playerId),
+                      toPar: formatToPar(toPar),
+                    })}
+                {/* Body jamky pod jménem, ne vedle: na úzkém displeji by jméno ořízly. */}
+                {points !== undefined && (
+                  <span className="player-mark gain">
+                    {t('play.pointsShort', { count: points })}
+                  </span>
+                )}
+                {awards.length > 0 && (
+                  <span
+                    className="bonus-marks"
+                    aria-label={t('play.bonusesFor', { name })}
+                  >
+                    {awards.map((award) => (
+                      <span
+                        key={award.bonus.id}
+                        className={
+                          award.void ? 'void' : award.pending ? 'pending' : undefined
+                        }
+                        title={award.void ? t('play.bonusesVoid') : undefined}
+                      >
+                        {award.bonus.mark}
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </>
+            )
+            return bonusChoices.length > 0 && entryEnabled ? (
+              <button
+                type="button"
+                className={`player-total bonus-row${awards.length > 0 ? ' active' : ''}`}
+                onClick={() => setBonusFor(playerId)}
+                aria-label={t('play.bonusesFor', { name })}
+              >
+                <span className="bonus-star" aria-hidden="true">
+                  ★
+                </span>
+                {totalLine}
+              </button>
+            ) : (
+              <span className="player-total">{totalLine}</span>
+            )
+          })()}
+        </div>
+        <button
+          type="button"
+          className={`pickup-button${score === PICKED_UP ? ' active' : ''}`}
+          onClick={() => setScore(playerId, score === PICKED_UP ? null : PICKED_UP)}
+          disabled={!entryEnabled}
+          aria-label={`${t('play.pickedUp')}: ${name}`}
+          title={t('play.pickedUp')}
+        >
+          ×
+        </button>
+        <div className="stepper">
+          <button
+            type="button"
+            className="step-button"
+            onClick={() => adjust(playerId, -1)}
+            disabled={!entryEnabled}
+            aria-label={t('play.minus', { name })}
+          >
+            −
+          </button>
+          <button
+            type="button"
+            className="score-value"
+            onClick={() => tapScore(playerId)}
+            disabled={!entryEnabled}
+            onPointerDown={() => startLongPress(playerId)}
+            onPointerUp={cancelLongPress}
+            onPointerLeave={cancelLongPress}
+            onPointerCancel={cancelLongPress}
+            onContextMenu={(e) => e.preventDefault()}
+            aria-label={t('play.score', { name })}
+          >
+            <ScoreMark score={score} par={par} large />
+          </button>
+          <button
+            type="button"
+            className="step-button"
+            onClick={() => adjust(playerId, 1)}
+            disabled={!entryEnabled}
+            aria-label={t('play.plus', { name })}
+          >
+            +
+          </button>
+        </div>
+      </li>
+    )
+  }
+
   return (
     <div className="screen">
       <Header
@@ -335,6 +474,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
           flight={flightEntry}
           hole={hole}
           bonusConfig={bonusConfig}
+          skipDuels={matchGroups.length > 0}
         />
 
         {results
@@ -362,146 +502,27 @@ export default function PlayScreen({ roundId, flight }: Props) {
             />
           ))}
 
-        <ul className="player-list">
-          {playOrder(round, flightEntry, state.players).map((playerId) => {
-            const score = scoreAt(round, playerId, hole)
-            const strokes = strokesReceived(round, playerId, hole)
-            const completed = holesCompleted(round, playerId)
-            const toPar = grossTotal(round, playerId) - parForPlayedHoles(round, playerId)
-            const points =
-              stablefordGame && score !== undefined
-                ? stablefordAt(round, playerId, hole, stablefordGame.options)
-                : undefined
-            const player = state.players.find((p) => p.id === playerId)
-            const name = shortName(state.players, playerId)
-            const awards = bonusAwardsAt(round, bonusConfig, playerId, hole)
-            return (
-              <li key={playerId} className="player-row">
-                <div className="player-info">
-                  <span className="player-name">
-                    <TeamBadge teamId={player?.teamId} />
-                    <span className="player-name-text">{name}</span>
-                    {strokes > 0 && (
-                      <span
-                        className="player-mark strokes"
-                        title={t('play.strokesReceived', { count: strokes })}
-                      >
-                        {'•'.repeat(strokes)}
-                      </span>
-                    )}
-                    {!hasHandicap(round, playerId) && (
-                      <span className="player-mark warn">?</span>
-                    )}
-                  </span>
-                  {/* Druhý řádek je u zapisovatele tlačítko s hvězdičkou (extra body
-                      jako v Golfgames); záporné okraje drží výšku řádku, aby se čtyři
-                      hráči vešli na displej. */}
-                  {(() => {
-                    const totalLine = (
-                      <>
-                        {completed === 0 && holesPlayed(round, playerId) === 0
-                          ? t('play.noScore')
-                          : t('play.total', {
-                              strokes: grossTotal(round, playerId),
-                              toPar: formatToPar(toPar),
-                            })}
-                        {/* Body jamky pod jménem, ne vedle: na úzkém displeji by jméno ořízly. */}
-                        {points !== undefined && (
-                          <span className="player-mark gain">
-                            {t('play.pointsShort', { count: points })}
-                          </span>
-                        )}
-                        {awards.length > 0 && (
-                          <span
-                            className="bonus-marks"
-                            aria-label={t('play.bonusesFor', { name })}
-                          >
-                            {awards.map((award) => (
-                              <span
-                                key={award.bonus.id}
-                                className={
-                                  award.void
-                                    ? 'void'
-                                    : award.pending
-                                      ? 'pending'
-                                      : undefined
-                                }
-                                title={award.void ? t('play.bonusesVoid') : undefined}
-                              >
-                                {award.bonus.mark}
-                              </span>
-                            ))}
-                          </span>
-                        )}
-                      </>
-                    )
-                    return bonusChoices.length > 0 && entryEnabled ? (
-                      <button
-                        type="button"
-                        className={`player-total bonus-row${awards.length > 0 ? ' active' : ''}`}
-                        onClick={() => setBonusFor(playerId)}
-                        aria-label={t('play.bonusesFor', { name })}
-                      >
-                        <span className="bonus-star" aria-hidden="true">
-                          ★
-                        </span>
-                        {totalLine}
-                      </button>
-                    ) : (
-                      <span className="player-total">{totalLine}</span>
-                    )
-                  })()}
-                </div>
-                <button
-                  type="button"
-                  className={`pickup-button${score === PICKED_UP ? ' active' : ''}`}
-                  onClick={() =>
-                    setScore(playerId, score === PICKED_UP ? null : PICKED_UP)
-                  }
-                  disabled={!entryEnabled}
-                  aria-label={`${t('play.pickedUp')}: ${name}`}
-                  title={t('play.pickedUp')}
-                >
-                  ×
-                </button>
-                <div className="stepper">
-                  <button
-                    type="button"
-                    className="step-button"
-                    onClick={() => adjust(playerId, -1)}
-                    disabled={!entryEnabled}
-                    aria-label={t('play.minus', { name })}
-                  >
-                    −
-                  </button>
-                  <button
-                    type="button"
-                    className="score-value"
-                    onClick={() => tapScore(playerId)}
-                    disabled={!entryEnabled}
-                    onPointerDown={() => startLongPress(playerId)}
-                    onPointerUp={cancelLongPress}
-                    onPointerLeave={cancelLongPress}
-                    onPointerCancel={cancelLongPress}
-                    onContextMenu={(e) => e.preventDefault()}
-                    aria-label={t('play.score', { name })}
-                  >
-                    <ScoreMark score={score} par={par} large />
-                  </button>
-                  <button
-                    type="button"
-                    className="step-button"
-                    onClick={() => adjust(playerId, 1)}
-                    disabled={!entryEnabled}
-                    aria-label={t('play.plus', { name })}
-                  >
-                    +
-                  </button>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
+        {matchGroups.length > 0 ? (
+          <div className="match-list">
+            {matchGroups.map((group) => (
+              <section key={group.key} className="match-group" aria-label={group.label}>
+                {group.duel && (
+                  <MatchHead
+                    duel={group.duel}
+                    players={state.players}
+                    hole={hole}
+                    format={group.format}
+                  />
+                )}
+                <ul className="player-list">{group.players.map(renderRow)}</ul>
+              </section>
+            ))}
+          </div>
+        ) : (
+          <ul className="player-list">
+            {playOrder(round, flightEntry, state.players).map(renderRow)}
+          </ul>
+        )}
         <p className="hint center px play-help" style={{ paddingTop: 10 }}>
           {t('play.clearHint', { par })}
         </p>

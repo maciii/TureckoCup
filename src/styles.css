@@ -3017,3 +3017,115 @@ a.menu-item {
     animation: none;
   }
 }
+
+/* --- zápis seskupený po duelech (singly pozic ve flightu) ------------------- */
+
+.match-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* Užší okraje než plochý seznam: karta i proužek týmu si berou šířku, kterou
+     jména a tlačítka na 320px displeji potřebují. */
+  padding: 6px 12px 0;
+}
+
+.match-group {
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.match-group .player-list {
+  padding: 0 6px;
+}
+
+/* Barva týmu jako proužek u řádku - soupeři pod sebou jsou k rozeznání na první pohled. */
+.player-row.team-a {
+  box-shadow: inset 4px 0 0 var(--team-a);
+  padding-left: 8px;
+}
+
+.player-row.team-b {
+  box-shadow: inset 4px 0 0 var(--team-b);
+  padding-left: 8px;
+}
+
+.match-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 5px;
+  background: var(--brand-soft);
+  border-bottom: 1px solid var(--line);
+}
+
+.match-side {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.match-side.right {
+  justify-content: flex-end;
+}
+
+.match-side-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.match-side-value {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.match-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.match-pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--track);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.match-pill.lead-a {
+  background: var(--team-a);
+  color: var(--team-a-ink);
+}
+
+.match-pill.lead-b {
+  background: var(--team-b);
+  color: var(--team-b-ink);
+}
+
+.match-pill.done {
+  box-shadow: 0 0 0 2px var(--gold-bright);
+}
+
+.match-hole {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
