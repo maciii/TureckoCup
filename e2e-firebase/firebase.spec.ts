@@ -230,14 +230,8 @@ test('admin založí turnaj a zadá e-maily, hráč zapisuje, cizí účet nepro
   await expect(writerRows.nth(0).locator('.mark')).toHaveText('4')
   await expect(writer.locator('.notice.error')).toHaveCount(0)
 
-  const firstPlayer = await readFirstFlightPlayer(request)
-  await expect
-    .poll(async () => {
-      const doc = await readDoc(request, 'tournaments/tc26/rounds/r1')
-      return doc?.fields.scores.mapValue.fields[firstPlayer]?.mapValue.fields?.['0']
-        ?.integerValue
-    })
-    .toBe('4')
+  const flightPlayers = await readFirstFlightPlayers(request)
+  await expect.poll(() => holeScores(request, flightPlayers, '0')).toEqual(['4', '5'])
   await expect(visitor.locator('table.scorecard .mark.par').first()).toBeVisible({
     timeout: 20_000,
   })
@@ -253,10 +247,24 @@ test('admin založí turnaj a zadá e-maily, hráč zapisuje, cizí účet nepro
   await expect(admin.locator('table.edits-log')).toContainText('Pavlos')
 })
 
-async function readFirstFlightPlayer(request: APIRequestContext): Promise<string> {
+/** Hráči prvního flightu; pořadí řádků v zápisu se řídí hrami, ne flightem. */
+async function readFirstFlightPlayers(request: APIRequestContext): Promise<string[]> {
   const doc = await readDoc(request, 'tournaments/tc26/rounds/r1')
   const flight = doc.fields.flights.arrayValue.values[0].mapValue.fields
-  return flight.players.arrayValue.values[0].stringValue as string
+  return flight.players.arrayValue.values.map((v: any) => v.stringValue as string)
+}
+
+/** Zapsané rány prvního flightu na jamce (seřazené), z dokumentu kola. */
+async function holeScores(request: APIRequestContext, players: string[], hole: string) {
+  const doc = await readDoc(request, 'tournaments/tc26/rounds/r1')
+  return players
+    .map(
+      (id) =>
+        doc?.fields.scores.mapValue.fields[id]?.mapValue.fields?.[hole]?.integerValue as
+          string | undefined,
+    )
+    .filter((v): v is string => v !== undefined)
+    .sort()
 }
 
 test('zápis bez signálu čeká ve frontě a po návratu signálu se odešle', async ({
@@ -284,7 +292,7 @@ test('zápis bez signálu čeká ve frontě a po návratu signálu se odešle', 
   await admin.goto('/#/play/r1/0')
   const rows = admin.locator('.player-row')
   await expect(rows).toHaveCount(4, { timeout: 20_000 })
-  const firstPlayer = await readFirstFlightPlayer(request)
+  const flightPlayers = await readFirstFlightPlayers(request)
   await admin.context().setOffline(true)
 
   await rows.nth(0).locator('.step-button').last().click()
@@ -292,10 +300,7 @@ test('zápis bez signálu čeká ve frontě a po návratu signálu se odešle', 
   // Zápis se nečeká: obrazovka ho ukazuje hned a hlásí neodeslaný stav.
   await expect(admin.getByRole('status', { name: /neodeslan/ })).toBeVisible()
   await admin.waitForTimeout(1500)
-  const offlineDoc = await readDoc(request, 'tournaments/tc26/rounds/r1')
-  expect(
-    offlineDoc.fields.scores.mapValue.fields[firstPlayer]?.mapValue.fields?.['0'],
-  ).toBeUndefined()
+  expect(await holeScores(request, flightPlayers, '0')).toEqual([])
 
   // Další jamka jde zapisovat i bez signálu.
   for (let i = 1; i < 4; i += 1) await rows.nth(i).locator('.score-value').click()
@@ -306,16 +311,11 @@ test('zápis bez signálu čeká ve frontě a po návratu signálu se odešle', 
   await expect(admin.locator('.hole-info')).toContainText('Jamka 2 z 18')
 
   await admin.context().setOffline(false)
+  // Po návratu signálu dorazí bogey prvního řádku i pary ostatních tří.
   await expect
-    .poll(
-      async () => {
-        const doc = await readDoc(request, 'tournaments/tc26/rounds/r1')
-        return doc?.fields.scores.mapValue.fields[firstPlayer]?.mapValue.fields?.['0']
-          ?.integerValue
-      },
-      { timeout: 45_000 },
-    )
-    .toBe('5')
+    .poll(() => holeScores(request, flightPlayers, '0'), { timeout: 45_000 })
+    .toHaveLength(4)
+  await expect.poll(() => holeScores(request, flightPlayers, '0')).toContain('5')
   await expect(admin.getByRole('status', { name: /neodeslan/ })).toHaveCount(0, {
     timeout: 30_000,
   })

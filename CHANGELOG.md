@@ -3,6 +3,13 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.27.1] – 2026-10-11
+
+### Opraveno
+
+- E2E proti emulátorům čtou zápis celého flightu, ne prvního řádku - pořadí
+  řádků v zápisu se řídí hrami kola.
+
 ## [0.27.0] – 2026-10-11
 
 ### Změněno
