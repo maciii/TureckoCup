@@ -830,6 +830,19 @@ function GameEditor({
   const holeNumbers = Array.from({ length: round.course.holeCount }, (_, i) => i)
   const holes = game.holes ?? { from: 0, to: round.course.holeCount - 1 }
   const pairs = flightPairs(round, state.players)
+  // Rány z HCP se ve výpočtu použijí jen u netto hry: duel s formátem rozhoduje
+  // formátem (brutto rány nikdy, jamkovka podle přepínače Netto), ostatní hry
+  // přepínačem Netto. Allowance a podíly HCP jinak nic nemění - schovat.
+  const format = options.format ?? 'strokes-net'
+  const usesHandicap = hasFormat
+    ? format === 'strokes-gross'
+      ? false
+      : format === 'match-play'
+        ? options.net
+        : true
+    : options.net
+  // Body za výhru, remízu a skin jdou jen do týmového skóre.
+  const teamScored = game.countsForTeam
 
   return (
     <div
@@ -968,7 +981,7 @@ function GameEditor({
           onChange={(net) => setOptions({ net })}
         />
       )}
-      {game.kind === 'texas-scramble' ? (
+      {!usesHandicap ? null : game.kind === 'texas-scramble' ? (
         // Texas: místo allowance podíly HCP partnerů (WHS 35 % nižšího + 15 % vyššího).
         <>
           <div className="field">
@@ -1081,7 +1094,7 @@ function GameEditor({
               )}
             </>
           )}
-          {game.kind === 'team-skins' && (
+          {game.kind === 'team-skins' && teamScored && (
             <div className="field">
               <span className="field-label">{t('admin.gamePerSkin')}</span>
               <DecimalInput
@@ -1118,26 +1131,30 @@ function GameEditor({
               <p className="hint">{t('admin.gameFormatHint')}</p>
             </div>
           )}
-          <div className="field">
-            <span className="field-label">{t('admin.gameWin')}</span>
-            <DecimalInput
-              label={t('admin.gameWin')}
-              value={game.teamPoints.win ?? 0}
-              onCommit={(win) =>
-                onChange({ ...game, teamPoints: { ...game.teamPoints, win } })
-              }
-            />
-          </div>
-          <div className="field">
-            <span className="field-label">{t('admin.gameHalve')}</span>
-            <DecimalInput
-              label={t('admin.gameHalve')}
-              value={game.teamPoints.halve ?? 0}
-              onCommit={(halve) =>
-                onChange({ ...game, teamPoints: { ...game.teamPoints, halve } })
-              }
-            />
-          </div>
+          {teamScored && (
+            <>
+              <div className="field">
+                <span className="field-label">{t('admin.gameWin')}</span>
+                <DecimalInput
+                  label={t('admin.gameWin')}
+                  value={game.teamPoints.win ?? 0}
+                  onCommit={(win) =>
+                    onChange({ ...game, teamPoints: { ...game.teamPoints, win } })
+                  }
+                />
+              </div>
+              <div className="field">
+                <span className="field-label">{t('admin.gameHalve')}</span>
+                <DecimalInput
+                  label={t('admin.gameHalve')}
+                  value={game.teamPoints.halve ?? 0}
+                  onCommit={(halve) =>
+                    onChange({ ...game, teamPoints: { ...game.teamPoints, halve } })
+                  }
+                />
+              </div>
+            </>
+          )}
           {hasSides(game.kind) && (
             <p className="hint">
               {pairs.some((pair) => pair.valid)

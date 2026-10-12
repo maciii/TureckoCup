@@ -178,7 +178,11 @@ test('body za remízu jdou zadat s desetinnou čárkou a přežijí obnovení', 
 }) => {
   await setIdentity(page, 'admin')
   await open(page, '#/admin/round/r1')
-  const halve = page.getByLabel('Bodů za remízu').first()
+  // Body za zápas jsou vidět jen u hry, která jde do týmového skóre.
+  const duels = page.locator('.game-card').nth(3)
+  await expect(duels.getByLabel('Bodů za remízu')).toHaveCount(0)
+  await duels.getByRole('switch', { name: 'Počítá se do týmového skóre' }).click()
+  const halve = duels.getByLabel('Bodů za remízu')
   await halve.fill('0,5')
   await expect(halve).toHaveValue('0,5')
   await halve.blur()

@@ -403,6 +403,23 @@ test('Texas scramble dvojic: HCP dvojic v adminu, zápis za dvojici oběma partn
   await expect(page.getByLabel('Podíl nižšího HCP (%)')).toHaveValue('35')
   await expect(page.getByLabel('Podíl vyššího HCP (%)')).toHaveValue('15')
   await expect(page.getByTestId('texas-pairs')).toContainText('HCP dvojic')
+  // Volby, se kterými výpočet nepočítá, nejsou vidět: brutto rány HCP nepoužijí,
+  // jamkovka jen se zapnutým Netto; body za výhru jen u hry do týmového skóre.
+  // Texas je v testovací verzi poslední hra dne 5.
+  const texasCard = page.locator('.game-card').last()
+  await expect(texasCard.getByTestId('texas-pairs')).toHaveCount(1)
+  await texasCard.getByRole('button', { name: 'Brutto rány' }).click()
+  await expect(texasCard.getByLabel('Podíl nižšího HCP (%)')).toHaveCount(0)
+  await expect(texasCard.getByTestId('texas-pairs')).toHaveCount(0)
+  await texasCard.getByRole('button', { name: 'Jamkovka' }).click()
+  await expect(texasCard.getByLabel('Podíl nižšího HCP (%)')).toHaveValue('35')
+  await texasCard.getByRole('switch', { name: 'Netto' }).click()
+  await expect(texasCard.getByLabel('Podíl nižšího HCP (%)')).toHaveCount(0)
+  await texasCard.getByRole('switch', { name: 'Netto' }).click()
+  await expect(texasCard.getByLabel('Bodů za výhru')).toHaveCount(1)
+  await texasCard.getByRole('switch', { name: 'Počítá se do týmového skóre' }).click()
+  await expect(texasCard.getByLabel('Bodů za výhru')).toHaveCount(0)
+  await texasCard.getByRole('switch', { name: 'Počítá se do týmového skóre' }).click()
 
   await openPreview(page, '#/play/r5/0')
   // Jedna karta zápasu, řádek za dvojici (jména obou partnerů).

@@ -3,6 +3,17 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.29.1] – 2026-10-12
+
+### Změněno
+
+- **Editor hry schovává volby, se kterými výpočet nepočítá.** Allowance
+  a u Texasu podíly HCP a HCP dvojic jsou vidět jen u netto hry: u formátu
+  Brutto rány nikdy, u Jamkovky jen se zapnutým Netto, u ostatních her podle
+  přepínače Netto. Body za výhru, remízu a za skin jsou vidět jen u hry,
+  která se počítá do týmového skóre. Uložené hodnoty zůstávají, po přepnutí
+  se vrátí.
+
 ## [0.29.0] – 2026-10-12
 
 ### Přidáno
