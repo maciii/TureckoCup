@@ -4,7 +4,7 @@ import { demoVariant, useData } from '../data'
 import { evaluateRound, hasSides } from '../evaluations'
 import { matchOfFlight } from '../evaluations/fourBallSkins'
 import { DuelRow } from './GameResults'
-import type { EvaluationResult } from '../evaluations'
+import type { DuelResult, EvaluationResult } from '../evaluations'
 import { stablefordAt } from '../evaluations/stableford'
 import { t } from '../i18n'
 import { MAX_STROKES, PICKED_UP } from '../model/types'
@@ -582,10 +582,8 @@ export default function PlayScreen({ roundId, flight }: Props) {
         {/* Druhý flight až pod zápisem: kde je a jak stojí jeho zápasy (hry dvojic) -
             výrazně, ale ať neodsouvá zadávání ran. */}
         {others.map(({ entry, index }) => {
-          const matches = results
-            .filter((r) => hasSides(r.game.kind))
-            .map((r) => ({ result: r, duel: matchOfFlight(r, entry.players) }))
-            .filter((m) => m.duel && m.duel.sides.length === 2)
+          const matches = flightMatches(results, entry.players)
+          const games = new Set(matches.map((m) => m.result.game.id))
           return (
             <section
               key={index}
@@ -601,18 +599,25 @@ export default function PlayScreen({ roundId, flight }: Props) {
                 {flightProgressLabel(round, entry)}
                 <span className="chev">›</span>
               </button>
-              {matches.map(({ result, duel }) => (
-                <ul key={result.game.id} className="list other-flight-match">
-                  {matches.length > 1 && (
-                    <li className="other-flight-game">{gameTitle(result.game)}</li>
-                  )}
-                  <DuelRow
-                    duel={duel!}
-                    players={state.players}
-                    format={result.game.options.format ?? 'strokes-net'}
-                  />
-                </ul>
-              ))}
+              {[...games].map((gameId) => {
+                const group = matches.filter((m) => m.result.game.id === gameId)
+                const result = group[0]!.result
+                return (
+                  <ul key={gameId} className="list other-flight-match">
+                    {games.size > 1 && (
+                      <li className="other-flight-game">{gameTitle(result.game)}</li>
+                    )}
+                    {group.map(({ duel }) => (
+                      <DuelRow
+                        key={duel.id}
+                        duel={duel}
+                        players={state.players}
+                        format={result.game.options.format ?? 'strokes-net'}
+                      />
+                    ))}
+                  </ul>
+                )
+              })}
             </section>
           )
         })}
@@ -719,6 +724,7 @@ function OtherFlightSheet({
   const flight = round.flights[flightIndex]!
   const stableford = results.find((r) => r.game.kind === 'individual-stableford')
   const teamSkins = results.find((r) => r.game.kind === 'team-skins')
+  const matches = flightMatches(results, flight.players)
   const rows = [...flight.players].sort((a, b) => {
     const pa = stableford?.rows.find((r) => r.id === a)?.value ?? 0
     const pb = stableford?.rows.find((r) => r.id === b)?.value ?? 0
@@ -765,6 +771,26 @@ function OtherFlightSheet({
             )
           })}
         </ul>
+        {/* Zápasy flightu: singly pozic (oba hráči tady) i hry dvojic. */}
+        {[...new Set(matches.map((m) => m.result.game.id))].map((gameId) => {
+          const group = matches.filter((m) => m.result.game.id === gameId)
+          const result = group[0]!.result
+          return (
+            <div key={gameId} className="other-flight-matches">
+              <p className="eyebrow">{gameTitle(result.game)}</p>
+              <ul className="list">
+                {group.map(({ duel }) => (
+                  <DuelRow
+                    key={duel.id}
+                    duel={duel}
+                    players={state.players}
+                    format={result.game.options.format ?? 'strokes-net'}
+                  />
+                ))}
+              </ul>
+            </div>
+          )
+        })}
         {teamSkins && (
           <p className="hint center px" style={{ paddingTop: 8 }}>
             {t('games.team-skins.name')}: A{' '}
@@ -780,6 +806,34 @@ function OtherFlightSheet({
       </div>
     </div>
   )
+}
+
+/**
+ * Zápasy flightu pro kartu a detail druhého flightu: hry dvojic (zápas
+ * dvojic flightu) i singly pozic, jejichž oba hráči hrají v tomhle flightu.
+ */
+function flightMatches(
+  results: EvaluationResult[],
+  flightPlayers: readonly PlayerId[],
+): { result: EvaluationResult; duel: DuelResult }[] {
+  const inFlight = new Set(flightPlayers)
+  return results.flatMap((result) => {
+    if (hasSides(result.game.kind)) {
+      const duel = matchOfFlight(result, flightPlayers)
+      return duel && duel.sides.length === 2 ? [{ result, duel }] : []
+    }
+    if (result.game.kind !== 'position-duel') return []
+    return (result.duels ?? [])
+      .filter(
+        (duel) =>
+          duel.sides.length === 2 &&
+          duel.sides.every(
+            (side) =>
+              side.players.length > 0 && side.players.every((id) => inFlight.has(id)),
+          ),
+      )
+      .map((duel) => ({ result, duel }))
+  })
 }
 
 function Shell({

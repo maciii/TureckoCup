@@ -3,6 +3,15 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.28.2] – 2026-10-12
+
+### Opraveno
+
+- **Druhý flight ukazuje stav singlů pozic.** Karta pod zápisem i detail
+  druhého flightu (klepnutím na kartu) ukazovaly jen hry dvojic; teď mají
+  i singly pozic, jejichž oba hráči v tom flightu hrají, se stavem zápasu
+  (např. „Mac 2 UP“).
+
 ## [0.28.1] – 2026-10-11
 
 ### Opraveno
