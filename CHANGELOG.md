@@ -3,6 +3,17 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.30.0] – 2026-10-12
+
+### Přidáno
+
+- **Team Skins zájezdu** na úvodní obrazovce: Team Skins přes všechna
+  odehraná kola, netto i brutto vedle sebe (lepší míč týmu na jamce přes
+  všech osm, dělená přenáší, plný HCP), nezávisle na tom, jak byla hra
+  v kolech nastavená. Klepnutím rozpis po kolech a jamkách: vítězná jamka
+  zvýrazněná barvou týmu se jménem hráče, rány obou týmů a počet skinů
+  i s bankem; dělené jamky tlumeně s bankem. Přepínač Netto / Brutto.
+
 ## [0.29.1] – 2026-10-12
 
 ### Změněno

@@ -3567,3 +3567,147 @@ a.menu-item {
     animation: none;
   }
 }
+
+/* --- Team Skins zájezdu: souhrn netto/brutto a rozpis jamek ------------------ */
+
+.ts-totals {
+  list-style: none;
+  margin: 0;
+}
+
+.ts-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+
+.ts-score .sep {
+  color: var(--ink-3);
+  font-weight: 800;
+}
+
+.ts-sheet {
+  max-height: 92dvh;
+}
+
+.ts-sheet .tabs {
+  margin: 8px 0 6px;
+}
+
+.ts-sheet-total {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ts-sheet-total b {
+  font-size: 20px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.ts-sheet-total .sep {
+  color: var(--ink-3);
+}
+
+.ts-rounds {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px var(--pad) 0;
+}
+
+.ts-round-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--brand);
+}
+
+.ts-holes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ts-hole {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+/* Skin vybojovaný týmem: barva týmu jako podklad a proužek - je vidět na první pohled. */
+.ts-hole.win-a {
+  background: var(--team-a-soft);
+  box-shadow: inset 4px 0 0 var(--team-a);
+}
+
+.ts-hole.win-b {
+  background: var(--team-b-soft);
+  box-shadow: inset 4px 0 0 var(--team-b);
+}
+
+.ts-hole.halved {
+  opacity: 0.7;
+}
+
+.ts-hole-no {
+  flex: none;
+  width: 26px;
+  font-size: 15px;
+  font-weight: 900;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.ts-hole-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ts-hole-who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.ts-hole-detail {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.ts-hole-skins {
+  flex: none;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.ts-round-foot {
+  margin: 6px 0 0;
+  padding: 0;
+}

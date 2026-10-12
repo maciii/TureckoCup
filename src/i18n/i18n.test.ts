@@ -66,6 +66,7 @@ describe('katalog textů', () => {
       'admin.bonusConfirm.',
       'admin.gameDoubleBy.',
       'award.',
+      'teamSkins.mode.',
     ]
     const source = sourceFiles('src')
       .filter((file) => !file.endsWith('cs.ts') && !file.endsWith('.test.ts'))

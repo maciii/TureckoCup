@@ -440,3 +440,33 @@ test('Texas scramble dvojic: HCP dvojic v adminu, zápis za dvojici oběma partn
   await expectNoHorizontalOverflow(page)
   expect(errors()).toEqual([])
 })
+
+test('Team Skins zájezdu: netto i brutto přes odehraná kola a rozpis jamek', async ({
+  page,
+}) => {
+  const errors = collectErrors(page)
+  await openPreview(page)
+  const section = page.locator('section', {
+    has: page.getByRole('heading', { name: 'Team Skins zájezdu' }),
+  })
+  const totals = section.locator('.ts-total')
+  await expect(totals).toHaveCount(2)
+  await expect(totals.first()).toContainText('Netto')
+  await expect(totals.last()).toContainText('Brutto')
+  await totals.first().click()
+  const sheet = page.getByRole('dialog', { name: 'Team Skins zájezdu' })
+  // Odehraná kola testovací verze (dny 1-4), vítězné jamky v barvě týmu se jménem.
+  await expect(sheet.locator('.ts-round')).toHaveCount(4)
+  await expect(sheet.locator('.ts-hole.win-a').first()).toBeVisible()
+  await expect(sheet.locator('.ts-hole.win-b').first()).toBeVisible()
+  await expect(sheet.locator('.ts-hole.win-a .ts-hole-who').first()).not.toBeEmpty()
+  const netTotal = await sheet.locator('.ts-sheet-total').innerText()
+  await sheet.getByRole('button', { name: 'Brutto', exact: true }).click()
+  await expect(
+    sheet.getByRole('button', { name: 'Brutto', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true')
+  await expect(sheet.locator('.ts-sheet-total')).not.toHaveText(netTotal)
+  await expectNoHorizontalOverflow(page)
+  await sheet.getByRole('button', { name: 'Zavřít' }).click()
+  expect(errors()).toEqual([])
+})

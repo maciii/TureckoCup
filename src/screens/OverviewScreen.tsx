@@ -29,6 +29,7 @@ import MenuSheet from './MenuSheet'
 import LiveNow from './LiveNow'
 import { AwardIntro, AwardsSection } from './Awards'
 import Welcome, { welcomeSeen, markWelcomeSeen } from './Welcome'
+import TeamSkinsOverview from './TeamSkinsOverview'
 import { computeAwards } from '../evaluations/awards'
 import { flightHolesStarted } from '../model/round'
 
@@ -207,6 +208,8 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
         {state.tournament && (
           <AwardsSection summary={awards} players={state.players} me={me} />
         )}
+
+        <TeamSkinsOverview rounds={state.rounds} players={state.players} teams={teams} />
 
         {state.rounds.length > 0 && (
           <>

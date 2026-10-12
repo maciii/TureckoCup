@@ -225,6 +225,19 @@ dvojitá jamka přenáší dva skiny) a všechny body dvojice v Best + Součet
 (Best, Součet, birdie, Double Best i extra body). Jamkovka a duely na rány
 volbu nemají - jamka tam nemá body. V zápisu ukáže karta dvojic chip ×2.
 
+## Team Skins zájezdu (souhrn přes kola)
+
+Statistika na úvodní obrazovce, ne hra kola: `evaluations/teamSkinsTotal.ts`
+spočítá každé odehrané kolo (ne plánované) stejnou evaluací jako Team Skins,
+ale jednotně - celé kolo, dělená jamka přenáší, plný HCP - a to **netto
+i brutto**. Nezávisí na tom, jestli a jak měl admin Team Skins v kole
+nastavené, a do týmového skóre nic nepřidává.
+
+Rozpis po klepnutí: po kolech jamky v pořadí hraní; vítězná jamka v barvě
+týmu se jménem hráče, který zahrál rozhodující ránu (při shodě v týmu všichni),
+rány obou týmů a počet skinů včetně banku; dělená jamka tlumeně s bankem.
+Dole u kola, co zůstalo v banku a kolik jamek čeká na zápis všech osmi.
+
 ## Odznaky zájezdu (individuální statistiky)
 
 Nejsou hra ani se neukládají: `evaluations/awards.ts` je počítá při zobrazení

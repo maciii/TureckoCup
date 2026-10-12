@@ -216,6 +216,31 @@ export const cs = {
   'play.scope.showFlight': 'Zapisovat celý flight',
   'play.scope.expand': 'Rozbalit',
   'play.scope.collapse': 'Sbalit',
+  'teamSkins.title': 'Team Skins zájezdu',
+  'teamSkins.hint': {
+    one: 'Lepší míč týmu na jamce přes všech osm, dělená přenáší - {count} odehrané kolo. Klepnutím rozpis jamek.',
+    few: 'Lepší míč týmu na jamce přes všech osm, dělená přenáší - {count} odehraná kola. Klepnutím rozpis jamek.',
+    other:
+      'Lepší míč týmu na jamce přes všech osm, dělená přenáší - {count} odehraných kol. Klepnutím rozpis jamek.',
+  },
+  'teamSkins.mode.net': 'Netto',
+  'teamSkins.mode.gross': 'Brutto',
+  'teamSkins.leads': 'vede {team}',
+  'teamSkins.tied': 'vyrovnáno',
+  'teamSkins.holeWon': 'par {par} · {own} proti {other}',
+  'teamSkins.holeHalved': 'par {par} · dělená ({score}), v banku {carry}',
+  'teamSkins.pickedUp': 'zvednuto',
+  'teamSkins.noHoles': 'Zatím žádná jamka se zápisem všech osmi.',
+  'teamSkins.pending': {
+    one: '{count} jamka čeká na zápis',
+    few: '{count} jamky čekají na zápis',
+    other: '{count} jamek čeká na zápis',
+  },
+  'teamSkins.carryLeft': {
+    one: 'v banku zůstal {count} skin',
+    few: 'v banku zůstaly {count} skiny',
+    other: 'v banku zůstalo {count} skinů',
+  },
   'awards.title': 'Odznaky zájezdu',
   'awards.hint':
     'Individuální statistiky ze zapsaných ran přes odehraná kola. Klepnutím na odznak uvidíš celou tabulku.',
