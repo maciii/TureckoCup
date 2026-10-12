@@ -53,7 +53,13 @@ export default function HoleStatus({
 
   for (const result of results) {
     const kind = result.game.kind
-    if (kind === 'best-aggregate' || kind === 'four-ball-skins') continue
+    // Hry dvojic mají v zápisu vlastní kartu zápasu - řádek by ji opakoval.
+    if (
+      kind === 'best-aggregate' ||
+      kind === 'four-ball-skins' ||
+      kind === 'texas-scramble'
+    )
+      continue
     if (kind === 'position-duel' && skipDuels) continue
     const label = result.game.name ?? t(`games.${kind}.name`)
     const outcome = result.holes.find((h) => h.hole === hole)

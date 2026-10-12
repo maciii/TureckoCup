@@ -118,6 +118,27 @@ kterýkoli její hráč. Jde přepnout kdykoli, i po zápisu ran; double u dvoji
 která dublovat nesměla, vyhodnocení ignoruje a zápis to ukáže. Zápis má
 kartu zápasu: stav, o kolik skinů se hraje, kdo jamku vzal, tlačítko Double.
 
+## Texas scramble dvojic (`texas-scramble`)
+
+Oba hráči dvojice odpalují, vyberou lepší míč a z něj hrají oba dál až do
+jamky - dvojice má na jamce **jedno skóre**. Dvojice plynou z flightů jako
+u ostatních her dvojic (dva hráči téhož týmu ve flightu), hrají proti
+dvojici druhého týmu ve flightu.
+
+- **Zápis:** jeden řádek za dvojici (jména obou partnerů); klepnutí uloží
+  totéž skóre oběma partnerům (dvě buňky, dva zápisy - rules beze změny).
+  Evaluace bere lepší ze zapsaných čísel partnerů, takže nevadí, když jeden
+  zápis chybí nebo se liší. Zvednutá jamka platí, jen když číslo nemá nikdo.
+- **Handicap:** hrací HCP dvojice = 35 % nižšího + 15 % vyššího hracího HCP
+  partnerů (doporučení WHS pro scramble dvojic), zaokrouhleno; podíly jdou
+  v editoru hry změnit (`options.texasLow`, `options.texasHigh`), allowance
+  hry se nepoužije. Rány dvojice se rozdělí podle SI jamek a zápis je ukazuje
+  tečkami u dvojice.
+- **Formát:** jako Four-ball - jamkovka (výchozí, s dormie), netto/brutto rány
+  nebo Stableford dvojice; body do týmu za výhru a remízu zápasu.
+- Individuální hry (Stableford, Skins) v kole Texasu dostanou skóre dvojice
+  u obou partnerů - pro jednotlivce nemají smysl, admin je z kola odebere.
+
 ## Extra body (centrální, v každém kole)
 
 **Do týmového skóre** jdou extra body jen přes hru, která má zapnuté

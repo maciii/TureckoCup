@@ -246,22 +246,32 @@ function gamesForDay(day: number): GameConfig[] {
           { win: 2, halve: 1 },
           { countsForTeam: true },
         ),
-        game(
-          'four-ball-skins',
-          'four-ball-skins',
-          'preview.game.fourBallSkins',
-          // Den 4 a 5: skiny dvojic s double prohrávající dvojice, dvojitá 9 a 18.
-          {
-            allowance: 0.9,
-            net: true,
-            carry: true,
-            doubleBy: 'behind',
-            doubleHoles: true,
-            birdieBonus: true,
-          },
-          { win: 1, halve: 0.5 },
-          { countsForTeam: true },
-        ),
+        // Den 5: Texas scramble dvojic místo Four-ball Skins (jako poslední den zájezdu).
+        day === 5
+          ? game(
+              'texas',
+              'texas-scramble',
+              null,
+              { allowance: 1, net: true, format: 'match-play' },
+              { win: 1, halve: 0.5 },
+              { countsForTeam: true },
+            )
+          : game(
+              'four-ball-skins',
+              'four-ball-skins',
+              'preview.game.fourBallSkins',
+              // Den 4: skiny dvojic s double prohrávající dvojice, dvojitá 9 a 18.
+              {
+                allowance: 0.9,
+                net: true,
+                carry: true,
+                doubleBy: 'behind',
+                doubleHoles: true,
+                birdieBonus: true,
+              },
+              { win: 1, halve: 0.5 },
+              { countsForTeam: true },
+            ),
       ]
   }
 }
@@ -375,7 +385,8 @@ export function previewRounds(seed = PREVIEW_SEED): TournamentRound[] {
         },
       ],
       departure: plan.departure,
-      games: day <= 4 ? gamesForDay(day) : base.games,
+      // Den 5 hraje Texas scramble dvojic (plánovaný, jde vyzkoušet adminem).
+      games: gamesForDay(day),
       ...emptyScoreMaps(base.playerIds),
     }
     if (plan.status === 'planned') return round

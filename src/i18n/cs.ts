@@ -100,6 +100,9 @@ export const cs = {
   'games.four-ball-skins.name': 'Four-ball Skins',
   'games.four-ball-skins.description':
     'Dvojice proti dvojici, lepší míč, skin za jamku, dělená přenáší; dubl = dva skiny',
+  'games.texas-scramble.name': 'Texas scramble dvojic',
+  'games.texas-scramble.description':
+    'Dvojice hraje jeden míč z lepší rány, jedno skóre na jamku; dvojice proti dvojici',
   'skins.match.atStake': {
     one: 've hře {count} skin',
     few: 've hře {count} skiny',
@@ -506,6 +509,11 @@ export const cs = {
   'admin.gameFormatHint':
     'Rány a Stableford určují netto nebo brutto samy; u Jamkovky rozhoduje přepínač Netto.',
   'admin.gameAllowance': 'Allowance (%)',
+  'admin.texasLow': 'Podíl nižšího HCP (%)',
+  'admin.texasHigh': 'Podíl vyššího HCP (%)',
+  'admin.texasHint':
+    'Hrací HCP dvojice = podíl nižšího + podíl vyššího hracího HCP partnerů (WHS doporučuje 35 % + 15 %). Skóre dvojice se zapisuje oběma partnerům naráz.',
+  'admin.texasPairs': 'HCP dvojic: {pairs}',
   'admin.gameScopeFlight': 'Ve flightu',
   'admin.gameScopeAll': 'Všech 8',
   'admin.gameCarry': 'Přenos banku',

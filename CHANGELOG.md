@@ -3,6 +3,20 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.29.0] – 2026-10-12
+
+### Přidáno
+
+- **Nová hra Texas scramble dvojic.** Dvojice z flightu hraje jeden míč
+  z lepší rány a má na jamku jedno skóre; hraje proti dvojici druhého týmu
+  ve flightu. Hrací HCP dvojice je 35 % nižšího + 15 % vyššího hracího HCP
+  partnerů (doporučení WHS), podíly jdou v editoru hry změnit a editor
+  ukáže HCP všech dvojic. Formát jamkovka (výchozí, s dormie), netto/brutto
+  rány nebo Stableford; body do týmu za výhru a remízu.
+- Zápis Texasu: jeden řádek za dvojici, klepnutí uloží skóre oběma
+  partnerům, tečky ukazují rány dvojice, nahoře karta zápasu se stavem.
+- Testovací verze: den 5 hraje Texas scramble dvojic.
+
 ## [0.28.3] – 2026-10-12
 
 ### Přidáno

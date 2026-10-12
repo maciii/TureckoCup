@@ -42,7 +42,9 @@ import {
   strokeIndexRanked,
   strokesReceived,
   playOrder,
+  matchSides,
 } from '../model/round'
+import { texasStrokesAt } from '../evaluations/texas'
 import { goBack, navigate } from '../nav'
 import {
   Header,
@@ -115,6 +117,12 @@ export default function PlayScreen({ roundId, flight }: Props) {
     )
   }
 
+  // Texas scramble: řádek zápisu je dvojice (první partner ji zastupuje).
+  const texasGame = round.games.find((g) => g.kind === 'texas-scramble')
+  const texasSides = texasGame ? matchSides(round, state.players) : []
+  const pairOf = (playerId: PlayerId): PlayerId[] =>
+    texasSides.find((side) => side.players.includes(playerId))?.players ?? [playerId]
+
   const canWrite = meta.role === 'admin' || meta.role === 'writer'
   const locked = round.status === 'finished' && meta.role !== 'admin'
   const notLive = round.status === 'planned' && meta.role !== 'admin'
@@ -167,7 +175,9 @@ export default function PlayScreen({ roundId, flight }: Props) {
 
   function setScore(playerId: PlayerId, value: number | null) {
     if (!entryEnabled) return
-    store.dispatch({ kind: 'setScore', roundId, playerId, hole, value })
+    // Texas scramble: skóre dvojice patří oběma partnerům - dvě buňky, dva zápisy.
+    for (const id of pairOf(playerId))
+      store.dispatch({ kind: 'setScore', roundId, playerId: id, hole, value })
   }
 
   function adjust(playerId: PlayerId, delta: number) {
@@ -258,7 +268,10 @@ export default function PlayScreen({ roundId, flight }: Props) {
   // Řádek hráče: sdílí ho plochý seznam i seznam seskupený podle duelů.
   const renderRow = (playerId: PlayerId) => {
     const score = scoreAt(round, playerId, hole)
-    const strokes = strokesReceived(round, playerId, hole)
+    const strokes =
+      texasGame && pairOf(playerId).length > 1
+        ? texasStrokesAt(round, pairOf(playerId), hole, texasGame.options)
+        : strokesReceived(round, playerId, hole)
     const completed = holesCompleted(round, playerId)
     const toPar = grossTotal(round, playerId) - parForPlayedHoles(round, playerId)
     const points =
@@ -266,7 +279,11 @@ export default function PlayScreen({ roundId, flight }: Props) {
         ? stablefordAt(round, playerId, hole, stablefordGame.options)
         : undefined
     const player = state.players.find((p) => p.id === playerId)
-    const name = shortName(state.players, playerId)
+    const pair = pairOf(playerId)
+    const name =
+      pair.length > 1
+        ? sideLabel(state.players, pair)
+        : shortName(state.players, playerId)
     const awards = bonusAwardsAt(round, bonusConfig, playerId, hole)
     return (
       <li

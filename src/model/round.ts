@@ -298,7 +298,12 @@ export function assignPosition(
 }
 
 /** Hry, které hrají dvojice (strany) z flightů. */
-export const SIDED_KINDS: GameKind[] = ['team-match', 'best-aggregate', 'four-ball-skins']
+export const SIDED_KINDS: GameKind[] = [
+  'team-match',
+  'best-aggregate',
+  'four-ball-skins',
+  'texas-scramble',
+]
 
 /** Dvojice flightu: hráči jednoho týmu ve flightu, v pořadí flightu. */
 export interface FlightPairs {

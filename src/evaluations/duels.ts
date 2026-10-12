@@ -75,7 +75,25 @@ function countedStroke(
   return value
 }
 
-function duelOf(
+/**
+ * Jak strana duelu hraje jamku: `stroke` pro jamkovku (zvednutí = `CONCEDED`),
+ * `counted` pro součtové formáty (zvednutí podle pravidla turnaje). Výchozí je
+ * lepší míč hráčů strany; Texas scramble dává jedno skóre dvojice.
+ */
+export interface SideScorer {
+  stroke: (players: PlayerId[], hole: number, net: boolean) => number | undefined
+  counted: (players: PlayerId[], hole: number, net: boolean) => number | undefined
+}
+
+function bestBallScorer(context: EvaluationContext, allowance: number): SideScorer {
+  return {
+    stroke: (players, hole, net) => strokeOf(context, players, hole, net, allowance),
+    counted: (players, hole, net) =>
+      countedStroke(context, players, hole, net, allowance),
+  }
+}
+
+export function duelOf(
   context: EvaluationContext,
   id: string,
   sides: GameSide[],
@@ -84,6 +102,7 @@ function duelOf(
   allowance: number,
   netOption: boolean,
   position?: number,
+  scorer: SideScorer = bestBallScorer(context, allowance),
 ): DuelResult {
   const { round, players } = context
   const [left, right] = sides
@@ -117,13 +136,7 @@ function duelOf(
     const state = computeMatch({
       holeOrder: order,
       scoreOf: (side, hole) =>
-        strokeOf(
-          context,
-          (side === 0 ? left : right).players,
-          hole,
-          netOption,
-          allowance,
-        ),
+        scorer.stroke((side === 0 ? left : right).players, hole, netOption),
     })
     return {
       id,
@@ -156,7 +169,7 @@ function duelOf(
     let value = 0
     let count = 0
     for (const hole of order) {
-      const stroke = countedStroke(context, side.players, hole, net, allowance)
+      const stroke = scorer.counted(side.players, hole, net)
       if (stroke === undefined) continue
       count += 1
       value +=
@@ -170,12 +183,12 @@ function duelOf(
   // která je o jamku napřed, "vedla" jen proto, že má víc zapsáno.
   const common = order.filter(
     (hole) =>
-      countedStroke(context, left.players, hole, net, allowance) !== undefined &&
-      countedStroke(context, right.players, hole, net, allowance) !== undefined,
+      scorer.counted(left.players, hole, net) !== undefined &&
+      scorer.counted(right.players, hole, net) !== undefined,
   )
   const sum = (side: GameSide) =>
     common.reduce((total, hole) => {
-      const stroke = countedStroke(context, side.players, hole, net, allowance) ?? 0
+      const stroke = scorer.counted(side.players, hole, net) ?? 0
       return (
         total +
         (format === 'stableford' ? stablefordPoints(stroke - parAt(round, hole)) : stroke)
@@ -188,7 +201,7 @@ function duelOf(
   const holeWinners: Record<string, 0 | 1 | null> = {}
   for (const hole of common) {
     const valueOf = (side: GameSide) => {
-      const stroke = countedStroke(context, side.players, hole, net, allowance) ?? 0
+      const stroke = scorer.counted(side.players, hole, net) ?? 0
       return format === 'stableford'
         ? stablefordPoints(stroke - parAt(round, hole))
         : stroke

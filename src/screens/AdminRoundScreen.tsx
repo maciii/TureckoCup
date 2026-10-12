@@ -30,6 +30,7 @@ import {
   teamOf,
 } from '../model/round'
 import { GAME_KINDS, hasSides } from '../evaluations'
+import { texasHandicap, texasShares } from '../evaluations/texas'
 import { DOUBLE_BY } from '../evaluations/fourBallSkins'
 import {
   TEE_INTERVAL_MINUTES,
@@ -967,17 +968,61 @@ function GameEditor({
           onChange={(net) => setOptions({ net })}
         />
       )}
-      <div className="field">
-        <span className="field-label">{t('admin.gameAllowance')}</span>
-        <input
-          className="input sm num"
-          inputMode="numeric"
-          value={Math.round(options.allowance * 100)}
-          onChange={(e) =>
-            setOptions({ allowance: Math.max(0, Number(e.target.value) || 0) / 100 })
-          }
-        />
-      </div>
+      {game.kind === 'texas-scramble' ? (
+        // Texas: místo allowance podíly HCP partnerů (WHS 35 % nižšího + 15 % vyššího).
+        <>
+          <div className="field">
+            <span className="field-label">{t('admin.texasLow')}</span>
+            <input
+              className="input sm num"
+              inputMode="numeric"
+              aria-label={t('admin.texasLow')}
+              value={Math.round(texasShares(options).low * 100)}
+              onChange={(e) =>
+                setOptions({ texasLow: Math.max(0, Number(e.target.value) || 0) / 100 })
+              }
+            />
+          </div>
+          <div className="field">
+            <span className="field-label">{t('admin.texasHigh')}</span>
+            <input
+              className="input sm num"
+              inputMode="numeric"
+              aria-label={t('admin.texasHigh')}
+              value={Math.round(texasShares(options).high * 100)}
+              onChange={(e) =>
+                setOptions({ texasHigh: Math.max(0, Number(e.target.value) || 0) / 100 })
+              }
+            />
+          </div>
+          <p className="hint">{t('admin.texasHint')}</p>
+          {pairs.some((pair) => pair.sides) && (
+            <p className="hint" data-testid="texas-pairs">
+              {t('admin.texasPairs', {
+                pairs: pairs
+                  .flatMap((pair) => pair.sides ?? [])
+                  .map(
+                    (side) =>
+                      `${sideLabel(state.players, side.players)} ${texasHandicap(round, side.players, options)}`,
+                  )
+                  .join(' · '),
+              })}
+            </p>
+          )}
+        </>
+      ) : (
+        <div className="field">
+          <span className="field-label">{t('admin.gameAllowance')}</span>
+          <input
+            className="input sm num"
+            inputMode="numeric"
+            value={Math.round(options.allowance * 100)}
+            onChange={(e) =>
+              setOptions({ allowance: Math.max(0, Number(e.target.value) || 0) / 100 })
+            }
+          />
+        </div>
+      )}
       {game.kind === 'individual-skins' && (
         <div className="field">
           <div className="tabs compact" style={{ width: '100%' }}>

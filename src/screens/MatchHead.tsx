@@ -9,7 +9,7 @@ import type {
   TournamentRound,
 } from '../model/types'
 import { TEAM_IDS } from '../model/types'
-import { TeamBadge } from './common'
+import { TeamBadge, sideLabel } from './common'
 
 export interface MatchGroup {
   key: string
@@ -33,6 +33,36 @@ export function duelGroups(
   players: Player[],
   round: TournamentRound,
 ): MatchGroup[] {
+  // Texas scramble: dvojice má jedno skóre - jedna karta zápasu, řádek za dvojici
+  // (zastupuje ji první partner, zápis se uloží oběma).
+  const texas = results.find((r) => r.game.kind === 'texas-scramble')
+  if (texas) {
+    const inFlight = new Set<PlayerId>(flight.players)
+    const duel = texas.duels?.find(
+      (d) =>
+        d.sides.length === 2 &&
+        d.sides.some((side) => side.players.some((id) => inFlight.has(id))),
+    )
+    if (!duel) return []
+    const sorted = {
+      ...duel,
+      sides: [...duel.sides].sort(
+        (a, b) => TEAM_IDS.indexOf(a.teamId ?? 'A') - TEAM_IDS.indexOf(b.teamId ?? 'A'),
+      ),
+    }
+    return [
+      {
+        key: duel.id,
+        label: t('play.match.vs', {
+          a: sideLabel(players, sorted.sides[0]!.players),
+          b: sideLabel(players, sorted.sides[1]!.players),
+        }),
+        players: sorted.sides.map((side) => side.players[0]!),
+        duel: sorted,
+        format: texas.game.options.format ?? 'match-play',
+      },
+    ]
+  }
   // Hra dvojic (Four-ball, Best + Součet, Four-ball Skins) řadí partnery pod sebe
   // a má vlastní kartu zápasu - duely pozic ji nepřeskládají.
   if (round.games.some((game) => SIDED_KINDS.includes(game.kind))) return []
@@ -104,13 +134,16 @@ export default function MatchHead({
       : winner === null
         ? t('play.status.halved')
         : t('play.status.holeTo', {
-            name: shortName(players, duel.sides[winner]!.players[0]!),
+            name: sideLabel(players, duel.sides[winner]!.players),
           })
   const started = duel.sides.some((side) => side.holes > 0)
   const state = !started
     ? t('play.match.notStarted')
     : leader
-      ? `${shortName(players, leader.players[0]!)} ${duel.notation}`.trim()
+      ? // Dvojici prozradí barva týmu; jména by se do kolečka nevešla.
+        leader.players.length > 1
+        ? duel.notation
+        : `${shortName(players, leader.players[0]!)} ${duel.notation}`.trim()
       : t('play.status.allSquare')
   const toneClass = leader?.teamId ? ` lead-${leader.teamId.toLowerCase()}` : ''
   // Dormie jako v Golfgames: výrazně, pod stavem s počtem zbývajících jamek.
@@ -118,7 +151,7 @@ export default function MatchHead({
   const side = (s: DuelResult['sides'][number], align: 'left' | 'right') => (
     <span className={`match-side ${align}`}>
       {align === 'left' && <TeamBadge teamId={s.teamId} />}
-      <span className="match-side-name">{shortName(players, s.players[0]!)}</span>
+      <span className="match-side-name">{sideLabel(players, s.players)}</span>
       {sumFormat && started && <span className="match-side-value">{s.value}</span>}
       {align === 'right' && <TeamBadge teamId={s.teamId} />}
     </span>

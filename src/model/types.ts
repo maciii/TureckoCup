@@ -150,6 +150,7 @@ export type GameKind =
   | 'team-match'
   | 'best-aggregate'
   | 'four-ball-skins'
+  | 'texas-scramble'
 
 /** Formát duelu pozic a hlavní týmové hry. */
 export type DuelFormat = 'strokes-gross' | 'strokes-net' | 'stableford' | 'match-play'
@@ -184,6 +185,10 @@ export interface GameOptions {
   doubleBy?: DoubleBy
   /** Four-ball Skins: bod do skóre dvojice navíc za každé birdie a lepší partnerů (brutto). */
   birdieBonus?: boolean
+  /** Texas scramble: podíl nižšího hracího HCP dvojice (výchozí 0,35). */
+  texasLow?: number
+  /** Texas scramble: podíl vyššího hracího HCP dvojice (výchozí 0,15). */
+  texasHigh?: number
 }
 
 /** Four-ball Skins: kdo smí dublovat jamku. */

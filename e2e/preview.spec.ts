@@ -392,3 +392,34 @@ test('druhý flight: karta pod zápisem i detail ukazují stav singlů pozic', a
   await expectNoHorizontalOverflow(page)
   expect(errors()).toEqual([])
 })
+
+test('Texas scramble dvojic: HCP dvojic v adminu, zápis za dvojici oběma partnerům', async ({
+  page,
+}) => {
+  const errors = collectErrors(page)
+  await setPreviewIdentity(page, 'admin')
+  await openPreview(page, '#/admin/round/r5')
+  // Editor hry ukáže podíly HCP a hrací HCP obou dvojic každého flightu.
+  await expect(page.getByLabel('Podíl nižšího HCP (%)')).toHaveValue('35')
+  await expect(page.getByLabel('Podíl vyššího HCP (%)')).toHaveValue('15')
+  await expect(page.getByTestId('texas-pairs')).toContainText('HCP dvojic')
+
+  await openPreview(page, '#/play/r5/0')
+  // Jedna karta zápasu, řádek za dvojici (jména obou partnerů).
+  const match = page.locator('.match-group')
+  await expect(match).toHaveCount(1)
+  const rows = match.locator('.player-row')
+  await expect(rows).toHaveCount(2)
+  await expect(rows.first().locator('.player-name-text')).toContainText(' + ')
+  await expect(match.locator('.match-side.left')).toContainText(' + ')
+  // Dvě klepnutí = čtyři hráči zapsaní: jamka je kompletní (další jamka zvýrazněná).
+  await rows.nth(0).locator('.score-value').click()
+  await rows.nth(1).locator('.score-value').click()
+  await rows.nth(1).locator('.step-button').first().click()
+  await expect(page.getByRole('button', { name: /Další jamka/ }).last()).toHaveClass(
+    /primary/,
+  )
+  await expect(match.locator('.match-hole')).toContainText('jamku bere')
+  await expectNoHorizontalOverflow(page)
+  expect(errors()).toEqual([])
+})
