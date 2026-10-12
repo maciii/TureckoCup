@@ -11,7 +11,8 @@ import { getFirestore } from 'firebase-admin/firestore'
  * pojmenované úlohy, každá vypíše, co změnila:
  *
  *   check     nic nemění: soupiska, kola (stav, odpaliště, program, hry,
- *             snímek HCP), e-maily hráčů a účty, které se přihlásily
+ *             snímek HCP), e-maily hráčů, účty, které se přihlásily,
+ *             a JSON živého kola k ověření výpočtů
  *   tees      výchozí odpaliště kol podle seedu (žlutá; Lykia Links zlatá)
  *   games     odstraní z kol hru 'bonuses' (extra body jsou od 0.11.0 centrální)
  *   index     HCP index hráčů do nedohraných kol (snímek `playerIndex`)
@@ -125,6 +126,23 @@ async function reportAccess() {
       `    ${email || u.uid} · ${flags.join(' · ')} · naposledy ${u.metadata.lastSignInTime ?? '–'}`,
     )
   }
+}
+
+/**
+ * Snímek živého (nebo dnešního) kola jako JSON - jen čtení. Slouží k ověření
+ * výpočtu her lokálně na skutečných datech (skóre, HCP snímek, hry, flighty).
+ */
+function dumpLiveRound() {
+  const today = new Date().toISOString().slice(0, 10)
+  for (const round of rounds) {
+    if (round.status !== 'live' && round.date !== today) continue
+    const { lastEdit: _lastEdit, ...data } = round
+    console.log(`ROUND_JSON ${round.id} ${JSON.stringify(data)}`)
+  }
+  console.log(`PLAYERS_JSON ${JSON.stringify(players)}`)
+  console.log(
+    `TOURNAMENT_JSON ${JSON.stringify({ pickup: tournament?.pickup ?? null, bonuses: tournament?.bonuses ?? null, handicapMode: tournament?.handicapMode ?? null })}`,
+  )
 }
 
 async function tees() {
@@ -262,6 +280,7 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
 }
 report()
 if (task === 'check') await reportAccess()
+if (task === 'check') dumpLiveRound()
 if (task === 'tees') await tees()
 if (task === 'games') await games()
 if (task === 'index') await index()
