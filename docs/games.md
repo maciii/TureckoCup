@@ -56,11 +56,16 @@ Přepínač **Netto** hry u duelů platí jen pro jamkovku (netto, nebo brutto
 lepší míč); Rány a Stableford mají netto/brutto ve formátu. Best + Součet
 formát nemá, tam platí jen Netto a allowance.
 | `stableford` | součet Stablefordových bodů, vyšší vyhrává |
-| `match-play` | jamkovka na netto rány, `2 UP`, `3&2`, `AS` |
+| `match-play` | jamkovka na netto rány, `2 UP`, `3&2`, `AS`, dormie |
 
 V součtových formátech se porovnává jen přes jamky, které mají obě strany
 zapsané (strana o jamku napřed „nevede“ jen proto, že má víc zapsáno), a
 zvednutá jamka se počítá podle **centrálního pravidla turnaje** (níže).
+Jamkovka hlásí **dormie** stejně jako Golfgames: vedoucí má náskok rovný
+počtu jamek, které ještě nejsou odehrané (nezapsané i nehrané), a zápas
+ještě není rozhodnutý - v hlavičce zápasu „Mac 2 UP · dormie“ a pod ní
+„dormie · zbývají 2 jamky“.
+
 Duel je dohraný po poslední jamce; jamkovka dřív, když je matematicky
 rozhodnutá. Výchozí `countsForTeam: false` - do týmového skóre vstupuje až
 po rozhodnutí administrátora; pak `win` a `halve` bodů za duel.

@@ -296,3 +296,38 @@ test('Four-ball Skins: double v kartě zápasu, přenos dvou skinů a výsledek 
   await expect(section.locator('.duel').first()).toContainText('4 : 0')
   expect(errors()).toEqual([])
 })
+
+test('singl jamkovkou: dormie v hlavičce zápasu, když náskok = zbývající jamky', async ({
+  page,
+}) => {
+  const errors = collectErrors(page)
+  await startRound(page)
+  await open(page, '#/admin/round/r1')
+  // Singly pozic jamkovkou na brutto rány, ať o jamkách rozhodují jen zapsané rány.
+  const card = page.locator('.game-card').nth(3)
+  await card.getByRole('button', { name: 'Jamkovka' }).click()
+  const net = card.getByRole('switch', { name: 'Netto' })
+  if ((await net.getAttribute('aria-checked')) === 'true') await net.click()
+
+  await setIdentity(page, 'writer')
+  await open(page, '#/play/r1/0')
+  const ota = playerRow(page, 'Ota')
+  // 16 jamek: Ota birdie na prvních dvou, jinak všichni par -> Ota 2 UP, zbývají 2.
+  for (let hole = 1; hole <= 16; hole += 1) {
+    await enterPar(page, ['Ota', 'Mac', 'Pavlos', 'Ferry'])
+    if (hole <= 2) await ota.locator('.step-button').first().click()
+    await page
+      .getByRole('button', { name: /Další jamka/ })
+      .last()
+      .click()
+    await expect(page.locator('.hole-info')).toContainText(`Jamka ${hole + 1} z 18`)
+  }
+  const match = page.locator('.match-group', { hasText: 'Pavlos' }).first()
+  await expect(match.locator('.match-pill')).toContainText('Ota 2 UP · dormie')
+  await expect(match.locator('.match-pill')).toHaveClass(/dormie/)
+  await expect(match.locator('.match-hole')).toContainText('dormie · zbývají 2 jamky')
+  // Druhý zápas je vyrovnaný - bez dormie.
+  const other = page.locator('.match-group', { hasText: 'Ferry' }).first()
+  await expect(other.locator('.match-pill')).not.toContainText('dormie')
+  expect(errors()).toEqual([])
+})

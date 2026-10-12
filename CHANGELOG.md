@@ -3,6 +3,16 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.28.3] – 2026-10-12
+
+### Přidáno
+
+- **Dormie v jamkovce** jako v Golfgames: když má vedoucí náskok rovný
+  počtu jamek, které zbývají, ukáže hlavička zápasu „Mac 2 UP · dormie“
+  s červeným prstencem a pod ní „dormie · zbývají 2 jamky“. Stejně
+  v řádcích duelů (přehled, druhý flight, výsledky kola) a ve stavu her.
+  Platí pro singly pozic i Four-ball hrané jamkovkou.
+
 ## [0.28.2] – 2026-10-12
 
 ### Opraveno

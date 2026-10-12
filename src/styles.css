@@ -3119,6 +3119,11 @@ a.menu-item {
   color: var(--team-b-ink);
 }
 
+/* Dormie: prohrávající musí vyhrát všechno - stav zvýrazněný červeným prstencem. */
+.match-pill.dormie {
+  box-shadow: 0 0 0 2px var(--red);
+}
+
 .match-pill.done {
   box-shadow: 0 0 0 2px var(--gold-bright);
 }

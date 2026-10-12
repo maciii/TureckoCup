@@ -113,6 +113,8 @@ export default function MatchHead({
       ? `${shortName(players, leader.players[0]!)} ${duel.notation}`.trim()
       : t('play.status.allSquare')
   const toneClass = leader?.teamId ? ` lead-${leader.teamId.toLowerCase()}` : ''
+  // Dormie jako v Golfgames: výrazně, pod stavem s počtem zbývajících jamek.
+  const dormie = Boolean(duel.dormie) && !duel.finished
   const side = (s: DuelResult['sides'][number], align: 'left' | 'right') => (
     <span className={`match-side ${align}`}>
       {align === 'left' && <TeamBadge teamId={s.teamId} />}
@@ -125,10 +127,17 @@ export default function MatchHead({
     <div className="match-head">
       {side(left, 'left')}
       <span className="match-state">
-        <span className={`match-pill${toneClass}${duel.finished ? ' done' : ''}`}>
+        <span
+          className={`match-pill${toneClass}${duel.finished ? ' done' : ''}${dormie ? ' dormie' : ''}`}
+        >
           {state}
+          {dormie && ` · ${t('match.dormie')}`}
         </span>
-        <span className="match-hole">{onHole}</span>
+        <span className="match-hole">
+          {dormie && winner === undefined
+            ? t('match.dormieLeft', { count: duel.holesLeft ?? 0 })
+            : onHole}
+        </span>
       </span>
       {side(right, 'right')}
     </div>

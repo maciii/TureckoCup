@@ -36,6 +36,13 @@ export interface MatchState {
   finished: boolean
   /** Golfová notace stavu: `AS`, `2 UP`, `3&2`, `1 UP` (po dohrání). */
   notation: string
+  /**
+   * Dormie (jako Golfgames): vedoucí má náskok rovný počtu jamek, které
+   * ještě nejsou odehrané - prohrávající musí vyhrát všechny, aby remizoval.
+   */
+  dormie: boolean
+  /** Jamky, které ještě nejsou odehrané (nezapsané i dosud nehrané). */
+  holesLeft: number
   /** Kolik jamek ještě není rozhodnutých. */
   pending: number
 }
@@ -83,6 +90,8 @@ export function computeMatch(input: MatchInput): MatchState {
   const remaining = total - playedCount - pending
   const decided = decidedAt !== null
   const finished = decided || (pending === 0 && remaining === 0)
+  const holesLeft = total - playedCount
+  const dormie = !decided && leaderIndex !== null && holesLeft > 0 && lead === holesLeft
 
   let notation: string
   if (decided && decidedAt !== null) {
@@ -104,6 +113,8 @@ export function computeMatch(input: MatchInput): MatchState {
     decided,
     finished,
     notation,
+    dormie,
+    holesLeft,
     pending,
   }
 }

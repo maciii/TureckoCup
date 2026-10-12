@@ -122,7 +122,8 @@ export default function HoleStatus({
         total: (duels.length > 0 ? duels : result.duels)
           .map((duel) => {
             const lead = duel.leader === null ? null : duel.sides[duel.leader]
-            return `${lead ? sideLabel(players, lead.players) : t('play.status.allSquare')} ${duel.notation}`
+            const dormie = duel.dormie && !duel.finished ? ` ${t('match.dormie')}` : ''
+            return `${lead ? sideLabel(players, lead.players) : t('play.status.allSquare')} ${duel.notation}${dormie}`
           })
           .join(' · '),
       })

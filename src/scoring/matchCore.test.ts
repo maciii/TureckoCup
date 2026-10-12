@@ -52,4 +52,25 @@ describe('jamkovka', () => {
   it('oba zvedli = dělená jamka', () => {
     expect(match([Infinity], [Infinity]).halved).toBe(1)
   })
+
+  it('dormie: náskok se rovná jamkám, které zbývají (i nezapsaným)', () => {
+    // 16 odehraných, vedoucí 2 UP, zbývají 2 nezapsané jamky.
+    const a = [...Array(16).fill(4), undefined, undefined]
+    const b = [5, 5, ...Array(14).fill(4), undefined, undefined]
+    const state = match(a, b)
+    expect(state.notation).toBe('2 UP')
+    expect(state.holesLeft).toBe(2)
+    expect(state.dormie).toBe(true)
+    expect(state.decided).toBe(false)
+  })
+
+  it('bez dormie, když náskok je menší než zbývající jamky nebo zápas skončil', () => {
+    expect(match([3, 4, undefined, undefined], [4, 4, undefined, undefined]).dormie).toBe(
+      false,
+    )
+    expect(
+      match([3, 3, 3, undefined, undefined], [4, 4, 4, undefined, undefined]).dormie,
+    ).toBe(false)
+    expect(match([4, 4], [4, 4]).dormie).toBe(false)
+  })
 })

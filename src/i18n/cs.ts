@@ -360,6 +360,12 @@ export const cs = {
   'play.bonusesFor': 'Extra body: {name}',
   'play.status.title': 'Stav her na jamce',
   'play.match.vs': '{a} proti {b}',
+  'match.dormie': 'dormie',
+  'match.dormieLeft': {
+    one: 'dormie · zbývá {count} jamka',
+    few: 'dormie · zbývají {count} jamky',
+    other: 'dormie · zbývá {count} jamek',
+  },
   'play.match.others': 'Ostatní hráči flightu',
   'play.match.notStarted': 'zatím nehráno',
   'play.status.pending': 'čeká na zápis',

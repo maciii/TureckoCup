@@ -130,9 +130,11 @@ export function DuelRow({
     duel.position !== undefined ? `${t('overview.positionShort')} ${duel.position}` : '',
     duel.finished
       ? t('status.finished')
-      : started
-        ? t('common.holes', { count: left.holes })
-        : '',
+      : duel.dormie
+        ? t('match.dormieLeft', { count: duel.holesLeft ?? 0 })
+        : started
+          ? t('common.holes', { count: left.holes })
+          : '',
   ]
     .filter(Boolean)
     .join(' · ')
@@ -148,7 +150,10 @@ export function DuelRow({
       <span className="duel-center">
         {started ? (
           leaderTeam ? (
-            <Pill teamId={leaderTeam}>{duel.notation}</Pill>
+            <Pill teamId={leaderTeam}>
+              {duel.notation}
+              {duel.dormie && !duel.finished && ` ${t('match.dormie')}`}
+            </Pill>
           ) : (
             <span className="v">{duel.notation}</span>
           )

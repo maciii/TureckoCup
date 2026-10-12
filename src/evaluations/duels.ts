@@ -139,6 +139,8 @@ function duelOf(
       ],
       leader: state.leaderIndex,
       notation: state.notation,
+      dormie: state.dormie,
+      holesLeft: state.holesLeft,
       decided: state.decided,
       finished: state.finished,
       pending: state.pending,

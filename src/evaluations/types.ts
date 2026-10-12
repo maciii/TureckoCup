@@ -56,6 +56,10 @@ export interface DuelResult {
   leader: 0 | 1 | null
   /** Golfová notace (`2 UP`, `3&2`, `AS`) nebo rozdíl hodnot. */
   notation: string
+  /** Jamkovka: vedoucí má náskok rovný zbývajícím jamkám (dormie). */
+  dormie?: boolean
+  /** Jamkovka: kolik jamek ještě není odehraných. */
+  holesLeft?: number
   decided: boolean
   finished: boolean
   pending: number
