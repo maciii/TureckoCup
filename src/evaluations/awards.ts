@@ -3,7 +3,7 @@ import { PICKED_UP } from '../model/types'
 import { holeCount, netScoreAt, parAt, scoreAt } from '../model/round'
 import { stablefordPoints } from '../scoring/whs'
 import { bonusAwardsAt } from './bonuses'
-import { evaluateRound } from './index'
+import { playerSkinsSummary } from './teamSkinsTotal'
 
 /**
  * Odznaky zájezdu - individuální statistiky z raw skóre přes odehraná kola
@@ -146,13 +146,12 @@ export function computeAwards(
         }
       }
     }
-    // Skiny jednotlivců ze hry kola (jen kde se Skins hrají).
-    for (const result of evaluateRound(round, players, undefined, bonuses)) {
-      if (result.game.kind !== 'individual-skins') continue
-      for (const row of result.rows) add(tally, 'skins', row.id, row.value)
-    }
   }
   for (const [id, best] of streakBest) tally.streak.set(id, best)
+  // Skinař: Skins jednotlivců ve flightu netto ve všech odehraných kolech -
+  // jednotně, i kde se Skins nehrály (rozpis netto i brutto ukazuje odznak).
+  for (const [id, skins] of playerSkinsSummary(rounds, players, 'net').totals)
+    tally.skins.set(id, skins)
 
   const results = AWARDS.map((award) => {
     const sorted = [...tally[award.id].entries()]

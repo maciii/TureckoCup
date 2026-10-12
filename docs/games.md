@@ -246,21 +246,21 @@ Každý odznak má držitele = všechny hráče na prvním místě s hodnotou > 
 při shodě jsou držitelé všichni. Klepnutí na medaili ukáže tabulku všech
 osmi hráčů s pořadím (shodné hodnoty sdílí pořadí).
 
-| Odznak        | Co počítá                                                                             |
-| ------------- | ------------------------------------------------------------------------------------- |
-| STBák zájezdu | součet Stableford bodů netto (volby hry Stableford v kole, jinak netto s allowance 1) |
-| Birdie Man    | birdie brutto                                                                         |
-| Orel          | eagle a lépe brutto                                                                   |
-| Parista       | pary brutto                                                                           |
-| Žhavá série   | nejdelší souvislá řada jamek na par a lépe (brutto) v pořadí hraní                    |
-| Skinař        | vyhrané skiny v individuálních Skins                                                  |
-| Dlouhán       | potvrzené Longesty                                                                    |
-| Ostrostřelec  | potvrzené Nearesty                                                                    |
-| Bogie Man     | bogey brutto                                                                          |
-| 2 Bogie Man   | double bogey                                                                          |
-| 3 Bogie Man   | triple bogey                                                                          |
-| Nenažranec    | čtyřbogey a hůř; zvednutá jamka se počítá                                             |
-| No Stable Man | jamky bez jediného STB bodu (zvednutá jamka = 0 bodů)                                 |
+| Odznak        | Co počítá                                                                                                                                       |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| STBák zájezdu | součet Stableford bodů netto (volby hry Stableford v kole, jinak netto s allowance 1)                                                           |
+| Birdie Man    | birdie brutto                                                                                                                                   |
+| Orel          | eagle a lépe brutto                                                                                                                             |
+| Parista       | pary brutto                                                                                                                                     |
+| Žhavá série   | nejdelší souvislá řada jamek na par a lépe (brutto) v pořadí hraní                                                                              |
+| Skinař        | skiny jednotlivců ve flightu netto (plný HCP, přenos) ve všech odehraných kolech, i kde se Skins nehrály; detail má rozpis jamek netto i brutto |
+| Dlouhán       | potvrzené Longesty                                                                                                                              |
+| Ostrostřelec  | potvrzené Nearesty                                                                                                                              |
+| Bogie Man     | bogey brutto                                                                                                                                    |
+| 2 Bogie Man   | double bogey                                                                                                                                    |
+| 3 Bogie Man   | triple bogey                                                                                                                                    |
+| Nenažranec    | čtyřbogey a hůř; zvednutá jamka se počítá                                                                                                       |
+| No Stable Man | jamky bez jediného STB bodu (zvednutá jamka = 0 bodů)                                                                                           |
 
 Gratulace: přihlášený hráč, který odznak drží, ji vidí po načtení aplikace
 jednou pro každý odznak; „viděno“ se drží v `localStorage` podle podpisu

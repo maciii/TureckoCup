@@ -3,10 +3,11 @@ import type { AwardId, AwardResult, AwardsSummary } from '../evaluations/awards'
 import { awardSignature, awardsOf } from '../evaluations/awards'
 import { dynamicKey, t } from '../i18n'
 import { shortName } from '../model/round'
-import type { Player, PlayerId } from '../model/types'
+import type { Player, PlayerId, TournamentRound } from '../model/types'
 import { STORAGE_PREFIX } from '../data/store'
 import { TeamBadge, formatDate } from './common'
 import { bleat } from './bleat'
+import PlayerSkinsBreakdown from './PlayerSkinsBreakdown'
 
 /**
  * Odznaky zájezdu (vzor Apple awards): medaile s držitelem a hodnotou,
@@ -175,10 +176,13 @@ export function AwardsSection({
   summary,
   players,
   me,
+  rounds = [],
 }: {
   summary: AwardsSummary
   players: Player[]
   me: PlayerId | null
+  /** Kola turnaje - pro rozpis odznaků, které ho mají (Skinař). */
+  rounds?: TournamentRound[]
 }) {
   const [open, setOpen] = useState<AwardResult | null>(null)
   if (summary.rounds === 0) return null
@@ -235,6 +239,7 @@ export function AwardsSection({
           players={players}
           date={summary.date}
           me={me}
+          rounds={rounds}
           onClose={() => setOpen(null)}
         />
       )}
@@ -248,12 +253,14 @@ function AwardSheet({
   players,
   date,
   me,
+  rounds,
   onClose,
 }: {
   result: AwardResult
   players: Player[]
   date: string | null
   me: PlayerId | null
+  rounds: TournamentRound[]
   onClose: () => void
 }) {
   const name = t(dynamicKey('award', result.award.id, 'name'))
@@ -294,6 +301,9 @@ function AwardSheet({
             )
           })}
         </ol>
+        {result.award.id === 'skins' && rounds.length > 0 && (
+          <PlayerSkinsBreakdown rounds={rounds} players={players} me={me} />
+        )}
         <div className="px" style={{ paddingTop: 14 }}>
           <button type="button" className="btn primary" onClick={onClose}>
             {t('common.close')}

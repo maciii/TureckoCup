@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { SEED_PLAYERS, seedRounds } from '../data/seed'
 import type { TournamentRound } from '../model/types'
 import { parAt } from '../model/round'
-import { teamSkinsSummary } from './teamSkinsTotal'
+import { playerSkinsSummary, teamSkinsSummary } from './teamSkinsTotal'
 
 /** Všech osm hráčů zapíše jamky; `overrides` mění ránu hráče na jamce. */
 function played(
@@ -45,5 +45,22 @@ describe('Team Skins přes odehraná kola', () => {
     // Všichni par: brutto jsou jamky dělené; netto rozhodnou rány z HCP.
     expect(gross.totals).toEqual({ A: 0, B: 0 })
     expect(gross.rounds[0]!.carry).toBe(2)
+  })
+
+  it('Skinař: skiny jednotlivců ve flightu, rozpis kdo a kde i s bankem', () => {
+    const rounds = seedRounds()
+    const round = rounds[0]!
+    const flight = round.flights[0]!.players
+    const better = parAt(round, 2) - 1
+    played(round, 3, { [flight[1]!]: { 2: better } })
+    const summary = playerSkinsSummary(rounds, SEED_PLAYERS, 'gross')
+    const holes = summary.rounds[0]!.flights[0]!.holes
+    expect(holes.map((h) => h.winner)).toEqual([null, null, flight[1]])
+    expect(holes[2]!.skins).toBe(3)
+    expect(holes[2]!.score).toBe(better)
+    expect(holes[2]!.others).toBe(parAt(round, 2))
+    expect(summary.totals.get(flight[1]!)).toBe(3)
+    // Druhý flight má vlastní skiny: všichni par, tři dělené jamky v banku.
+    expect(summary.rounds[0]!.flights[1]!.carry).toBe(3)
   })
 })

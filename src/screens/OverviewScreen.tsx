@@ -206,7 +206,12 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
         )}
 
         {state.tournament && (
-          <AwardsSection summary={awards} players={state.players} me={me} />
+          <AwardsSection
+            summary={awards}
+            players={state.players}
+            me={me}
+            rounds={state.rounds}
+          />
         )}
 
         <TeamSkinsOverview rounds={state.rounds} players={state.players} teams={teams} />

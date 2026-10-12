@@ -3711,3 +3711,30 @@ a.menu-item {
   margin: 6px 0 0;
   padding: 0;
 }
+
+/* Rozpis odznaku Skinař (sdílí vzhled jamek s Team Skins zájezdu). */
+.skins-breakdown {
+  margin-top: 14px;
+}
+
+.skins-breakdown .tabs {
+  margin: 4px 0 6px;
+}
+
+.skins-breakdown-totals {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+
+.skins-flight + .skins-flight {
+  margin-top: 10px;
+}
+
+/* Skin přihlášeného hráče: zlatý obrys navíc k barvě týmu. */
+.ts-hole.mine {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: -2px;
+}

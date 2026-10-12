@@ -223,6 +223,8 @@ export const cs = {
     other:
       'Lepší míč týmu na jamce přes všech osm, dělená přenáší - {count} odehraných kol. Klepnutím rozpis jamek.',
   },
+  'skinsBreakdown.title': 'Rozpis skinů ve flightu',
+  'skinsBreakdown.halved': 'par {par} · dělená, v banku {carry}',
   'teamSkins.mode.net': 'Netto',
   'teamSkins.mode.gross': 'Brutto',
   'teamSkins.leads': 'vede {team}',
@@ -288,7 +290,7 @@ export const cs = {
   },
   'award.skins.name': 'Skinař',
   'award.skins.description':
-    'Nejvíc vyhraných skinů ve Skins jednotlivců přes kola, kde se hrály.',
+    'Nejvíc vyhraných skinů jednotlivců ve flightu přes všechna odehraná kola: nejlepší netto rána na jamce (plný HCP) bere skin, dělená jamka přenáší do další. Počítá se v každém kole stejně, i kde se Skins nehrály. Níže rozpis jamek netto i brutto.',
   'award.skins.count': {
     one: '{count} skin',
     few: '{count} skiny',

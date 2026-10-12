@@ -7,7 +7,7 @@ import type {
   TournamentRound,
 } from '../model/types'
 import { TEAM_IDS } from '../model/types'
-import { teamSkins, teamBestBall } from './skins'
+import { individualSkins, teamSkins, teamBestBall } from './skins'
 import type { EvaluationContext } from './types'
 import { DEFAULT_PICKUP } from '../model/pickup'
 import { DEFAULT_BONUS_CONFIG } from '../model/bonuses'
@@ -136,6 +136,112 @@ export function teamSkinsSummary(
       carry: evaluated.carry ?? 0,
       pending: evaluated.pending,
     })
+  }
+  return { mode, totals, rounds: result }
+}
+
+/* --- Skins jednotlivců přes kola (odznak Skinař) --------------------------- */
+
+export interface PlayerSkinsHole {
+  hole: number
+  par: number
+  /** Kdo skin vzal; `null` = dělená jamka (skin jde do banku). */
+  winner: PlayerId | null
+  skins: number
+  carry: number
+  /** Rána vítěze a nejlepší rána ostatních ve flightu; `null` = zvednuto. */
+  score: number | null
+  others: number | null
+}
+
+export interface PlayerSkinsFlight {
+  index: number
+  players: PlayerId[]
+  holes: PlayerSkinsHole[]
+  carry: number
+  pending: number
+}
+
+export interface PlayerSkinsRound {
+  round: TournamentRound
+  flights: PlayerSkinsFlight[]
+}
+
+export interface PlayerSkinsSummary {
+  mode: SkinsMode
+  totals: Map<PlayerId, number>
+  rounds: PlayerSkinsRound[]
+}
+
+/**
+ * Skins jednotlivců ve flightu přes všechna odehraná kola, jednotně: každý
+ * flight má své skiny, dělená jamka přenáší, plný HCP (netto). Stejná evaluace
+ * jako hra Skins - nezávisí na tom, jestli a jak se Skins v kole hrály.
+ */
+export function playerSkinsSummary(
+  rounds: TournamentRound[],
+  players: Player[],
+  mode: SkinsMode,
+): PlayerSkinsSummary {
+  const net = mode === 'net'
+  const options = { net, allowance: 1 }
+  const game: GameConfig = {
+    id: `skins-overview-${mode}`,
+    kind: 'individual-skins',
+    options: { net, allowance: 1, scope: 'flight', carry: true },
+    countsForTeam: false,
+    teamPoints: {},
+  }
+  const totals = new Map<PlayerId, number>(players.map((p) => [p.id, 0]))
+  const result: PlayerSkinsRound[] = []
+  for (const round of rounds) {
+    if (round.status === 'planned') continue
+    const context: EvaluationContext = {
+      round,
+      players,
+      pickup: DEFAULT_PICKUP,
+      bonuses: DEFAULT_BONUS_CONFIG,
+    }
+    const evaluated = individualSkins(context, game)
+    for (const row of evaluated.rows)
+      totals.set(row.id, (totals.get(row.id) ?? 0) + row.value)
+    const scoreOf = (id: PlayerId, hole: number) => {
+      const value = netScoreAt(round, id, hole, options)
+      return value === undefined || value === CONCEDED ? null : value
+    }
+    const flights: PlayerSkinsFlight[] = round.flights.map((flight, index) => {
+      const outcomes = evaluated.holes.filter(
+        (h) => h.group?.some((id) => flight.players.includes(id)) ?? false,
+      )
+      const holes = holeOrder(round, flight)
+        .map((hole) => outcomes.find((o) => o.hole === hole))
+        .filter((o): o is NonNullable<typeof o> => Boolean(o?.decided))
+        .map((outcome) => {
+          const winner = outcome.winners[0] ?? null
+          const rest = flight.players
+            .filter((id) => id !== winner)
+            .map((id) => scoreOf(id, outcome.hole))
+            .filter((v): v is number => v !== null)
+          return {
+            hole: outcome.hole,
+            par: parAt(round, outcome.hole),
+            winner,
+            skins: winner ? (outcome.value ?? 1) : 0,
+            carry: outcome.carry ?? 0,
+            score: winner ? scoreOf(winner, outcome.hole) : null,
+            others: rest.length > 0 ? Math.min(...rest) : null,
+          }
+        })
+      const last = outcomes.filter((o) => o.decided).at(-1)
+      return {
+        index,
+        players: flight.players,
+        holes,
+        carry: holes.at(-1)?.carry ?? last?.carry ?? 0,
+        pending: outcomes.filter((o) => !o.decided).length,
+      }
+    })
+    result.push({ round, flights })
   }
   return { mode, totals, rounds: result }
 }

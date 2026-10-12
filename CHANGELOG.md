@@ -3,6 +3,18 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.31.0] – 2026-10-12
+
+### Změněno
+
+- **Odznak Skinař se počítá jednotně a má rozpis.** Skiny jednotlivců ve
+  flightu netto (plný HCP, dělená jamka přenáší) ve všech odehraných kolech,
+  i kde se Skins nehrály - dřív jen z kol se hrou Skins, každé s jiným
+  nastavením. Detail odznaku vysvětluje pravidlo a pod tabulkou má rozpis
+  netto i brutto: součty hráčů a po kolech a flightech jamky - kdo skin vzal
+  (barva týmu, jeho rána proti nejlepší ráně ostatních, skiny i s bankem),
+  dělené jamky tlumeně; vlastní skiny přihlášeného hráče zlatě orámované.
+
 ## [0.30.0] – 2026-10-12
 
 ### Přidáno
