@@ -11,6 +11,7 @@ import {
 } from './round'
 import type { Player, PlayerId, TeamId, TournamentRound } from './types'
 import { SIDED_KINDS } from './round'
+import { matchGame } from './games'
 import { TEAM_IDS } from './types'
 
 /**
@@ -40,12 +41,43 @@ export interface StrokeComparison {
   down: number
 }
 
-/** Allowance, kterou kolo hraje: singly pozic, jinak první netto hra, jinak plný HCP. */
+/** Allowance hlavního zápasu kola (hra dvojic, singly), jinak první netto hry, jinak plný HCP. */
 export function roundAllowance(round: TournamentRound): number {
-  const game =
-    round.games.find((g) => g.kind === 'position-duel') ??
-    round.games.find((g) => g.options.net)
+  const game = matchGame(round) ?? round.games.find((g) => g.options.net)
   return game?.options.allowance ?? 1
+}
+
+/**
+ * Rány dvojice proti dvojici (Texas scramble): na které jamce má naše dvojice
+ * ránu navíc z HCP dvojice. `opponent` je první hráč soupeřovy dvojice.
+ */
+export function compareSides(
+  round: TournamentRound,
+  mine: PlayerId[],
+  theirs: PlayerId[],
+  strokesAt: (players: PlayerId[], hole: number) => number,
+  handicapOf: (players: PlayerId[]) => number,
+): StrokeComparison {
+  const si = strokeIndexRanked(round)
+  const holes: StrokeHole[] = Array.from({ length: holeCount(round) }, (_, hole) => {
+    const own = strokesAt(mine, hole)
+    const other = strokesAt(theirs, hole)
+    return {
+      hole,
+      par: parAt(round, hole),
+      si: si[hole] ?? hole + 1,
+      mine: own,
+      theirs: other,
+      diff: own - other,
+    }
+  })
+  return {
+    opponent: theirs[0] ?? '',
+    handicap: handicapOf(theirs),
+    holes,
+    up: holes.filter((h) => h.diff > 0).length,
+    down: holes.filter((h) => h.diff < 0).length,
+  }
 }
 
 export function compareStrokes(

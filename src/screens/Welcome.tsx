@@ -1,10 +1,14 @@
 import { useState } from 'react'
 import { demoVariant } from '../data'
 import { STORAGE_PREFIX } from '../data/store'
-import { t } from '../i18n'
+import { dynamicKey, t } from '../i18n'
 import { flightIndexOf, shortName } from '../model/round'
 import { isValidTime, localToday } from '../model/schedule'
 import { flightCompany, flightHasHandicaps } from '../model/strokes'
+import { roundUsesHandicap } from '../model/games'
+import type { AwardResult, AwardsSummary } from '../evaluations/awards'
+import { awardsOf } from '../evaluations/awards'
+import { AwardMedal, AwardSheet } from './Awards'
 import type { Player, PlayerId, TournamentRound } from '../model/types'
 import { navigate } from '../nav'
 import { Crest, formatDay, gameTitle, sideLabel } from './common'
@@ -71,6 +75,9 @@ interface Props {
   players: Player[]
   me: PlayerId
   canWrite: boolean
+  /** Odznaky zájezdu a kola (rozpis odznaku) - uvítání ukáže hráčovy odznaky. */
+  awards?: AwardsSummary
+  rounds?: TournamentRound[]
   /** Ukázat celoobrazovkové uvítání (jednou denně). */
   intro: boolean
   onIntroClose: () => void
@@ -81,11 +88,15 @@ export default function Welcome({
   players,
   me,
   canWrite,
+  awards,
+  rounds = [],
   intro,
   onIntroClose,
 }: Props) {
   const [strokesOpen, setStrokesOpen] = useState(false)
   const [scopeOpen, setScopeOpen] = useState(false)
+  const [awardOpen, setAwardOpen] = useState<AwardResult | null>(null)
+  const mine = awards ? awardsOf(awards, me) : []
   const flightIndex = flightIndexOf(round, me)
   const flight = round.flights[flightIndex]
   const company = flightCompany(round, players, me)
@@ -115,7 +126,9 @@ export default function Welcome({
     : company.opponents[0]
       ? t('welcome.duel', { name: shortName(players, company.opponents[0]) })
       : null
-  const strokesReady = Boolean(flight) && flightHasHandicaps(round, me)
+  // Rány na soupeře jen tam, kde je zápas dne netto (brutto je nepotřebuje).
+  const strokesReady =
+    Boolean(flight) && flightHasHandicaps(round, me) && roundUsesHandicap(round)
   const canEnter = canWrite && Boolean(flight) && round.status !== 'finished'
   // Volba „jen můj zápas“ má smysl jen u singlů pozic uvnitř flightu.
   const scopeChoice = !company.pairs && company.opponents.length > 0 && mates.length > 1
@@ -143,6 +156,35 @@ export default function Welcome({
       <p className="welcome-line">{flightLine}</p>
       {flight && <p className="welcome-line">{t('welcome.games', { games })}</p>}
       {matchLine && <p className="welcome-match">{matchLine}</p>}
+      {mine.length > 0 && (
+        <div className="welcome-awards">
+          <p className="welcome-awards-title">
+            {t('welcome.awards', { count: mine.length })}
+          </p>
+          <ul className="welcome-awards-row">
+            {mine.map((result) => (
+              <li key={result.award.id}>
+                <button
+                  type="button"
+                  className="welcome-award"
+                  onClick={() => setAwardOpen(result)}
+                  aria-label={t(dynamicKey('award', result.award.id, 'name'))}
+                >
+                  <AwardMedal
+                    result={result}
+                    players={players}
+                    date={awards?.date ?? null}
+                    size="sm"
+                  />
+                  <span className="welcome-award-name">
+                    {t(dynamicKey('award', result.award.id, 'name'))}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </>
   )
 
@@ -178,7 +220,7 @@ export default function Welcome({
       </section>
 
       {/* Listy (rány, rozsah) jdou nad uvítání - to se na tu chvíli schová. */}
-      {intro && !strokesOpen && !scopeOpen && (
+      {intro && !strokesOpen && !scopeOpen && !awardOpen && (
         <div
           className="welcome-intro"
           role="dialog"
@@ -200,6 +242,17 @@ export default function Welcome({
             </button>
           </div>
         </div>
+      )}
+
+      {awardOpen && (
+        <AwardSheet
+          result={awardOpen}
+          players={players}
+          date={awards?.date ?? null}
+          me={me}
+          rounds={rounds}
+          onClose={() => setAwardOpen(null)}
+        />
       )}
 
       {strokesOpen && (

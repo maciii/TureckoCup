@@ -32,6 +32,8 @@ export type AwardId =
   | 'skins'
   | 'longest'
   | 'nearest'
+  | 'collector'
+  | 'none'
 
 export interface AwardDefinition {
   id: AwardId
@@ -55,7 +57,13 @@ export const AWARDS: AwardDefinition[] = [
   { id: 'triple', mark: '+3', tone: 'bronze' },
   { id: 'glutton', mark: '🍗', tone: 'red' },
   { id: 'nostable', mark: '0', tone: 'red' },
+  // Odvozené z ostatních: kdo drží nejvíc odznaků, a kdo nedrží žádný.
+  { id: 'collector', mark: '×', tone: 'gold' },
+  { id: 'none', mark: '◇', tone: 'silver' },
 ]
+
+/** Odznaky počítané z ostatních odznaků, ne ze skóre. */
+const META_AWARDS: AwardId[] = ['collector', 'none']
 
 export interface AwardRow {
   id: PlayerId
@@ -153,15 +161,18 @@ export function computeAwards(
   for (const [id, skins] of playerSkinsSummary(rounds, players, 'net').totals)
     tally.skins.set(id, skins)
 
-  const results = AWARDS.map((award) => {
-    const sorted = [...tally[award.id].entries()]
+  const rank = (values: Map<PlayerId, number>, ascending = false): AwardRow[] => {
+    const sorted = [...values.entries()]
       .map(([id, value]) => ({ id, value }))
-      .sort((a, b) => b.value - a.value)
+      .sort((a, b) => (ascending ? a.value - b.value : b.value - a.value))
     let position = 0
-    const rows: AwardRow[] = sorted.map((row, index) => {
+    return sorted.map((row, index) => {
       if (index === 0 || row.value !== sorted[index - 1]!.value) position = index + 1
       return { ...row, position }
     })
+  }
+  const base = AWARDS.filter((award) => !META_AWARDS.includes(award.id)).map((award) => {
+    const rows = rank(tally[award.id])
     const top = rows[0]?.value ?? 0
     return {
       award,
@@ -170,6 +181,38 @@ export function computeAwards(
       holders: top > 0 ? rows.filter((r) => r.value === top).map((r) => r.id) : [],
     }
   })
+  // Sběrač odznaků: kolik odznaků hráč drží (vedoucí, aspoň jeden).
+  // Ani piču: kdo nedrží žádný - v tabulce počet odznaků od nejmenšího.
+  const held = new Map<PlayerId, number>(players.map((p) => [p.id, 0]))
+  if (played.length > 0)
+    for (const result of base)
+      for (const id of result.holders) held.set(id, (held.get(id) ?? 0) + 1)
+  const collectorRows = rank(held)
+  const collectorTop = collectorRows[0]?.value ?? 0
+  const noneRows = rank(held, true)
+  const meta: Record<'collector' | 'none', AwardResult> = {
+    collector: {
+      award: AWARDS.find((a) => a.id === 'collector')!,
+      rows: collectorRows,
+      value: collectorTop,
+      holders:
+        collectorTop > 0
+          ? collectorRows.filter((r) => r.value === collectorTop).map((r) => r.id)
+          : [],
+    },
+    none: {
+      award: AWARDS.find((a) => a.id === 'none')!,
+      rows: noneRows,
+      value: 0,
+      holders:
+        played.length > 0 ? noneRows.filter((r) => r.value === 0).map((r) => r.id) : [],
+    },
+  }
+  const results: AwardResult[] = AWARDS.map((award) =>
+    award.id === 'collector' || award.id === 'none'
+      ? meta[award.id]
+      : base.find((r) => r.award.id === award.id)!,
+  )
 
   const dates = played.map((r) => r.date).sort()
   return { results, rounds: played.length, date: dates.at(-1) ?? null }

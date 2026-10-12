@@ -470,3 +470,51 @@ test('Team Skins zájezdu: netto i brutto přes odehraná kola a rozpis jamek', 
   await sheet.getByRole('button', { name: 'Zavřít' }).click()
   expect(errors()).toEqual([])
 })
+
+test('uvítání podle hry dne: Texas porovná dvojice, brutto rány na soupeře nemá, odznaky s proklikem', async ({
+  page,
+}) => {
+  const errors = collectErrors(page)
+  await page.clock.setFixedTime(new Date('2026-10-13T08:00:00'))
+  await page.goto('/?demo=4dny#/')
+  await page.waitForSelector('.screen')
+  await page.evaluate(
+    ([key, value]) => localStorage.setItem(key!, value!),
+    [IDENTITY_KEY, 'writer'],
+  )
+  await page.reload()
+  await page.waitForSelector('.screen')
+  const intro = page.locator('.welcome-intro')
+  await expect(intro).toContainText('Kolo 5')
+  // Odznaky hráče s proklikem na detail.
+  await expect(intro.locator('.welcome-award').first()).toBeVisible()
+  const awardName = await intro.locator('.welcome-award-name').first().innerText()
+  await intro.locator('.welcome-award').first().click()
+  const awardSheet = page.getByRole('dialog', { name: awardName })
+  await expect(awardSheet.locator('li.row')).toHaveCount(8)
+  await awardSheet.getByRole('button', { name: 'Zavřít' }).click()
+  // Texas netto: jeden sloupec, dvojice proti dvojici.
+  await intro.locator('.welcome-strokes-btn').click()
+  const strokes = page.getByRole('dialog', { name: 'Rány na soupeře' })
+  await expect(strokes.locator('th.who')).toHaveCount(1)
+  await expect(strokes.locator('th.who')).toContainText(' + ')
+  await expect(strokes).toContainText('Texas scramble')
+  await strokes.getByRole('button', { name: 'Zavřít' }).click()
+  await intro.locator('.welcome-intro-close').click()
+  await dismissAwards(page)
+
+  // Admin přepne Texas na brutto rány: rány na soupeře zmizí.
+  await setPreviewIdentity(page, 'admin')
+  await openPreview(page, '#/admin/round/r5')
+  await page
+    .locator('.game-card')
+    .last()
+    .getByRole('button', { name: 'Brutto rány' })
+    .click()
+  await setPreviewIdentity(page, 'writer')
+  await openPreview(page, '#/')
+  await expect(page.locator('.welcome-card')).toBeVisible()
+  await expect(page.locator('.welcome-card .welcome-strokes-btn')).toHaveCount(0)
+  await expect(page.locator('.welcome-card .welcome-enter-btn')).toHaveCount(1)
+  expect(errors()).toEqual([])
+})

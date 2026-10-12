@@ -1,8 +1,15 @@
 import { t } from '../i18n'
 import { playingHandicap, shortName, teamOf } from '../model/round'
-import { compareStrokes, flightCompany, roundAllowance } from '../model/strokes'
+import {
+  compareSides,
+  compareStrokes,
+  flightCompany,
+  roundAllowance,
+} from '../model/strokes'
+import { matchGame } from '../model/games'
+import { texasHandicap, texasShares, texasStrokesAt } from '../evaluations/texas'
 import type { Player, PlayerId, TournamentRound } from '../model/types'
-import { TeamBadge } from './common'
+import { TeamBadge, sideLabel } from './common'
 
 interface Props {
   round: TournamentRound
@@ -22,15 +29,48 @@ interface Props {
 export default function StrokesSheet({ round, players, me, onClose, onEnter }: Props) {
   const allowance = roundAllowance(round)
   const company = flightCompany(round, players, me)
-  const columns = [
-    ...company.opponents.map((id) => ({ id, tag: company.pairs ? 'opponent' : 'duel' })),
-    ...company.others.map((id) => ({ id, tag: null })),
-    ...company.partners.map((id) => ({ id, tag: 'partner' })),
-  ].map((column) => ({
-    ...column,
-    comparison: compareStrokes(round, me, column.id, allowance),
-  }))
-  const myHandicap = playingHandicap(round, me, allowance)
+  // Texas scramble: rány má dvojice, ne hráč - jeden sloupec, naše dvojice proti jejich.
+  const match = matchGame(round)
+  const texas =
+    match?.kind === 'texas-scramble' && company.pairs && company.opponents.length > 0
+      ? match
+      : undefined
+  const mySide = [me, ...company.partners]
+  const columns: {
+    id: string
+    tag: string | null
+    label: string
+    comparison: ReturnType<typeof compareStrokes>
+  }[] = texas
+    ? [
+        {
+          id: company.opponents[0]!,
+          tag: 'opponent',
+          label: sideLabel(players, company.opponents),
+          comparison: compareSides(
+            round,
+            mySide,
+            company.opponents,
+            (side, hole) => texasStrokesAt(round, side, hole, texas.options),
+            (side) => texasHandicap(round, side, texas.options),
+          ),
+        },
+      ]
+    : [
+        ...company.opponents.map((id) => ({
+          id,
+          tag: company.pairs ? 'opponent' : 'duel',
+        })),
+        ...company.others.map((id) => ({ id, tag: null })),
+        ...company.partners.map((id) => ({ id, tag: 'partner' })),
+      ].map((column) => ({
+        ...column,
+        label: shortName(players, column.id),
+        comparison: compareStrokes(round, me, column.id, allowance),
+      }))
+  const myHandicap = texas
+    ? texasHandicap(round, mySide, texas.options)
+    : playingHandicap(round, me, allowance)
 
   return (
     <div className="sheet-backdrop" onClick={onClose} role="presentation">
@@ -43,13 +83,20 @@ export default function StrokesSheet({ round, players, me, onClose, onEnter }: P
         <div className="sheet-head px">
           <h2>{t('strokes.title')}</h2>
           <p className="hint">
-            {t('strokes.hint', {
-              hcp: myHandicap,
-              allowance:
-                allowance === 1
-                  ? ''
-                  : t('strokes.allowance', { percent: Math.round(allowance * 100) }),
-            })}
+            {texas
+              ? t('strokes.texasHint', {
+                  pair: sideLabel(players, mySide),
+                  hcp: myHandicap,
+                  low: Math.round(texasShares(texas.options).low * 100),
+                  high: Math.round(texasShares(texas.options).high * 100),
+                })
+              : t('strokes.hint', {
+                  hcp: myHandicap,
+                  allowance:
+                    allowance === 1
+                      ? ''
+                      : t('strokes.allowance', { percent: Math.round(allowance * 100) }),
+                })}
           </p>
         </div>
         {columns.length === 0 ? (
@@ -69,7 +116,7 @@ export default function StrokesSheet({ round, players, me, onClose, onEnter }: P
                     >
                       <span className="who-name">
                         <TeamBadge teamId={teamOf(players, column.id)} />
-                        {shortName(players, column.id)}
+                        {column.label}
                       </span>
                       <span className="who-meta">
                         {t('strokes.hcp', { value: column.comparison.handicap })}

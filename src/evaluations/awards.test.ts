@@ -62,10 +62,38 @@ describe('odznaky zájezdu', () => {
     expect(summary.rounds).toBe(4)
     for (const result of summary.results) {
       expect(result.rows).toHaveLength(8)
-      if (result.award.id !== 'eagle') expect(result.holders.length).toBeGreaterThan(0)
+      if (result.award.id !== 'eagle' && result.award.id !== 'none')
+        expect(result.holders.length).toBeGreaterThan(0)
     }
     const stb = by(summary, 'stb')
     expect(awardsOf(summary, stb.holders[0]!).map((r) => r.award.id)).toContain('stb')
     expect(awardSignature(stb)).toBe(`stb:${stb.value}:${stb.holders.join(',')}`)
+  })
+
+  it('Sběrač odznaků drží nejvíc odznaků, Ani piču ti bez jediného', () => {
+    const summary = computeAwards(previewRounds(), PREVIEW_PLAYERS, DEFAULT_BONUS_CONFIG)
+    const scoring = summary.results.filter(
+      (r) => r.award.id !== 'collector' && r.award.id !== 'none',
+    )
+    const count = (id: string) => scoring.filter((r) => r.holders.includes(id)).length
+    const collector = by(summary, 'collector')
+    const most = Math.max(...PREVIEW_PLAYERS.map((p) => count(p.id)))
+    expect(collector.value).toBe(most)
+    for (const id of collector.holders) expect(count(id)).toBe(most)
+    const none = by(summary, 'none')
+    expect(none.holders).toEqual(
+      PREVIEW_PLAYERS.map((p) => p.id).filter(
+        (id) => count(id) === 0 && none.holders.includes(id),
+      ),
+    )
+    expect(none.holders.length).toBe(
+      PREVIEW_PLAYERS.filter((p) => count(p.id) === 0).length,
+    )
+    for (const id of none.holders) expect(count(id)).toBe(0)
+    // Tabulka Ani piču jde od nejmenšího počtu odznaků.
+    expect(none.rows[0]!.value).toBeLessThanOrEqual(none.rows.at(-1)!.value)
+    // Bez odehraného kola nedrží nikdo nic.
+    const empty = computeAwards([], PREVIEW_PLAYERS, DEFAULT_BONUS_CONFIG)
+    expect(by(empty, 'none').holders).toEqual([])
   })
 })

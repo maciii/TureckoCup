@@ -20,7 +20,7 @@ test('testovací verze: odznaky s držiteli a tabulka všech hráčů', async ({
   const awards = page.locator('section.awards')
   await expect(awards).toContainText('Odznaky zájezdu')
   await expect(awards).toContainText('po 4 kolech')
-  await expect(awards.locator('.award-btn')).toHaveCount(13)
+  await expect(awards.locator('.award-btn')).toHaveCount(15)
   const first = awards.locator('.award-btn').first()
   await expect(first).toContainText('STBák zájezdu')
   await expect(first).toContainText('bodů')
@@ -62,7 +62,7 @@ test('bez zapsaných ran odznaky nejsou; po birdie hráč dostane gratulaci jen 
   await expect(intro).toContainText('Gratulujeme, Ferry!')
   // Projít všechny nové odznaky; Birdie Man je mezi nimi.
   const names: string[] = []
-  for (let i = 0; i < 13 && (await intro.count()) > 0; i += 1) {
+  for (let i = 0; i < 15 && (await intro.count()) > 0; i += 1) {
     names.push((await intro.locator('.award-intro-name').innerText()).trim())
     await intro.locator('.award-intro-btn').click()
   }
@@ -98,5 +98,22 @@ test('Skinař: vysvětlení a rozpis skinů ve flightu netto i brutto', async ({
   await breakdown.getByRole('button', { name: 'Brutto', exact: true }).click()
   await expect(breakdown.getByTestId('skins-totals')).not.toHaveText(net)
   await expectNoHorizontalOverflow(page)
+  expect(errors()).toEqual([])
+})
+
+test('Sběrač odznaků a Ani piču: odvozené z ostatních, s tabulkou', async ({ page }) => {
+  const errors = collectErrors(page)
+  await page.goto('/?demo=4dny#/')
+  await page.waitForSelector('.screen')
+  const collector = page.locator('.award-btn', { hasText: 'Sběrač odznaků' })
+  await expect(collector).toContainText('odznak')
+  const none = page.locator('.award-btn', { hasText: 'Ani piču' })
+  await expect(none.locator('.rhombus')).toHaveCount(1)
+  await none.click()
+  const sheet = page.getByRole('dialog', { name: 'Ani piču' })
+  await expect(sheet.locator('li.row')).toHaveCount(8)
+  // Tabulka od nejmenšího počtu odznaků.
+  await expect(sheet.locator('.award-table-value').first()).toContainText('0 odznak')
+  await sheet.getByRole('button', { name: 'Zavřít' }).click()
   expect(errors()).toEqual([])
 })

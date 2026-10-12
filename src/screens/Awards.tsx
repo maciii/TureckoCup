@@ -6,7 +6,7 @@ import { shortName } from '../model/round'
 import type { Player, PlayerId, TournamentRound } from '../model/types'
 import { STORAGE_PREFIX } from '../data/store'
 import { TeamBadge, formatDate } from './common'
-import { bleat } from './bleat'
+import { bleat, sigh } from './bleat'
 import PlayerSkinsBreakdown from './PlayerSkinsBreakdown'
 
 /**
@@ -76,6 +76,25 @@ const EMBLEMS: Partial<Record<AwardId, React.ReactNode>> = {
       </g>
     </svg>
   ),
+  collector: (
+    // Tři medaile přes sebe - sbírka.
+    <svg viewBox="0 0 24 24">
+      <circle cx="8" cy="13" r="5" opacity="0.6" />
+      <circle cx="16" cy="13" r="5" opacity="0.6" />
+      <circle cx="12" cy="10" r="5.5" />
+      <path d="M9 3h6l-1.5 3h-3z" />
+    </svg>
+  ),
+  none: (
+    // Klasický kosočtverec s čárkami, točí se (CSS).
+    <span className="rhombus-spin">
+      <svg viewBox="0 0 24 24" className="rhombus">
+        <path d="M12 4 L17.5 12 L12 20 L6.5 12 Z" />
+        <path d="M12 7.5 L12 16.5" />
+        <path d="M12 2 L12 0.5 M15.5 3.5 L16.5 2.3 M8.5 3.5 L7.5 2.3 M19.5 8 L21 7.2 M4.5 8 L3 7.2 M19.5 16 L21 16.8 M4.5 16 L3 16.8 M15.5 20.5 L16.5 21.7 M8.5 20.5 L7.5 21.7 M12 22 L12 23.5" />
+      </svg>
+    </span>
+  ),
   glutton: (
     // Jehně na rožni: točí se nad ohněm (CSS), rožeň stojí.
     <span className="lamb-scene">
@@ -132,7 +151,7 @@ export function AwardMedal({
   result: AwardResult
   players: Player[]
   date: string | null
-  size?: 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg'
   mine?: boolean
 }) {
   const empty = result.holders.length === 0
@@ -211,6 +230,8 @@ export function AwardsSection({
                 onClick={() => {
                   // Nenažranec: žalostné bečení jehněte na rožni.
                   if (result.award.id === 'glutton') bleat()
+                  // Ani piču: vzdech.
+                  if (result.award.id === 'none') sigh()
                   setOpen(result)
                 }}
                 aria-label={`${t(dynamicKey('award', result.award.id, 'name'))}: ${holdersLabel(result, players)}`}
@@ -248,7 +269,7 @@ export function AwardsSection({
 }
 
 /** Tabulka všech hráčů v jedné statistice. */
-function AwardSheet({
+export function AwardSheet({
   result,
   players,
   date,

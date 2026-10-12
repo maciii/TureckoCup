@@ -3,6 +3,22 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.32.0] – 2026-10-13
+
+### Přidáno
+
+- **Odznaky v uvítání:** hráč vidí odznaky, které drží, s proklikem na detail
+  (tabulka, u Skinaře rozpis).
+- **Sběrač odznaků** (kdo drží nejvíc odznaků) a **Ani piču** (kdo nedrží
+  žádný; točící se kosočtverec, při klepnutí zvuk).
+
+### Změněno
+
+- **Uvítání podle hry dne:** Rány na soupeře jen tam, kde hlavní zápas dne
+  počítá s HCP (brutto ne, jamkovka podle Netto); u Texas scramble porovná
+  HCP dvojice proti dvojici. Allowance náhledu bere hlavní zápas kola.
+  Pravidlo „hra počítá s HCP“ je sdílené s editorem hry (`model/games.ts`).
+
 ## [0.31.0] – 2026-10-12
 
 ### Změněno

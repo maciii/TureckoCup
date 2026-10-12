@@ -179,12 +179,19 @@ export const cs = {
   'welcome.pairMatch': 'Tvoje dvojice {pair} proti {opponents}',
   'welcome.noFlight': 'V tomhle kole zatím nejsi v žádném flightu.',
   'welcome.strokes': 'Rány na soupeře',
+  'welcome.awards': {
+    one: 'Držíš {count} odznak',
+    few: 'Držíš {count} odznaky',
+    other: 'Držíš {count} odznaků',
+  },
   'welcome.hint':
     'Náhled scorekarty ukáže, na kterých jamkách máš ránu navíc a kde ji má soupeř na tebe.',
   'welcome.close': 'Zavřít',
   'strokes.title': 'Rány na soupeře',
   'strokes.hint': 'Tvůj hrací HCP {hcp}{allowance}. Rány rozdělené podle SI jamek.',
   'strokes.allowance': ' (allowance {percent} %)',
+  'strokes.texasHint':
+    'Texas scramble: hrací HCP dvojice {pair} je {hcp} ({low} % nižšího + {high} % vyššího). Srovnání ran dvojice proti dvojici.',
   'strokes.hole': 'Jamka',
   'strokes.par': 'Par',
   'strokes.si': 'SI',
@@ -348,6 +355,22 @@ export const cs = {
     one: '{count} jamka bez bodu',
     few: '{count} jamky bez bodu',
     other: '{count} jamek bez bodu',
+  },
+  'award.collector.name': 'Sběrač odznaků',
+  'award.collector.description':
+    'Kdo drží nejvíc ostatních odznaků zájezdu (bez Sběrače a Ani piču).',
+  'award.collector.count': {
+    one: '{count} odznak',
+    few: '{count} odznaky',
+    other: '{count} odznaků',
+  },
+  'award.none.name': 'Ani piču',
+  'award.none.description':
+    'Pro ty, kdo nedrží ani jeden odznak. Tabulka od nejmenšího počtu odznaků.',
+  'award.none.count': {
+    one: '{count} odznak',
+    few: '{count} odznaky',
+    other: '{count} odznaků',
   },
   'overview.installApp': 'Přidat na plochu',
   'overview.installHint':

@@ -158,6 +158,8 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
             players={state.players}
             me={me}
             canWrite={canWrite}
+            awards={awards}
+            rounds={state.rounds}
             intro={welcomeIntro}
             onIntroClose={() => {
               markWelcomeSeen(me, welcomeRound, today)
