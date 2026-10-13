@@ -239,6 +239,9 @@ Rozpis po klepnutí: po kolech jamky v pořadí hraní; vítězná jamka v barv�
 týmu se jménem hráče, který zahrál rozhodující ránu (při shodě v týmu všichni),
 rány obou týmů a počet skinů včetně banku; dělená jamka tlumeně s bankem.
 Dole u kola, co zůstalo v banku a kolik jamek čeká na zápis všech osmi.
+Klepnutí na jamku ji rozbalí na rány všech osmi po týmech (`scores`, v týmu
+od nejlepší; netto i s „brutto − rány z HCP“), nejlepší rána týmu je
+zvýrazněná - u týmu, který skin vzal, v barvě týmu.
 
 ## Odznaky zájezdu (individuální statistiky)
 

@@ -32,6 +32,26 @@ describe('Team Skins přes odehraná kola', () => {
     expect(holes[2]!.players).toEqual(['p3'])
     expect(holes[2]!.best.A).toBe(par3)
     expect(summary.totals).toEqual({ A: 3, B: 0 })
+    // Rozpis jamky: všech osm po týmech, v týmu od nejlepší, nejlepší označená.
+    const scores = holes[2]!.scores
+    expect(scores).toHaveLength(8)
+    const teamA = scores.filter((s) => s.team === 'A')
+    expect(teamA[0]).toMatchObject({ id: 'p3', gross: par3, value: par3, best: true })
+    expect(teamA.slice(1).every((s) => !s.best && s.value === par3 + 1)).toBe(true)
+    // Tým B: všichni par, všichni nejlepší svého týmu; brutto bez ran z HCP.
+    const teamB = scores.filter((s) => s.team === 'B')
+    expect(teamB.every((s) => s.best && s.strokes === 0)).toBe(true)
+  })
+
+  it('netto rozpis: brutto minus rány z HCP dává ránu, se kterou se hraje', () => {
+    const rounds = seedRounds()
+    played(rounds[0]!, 3)
+    const net = teamSkinsSummary(rounds, SEED_PLAYERS, 'net')
+    for (const hole of net.rounds[0]!.holes)
+      for (const entry of hole.scores) {
+        expect(entry.value).toBe(entry.gross! - entry.strokes)
+        if (entry.best) expect(entry.value).toBe(hole.best[entry.team])
+      }
   })
 
   it('plánovaná kola se nepočítají, netto bere rány z HCP', () => {

@@ -474,6 +474,15 @@ test('Team Skins zájezdu: netto i brutto přes odehraná kola a rozpis jamek', 
   await expect(sheet.locator('.ts-hole.win-a').first()).toBeVisible()
   await expect(sheet.locator('.ts-hole.win-b').first()).toBeVisible()
   await expect(sheet.locator('.ts-hole.win-a .ts-hole-who').first()).not.toBeEmpty()
+  // Klepnutí na jamku: rány všech osmi po týmech, nejlepší rána týmu zvýrazněná.
+  const won = sheet.locator('.ts-hole.win-a').first()
+  await won.locator('.ts-hole-row').click()
+  await expect(won.locator('.ts-hole-row')).toHaveAttribute('aria-expanded', 'true')
+  await expect(won.locator('.ts-hole-scores li')).toHaveCount(8)
+  await expect(won.locator('.ts-team-scores.won li.best').first()).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+  await won.locator('.ts-hole-row').click()
+  await expect(won.locator('.ts-hole-scores')).toHaveCount(0)
   const netTotal = await sheet.locator('.ts-sheet-total').innerText()
   await sheet.getByRole('button', { name: 'Brutto', exact: true }).click()
   await expect(

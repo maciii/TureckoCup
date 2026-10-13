@@ -1,4 +1,12 @@
-import { CONCEDED, holeOrder, netScoreAt, parAt, teamPlayers } from '../model/round'
+import {
+  CONCEDED,
+  holeOrder,
+  netScoreAt,
+  parAt,
+  scoreAt,
+  strokesReceived,
+  teamPlayers,
+} from '../model/round'
 import type {
   GameConfig,
   Player,
@@ -6,7 +14,7 @@ import type {
   TeamId,
   TournamentRound,
 } from '../model/types'
-import { TEAM_IDS } from '../model/types'
+import { PICKED_UP, TEAM_IDS } from '../model/types'
 import { individualSkins, teamSkins, teamBestBall } from './skins'
 import type { EvaluationContext } from './types'
 import { DEFAULT_PICKUP } from '../model/pickup'
@@ -22,6 +30,20 @@ import { DEFAULT_BONUS_CONFIG } from '../model/bonuses'
 
 export type SkinsMode = 'gross' | 'net'
 
+/** Rána jednoho hráče na jamce - rozpis, kdo v týmu zahrál co. */
+export interface TeamSkinsScore {
+  id: PlayerId
+  team: TeamId
+  /** Zapsané rány; `null` = zvedl (nebo chybí). */
+  gross: number | null
+  /** Rány z HCP na jamce (jen netto, jinak 0). */
+  strokes: number
+  /** Rána, se kterou se hraje (brutto, nebo netto); `null` = zvedl. */
+  value: number | null
+  /** Nejlepší rána týmu na jamce (může jich být víc). */
+  best: boolean
+}
+
 export interface TeamSkinsHole {
   hole: number
   par: number
@@ -35,6 +57,8 @@ export interface TeamSkinsHole {
   players: PlayerId[]
   /** Nejlepší rána každého týmu na jamce (brutto nebo netto); `null` = zvedli všichni. */
   best: Record<TeamId, number | null>
+  /** Rány všech hráčů po týmech, v týmu od nejlepší. */
+  scores: TeamSkinsScore[]
 }
 
 export interface TeamSkinsRound {
@@ -121,6 +145,31 @@ export function teamSkinsSummary(
               )
             : [],
         best,
+        scores: TEAM_IDS.flatMap((team) =>
+          teamPlayers(round, players, team)
+            .map((id): TeamSkinsScore => {
+              const raw = scoreAt(round, id, hole)
+              const value = netScoreAt(round, id, hole, options)
+              const counted = value === undefined || value === CONCEDED ? null : value
+              return {
+                id,
+                team,
+                gross: raw === undefined || raw === PICKED_UP ? null : raw,
+                strokes: net ? strokesReceived(round, id, hole, 1) : 0,
+                value: counted,
+                best: counted !== null && counted === best[team],
+              }
+            })
+            .sort((a, b) =>
+              a.value === null
+                ? b.value === null
+                  ? 0
+                  : 1
+                : b.value === null
+                  ? -1
+                  : a.value - b.value,
+            ),
+        ),
       })
     }
     const roundTotals: Record<TeamId, number> = {

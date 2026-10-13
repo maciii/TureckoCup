@@ -1,9 +1,14 @@
 import { useMemo, useState } from 'react'
-import type { SkinsMode, TeamSkinsSummary } from '../evaluations/teamSkinsTotal'
+import type {
+  SkinsMode,
+  TeamSkinsHole,
+  TeamSkinsSummary,
+} from '../evaluations/teamSkinsTotal'
 import { teamSkinsSummary } from '../evaluations/teamSkinsTotal'
 import { t } from '../i18n'
 import { shortName } from '../model/round'
 import type { Player, TeamId, TournamentRound } from '../model/types'
+import { TEAM_IDS } from '../model/types'
 import { Pill, Section, TeamBadge, teamName } from './common'
 
 const MODES: SkinsMode[] = ['net', 'gross']
@@ -11,7 +16,8 @@ const MODES: SkinsMode[] = ['net', 'gross']
 /**
  * Team Skins přes všechna odehraná kola: netto i brutto vedle sebe, klepnutím
  * rozpis po kolech a jamkách - kdo skin vzal (zvýrazněno barvou týmu), kolik
- * skinů s bankem a jakou ránou; dělené jamky tlumeně s bankem.
+ * skinů s bankem a jakou ránou; dělené jamky tlumeně s bankem. Klepnutí na
+ * jamku ji rozbalí na rány všech osmi po týmech s nejlepší ránou týmu.
  */
 export default function TeamSkinsOverview({
   rounds,
@@ -96,6 +102,7 @@ function TeamSkinsSheet({
   onClose: () => void
 }) {
   const [mode, setMode] = useState<SkinsMode>(initial)
+  const [openHole, setOpenHole] = useState<string | null>(null)
   const summary = summaries[mode]
   const score = (value: number | null) =>
     value === null ? t('teamSkins.pickedUp') : value
@@ -127,6 +134,7 @@ function TeamSkinsSheet({
             <span className="sep">:</span>
             <b>{summary.totals.B}</b> {teamName('B', teams)} <TeamBadge teamId="B" />
           </p>
+          <p className="hint center">{t('teamSkins.tapHint')}</p>
         </div>
         <div className="ts-rounds">
           {summary.rounds.map((entry) => (
@@ -146,46 +154,68 @@ function TeamSkinsSheet({
                 <p className="hint px">{t('teamSkins.noHoles')}</p>
               ) : (
                 <ol className="ts-holes">
-                  {entry.holes.map((hole) => (
-                    <li
-                      key={hole.hole}
-                      className={`ts-hole${hole.winner ? ` win-${hole.winner.toLowerCase()}` : ' halved'}`}
-                    >
-                      <span className="ts-hole-no">{hole.hole + 1}</span>
-                      <span className="ts-hole-main">
-                        {hole.winner ? (
-                          <>
-                            <span className="ts-hole-who">
-                              <TeamBadge teamId={hole.winner} />
-                              {hole.players
-                                .map((id) => shortName(players, id))
-                                .join(', ')}
-                            </span>
-                            <span className="ts-hole-detail">
-                              {t('teamSkins.holeWon', {
-                                par: hole.par,
-                                own: score(hole.best[hole.winner]),
-                                other: score(hole.best[hole.winner === 'A' ? 'B' : 'A']),
-                              })}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="ts-hole-detail">
-                            {t('teamSkins.holeHalved', {
-                              par: hole.par,
-                              score: score(hole.best.A),
-                              carry: hole.carry,
-                            })}
+                  {entry.holes.map((hole) => {
+                    const key = `${entry.round.id}:${hole.hole}`
+                    const expanded = openHole === key
+                    return (
+                      <li
+                        key={hole.hole}
+                        className={`ts-hole expandable${hole.winner ? ` win-${hole.winner.toLowerCase()}` : ' halved'}${expanded ? ' open' : ''}`}
+                      >
+                        <button
+                          type="button"
+                          className="ts-hole-row"
+                          aria-expanded={expanded}
+                          onClick={() => setOpenHole(expanded ? null : key)}
+                        >
+                          <span className="ts-hole-no">{hole.hole + 1}</span>
+                          <span className="ts-hole-main">
+                            {hole.winner ? (
+                              <>
+                                <span className="ts-hole-who">
+                                  <TeamBadge teamId={hole.winner} />
+                                  {hole.players
+                                    .map((id) => shortName(players, id))
+                                    .join(', ')}
+                                </span>
+                                <span className="ts-hole-detail">
+                                  {t('teamSkins.holeWon', {
+                                    par: hole.par,
+                                    own: score(hole.best[hole.winner]),
+                                    other: score(
+                                      hole.best[hole.winner === 'A' ? 'B' : 'A'],
+                                    ),
+                                  })}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="ts-hole-detail">
+                                {t('teamSkins.holeHalved', {
+                                  par: hole.par,
+                                  score: score(hole.best.A),
+                                  carry: hole.carry,
+                                })}
+                              </span>
+                            )}
                           </span>
+                          {hole.winner && (
+                            <span className="ts-hole-skins">
+                              {t('common.skins', { count: hole.skins })}
+                            </span>
+                          )}
+                          <span className="chev">›</span>
+                        </button>
+                        {expanded && (
+                          <HoleScores
+                            hole={hole}
+                            net={mode === 'net'}
+                            players={players}
+                            teams={teams}
+                          />
                         )}
-                      </span>
-                      {hole.winner && (
-                        <span className="ts-hole-skins">
-                          {t('common.skins', { count: hole.skins })}
-                        </span>
-                      )}
-                    </li>
-                  ))}
+                      </li>
+                    )
+                  })}
                 </ol>
               )}
               {(entry.carry > 0 || entry.pending > 0) && (
@@ -211,6 +241,62 @@ function TeamSkinsSheet({
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+/**
+ * Rány všech osmi na jamce po týmech: kdo co zahrál, u netto i rány z HCP,
+ * nejlepší rána týmu zvýrazněná (u vítěze barvou týmu) - z ní je skin.
+ */
+function HoleScores({
+  hole,
+  net,
+  players,
+  teams,
+}: {
+  hole: TeamSkinsHole
+  net: boolean
+  players: Player[]
+  teams?: Record<TeamId, { name: string }>
+}) {
+  return (
+    <div className="ts-hole-scores">
+      {TEAM_IDS.map((team) => (
+        <div
+          key={team}
+          className={`ts-team-scores${hole.winner === team ? ` won team-${team.toLowerCase()}` : ''}`}
+        >
+          <p className="ts-team-head">
+            <TeamBadge teamId={team} />
+            <span className="ts-team-name">{teamName(team, teams)}</span>
+          </p>
+          <ul>
+            {hole.scores
+              .filter((entry) => entry.team === team)
+              .map((entry) => (
+                <li key={entry.id} className={entry.best ? 'best' : undefined}>
+                  <span className="ts-score-name">{shortName(players, entry.id)}</span>
+                  {entry.gross === null ? (
+                    <span className="ts-score-value">×</span>
+                  ) : (
+                    <>
+                      {net && entry.strokes > 0 && (
+                        <span className="ts-score-calc">
+                          {t('teamSkins.netCalc', {
+                            gross: entry.gross,
+                            strokes: entry.strokes,
+                          })}
+                        </span>
+                      )}
+                      <span className="ts-score-value">{entry.value}</span>
+                    </>
+                  )}
+                </li>
+              ))}
+          </ul>
+        </div>
+      ))}
     </div>
   )
 }

@@ -3724,6 +3724,143 @@ a.menu-item {
   white-space: nowrap;
 }
 
+/* Rozbalitelná jamka: řádek je tlačítko, pod ním rány všech po týmech. */
+.ts-hole.expandable {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+}
+
+.ts-hole.halved.open {
+  opacity: 1;
+}
+
+.ts-hole-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ts-hole-row .chev {
+  flex: none;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink-3);
+  transform: rotate(90deg);
+  transition: transform 0.15s;
+}
+
+.ts-hole.open .ts-hole-row .chev {
+  transform: rotate(-90deg);
+}
+
+.ts-hole-scores {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 2px 10px 10px 14px;
+}
+
+.ts-team-scores {
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.ts-team-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--ink-2);
+}
+
+.ts-team-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ts-team-scores ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ts-team-scores li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.ts-score-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ts-score-calc {
+  flex: none;
+  font-size: 11px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.ts-score-value {
+  flex: none;
+  min-width: 18px;
+  text-align: right;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Nejlepší rána týmu: tučně a v rámečku; u týmu, který skin vzal, v barvě týmu. */
+.ts-team-scores li.best {
+  color: var(--ink);
+  font-weight: 800;
+  box-shadow: inset 0 0 0 1.5px var(--ink-3);
+}
+
+.ts-team-scores.won.team-a li.best {
+  background: var(--team-a);
+  color: var(--team-a-ink);
+  box-shadow: none;
+}
+
+.ts-team-scores.won.team-b li.best {
+  background: var(--team-b);
+  color: var(--team-b-ink);
+  box-shadow: none;
+}
+
+.ts-team-scores.won li.best .ts-score-calc {
+  color: inherit;
+  opacity: 0.8;
+}
+
 .ts-round-foot {
   margin: 6px 0 0;
   padding: 0;

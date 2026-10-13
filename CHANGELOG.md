@@ -3,6 +3,15 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.33.0] – 2026-10-13
+
+### Přidáno
+
+- **Team Skins zájezdu - rozpis jamky:** klepnutím se jamka rozbalí na rány
+  všech osmi po týmech (v týmu od nejlepší), u netto i výpočet brutto − rány
+  z HCP. Nejlepší rána týmu je orámovaná, u týmu, který skin vzal, v barvě
+  týmu.
+
 ## [0.32.2] – 2026-10-13
 
 ### Změněno

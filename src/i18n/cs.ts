@@ -239,6 +239,8 @@ export const cs = {
   'teamSkins.holeWon': 'par {par} · {own} proti {other}',
   'teamSkins.holeHalved': 'par {par} · dělená ({score}), v banku {carry}',
   'teamSkins.pickedUp': 'zvednuto',
+  'teamSkins.tapHint': 'Klepnutím na jamku uvidíš rány všech hráčů a nejlepší ránu týmu.',
+  'teamSkins.netCalc': '{gross} − {strokes} =',
   'teamSkins.noHoles': 'Zatím žádná jamka se zápisem všech osmi.',
   'teamSkins.pending': {
     one: '{count} jamka čeká na zápis',
