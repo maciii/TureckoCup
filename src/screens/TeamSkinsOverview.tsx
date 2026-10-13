@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type {
   SkinsMode,
   TeamSkinsHole,
+  TeamSkinsRound,
   TeamSkinsSummary,
 } from '../evaluations/teamSkinsTotal'
 import { teamSkinsSummary } from '../evaluations/teamSkinsTotal'
@@ -102,10 +103,7 @@ function TeamSkinsSheet({
   onClose: () => void
 }) {
   const [mode, setMode] = useState<SkinsMode>(initial)
-  const [openHole, setOpenHole] = useState<string | null>(null)
   const summary = summaries[mode]
-  const score = (value: number | null) =>
-    value === null ? t('teamSkins.pickedUp') : value
   return (
     <div className="sheet-backdrop" onClick={onClose} role="presentation">
       <div
@@ -150,88 +148,12 @@ function TeamSkinsSheet({
                   <Pill teamId="B">{entry.totals.B}</Pill>
                 </span>
               </p>
-              {entry.holes.length === 0 ? (
-                <p className="hint px">{t('teamSkins.noHoles')}</p>
-              ) : (
-                <ol className="ts-holes">
-                  {entry.holes.map((hole) => {
-                    const key = `${entry.round.id}:${hole.hole}`
-                    const expanded = openHole === key
-                    return (
-                      <li
-                        key={hole.hole}
-                        className={`ts-hole expandable${hole.winner ? ` win-${hole.winner.toLowerCase()}` : ' halved'}${expanded ? ' open' : ''}`}
-                      >
-                        <button
-                          type="button"
-                          className="ts-hole-row"
-                          aria-expanded={expanded}
-                          onClick={() => setOpenHole(expanded ? null : key)}
-                        >
-                          <span className="ts-hole-no">{hole.hole + 1}</span>
-                          <span className="ts-hole-main">
-                            {hole.winner ? (
-                              <>
-                                <span className="ts-hole-who">
-                                  <TeamBadge teamId={hole.winner} />
-                                  {hole.players
-                                    .map((id) => shortName(players, id))
-                                    .join(', ')}
-                                </span>
-                                <span className="ts-hole-detail">
-                                  {t('teamSkins.holeWon', {
-                                    par: hole.par,
-                                    own: score(hole.best[hole.winner]),
-                                    other: score(
-                                      hole.best[hole.winner === 'A' ? 'B' : 'A'],
-                                    ),
-                                  })}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="ts-hole-detail">
-                                {t('teamSkins.holeHalved', {
-                                  par: hole.par,
-                                  score: score(hole.best.A),
-                                  carry: hole.carry,
-                                })}
-                              </span>
-                            )}
-                          </span>
-                          {hole.winner && (
-                            <span className="ts-hole-skins">
-                              {t('common.skins', { count: hole.skins })}
-                            </span>
-                          )}
-                          <span className="chev">›</span>
-                        </button>
-                        {expanded && (
-                          <HoleScores
-                            hole={hole}
-                            net={mode === 'net'}
-                            players={players}
-                            teams={teams}
-                          />
-                        )}
-                      </li>
-                    )
-                  })}
-                </ol>
-              )}
-              {(entry.carry > 0 || entry.pending > 0) && (
-                <p className="hint px ts-round-foot">
-                  {[
-                    entry.pending > 0
-                      ? t('teamSkins.pending', { count: entry.pending })
-                      : '',
-                    entry.carry > 0
-                      ? t('teamSkins.carryLeft', { count: entry.carry })
-                      : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </p>
-              )}
+              <TeamSkinsRoundHoles
+                entry={entry}
+                net={mode === 'net'}
+                players={players}
+                teams={teams}
+              />
             </section>
           ))}
         </div>
@@ -242,6 +164,105 @@ function TeamSkinsSheet({
         </div>
       </div>
     </div>
+  )
+}
+
+/**
+ * Jamky jednoho kola Team Skins: kdo skin vzal (barva týmu), dělené tlumeně
+ * s bankem; klepnutí jamku rozbalí na rány všech osmi. Sdílí ho souhrn
+ * zájezdu i Team Skins kola.
+ */
+export function TeamSkinsRoundHoles({
+  entry,
+  net,
+  players,
+  teams,
+}: {
+  entry: TeamSkinsRound
+  net: boolean
+  players: Player[]
+  teams?: Record<TeamId, { name: string }>
+}) {
+  const [openHole, setOpenHole] = useState<string | null>(null)
+  const score = (value: number | null) =>
+    value === null ? t('teamSkins.pickedUp') : value
+  return (
+    <>
+      {entry.holes.length === 0 ? (
+        <p className="hint px">{t('teamSkins.noHoles')}</p>
+      ) : (
+        <ol className="ts-holes">
+          {entry.holes.map((hole) => {
+            const key = `${entry.round.id}:${hole.hole}`
+            const expanded = openHole === key
+            return (
+              <li
+                key={hole.hole}
+                className={`ts-hole expandable${hole.winner ? ` win-${hole.winner.toLowerCase()}` : ' halved'}${expanded ? ' open' : ''}`}
+              >
+                <button
+                  type="button"
+                  className="ts-hole-row"
+                  aria-expanded={expanded}
+                  onClick={() => setOpenHole(expanded ? null : key)}
+                >
+                  <span className="ts-hole-no">{hole.hole + 1}</span>
+                  <span className="ts-hole-main">
+                    {hole.winner ? (
+                      <>
+                        <span className="ts-hole-who">
+                          <TeamBadge teamId={hole.winner} />
+                          {hole.players.map((id) => shortName(players, id)).join(', ')}
+                        </span>
+                        <span className="ts-hole-detail">
+                          {t('teamSkins.holeWon', {
+                            par: hole.par,
+                            own: score(hole.best[hole.winner]),
+                            other: score(hole.best[hole.winner === 'A' ? 'B' : 'A']),
+                          })}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="ts-hole-detail">
+                        {hole.carry > 0
+                          ? t('teamSkins.holeHalved', {
+                              par: hole.par,
+                              score: score(hole.best.A),
+                              carry: hole.carry,
+                            })
+                          : t('teamSkins.holeHalvedNoCarry', {
+                              par: hole.par,
+                              score: score(hole.best.A),
+                            })}
+                      </span>
+                    )}
+                  </span>
+                  {hole.winner && (
+                    <span className="ts-hole-skins">
+                      {t('common.skins', { count: hole.skins })}
+                    </span>
+                  )}
+                  <span className="chev">›</span>
+                </button>
+                {expanded && (
+                  <HoleScores hole={hole} net={net} players={players} teams={teams} />
+                )}
+              </li>
+            )
+          })}
+        </ol>
+      )}
+      {(entry.carry > 0 || entry.pending > 0) && (
+        <p className="hint px ts-round-foot">
+          {[
+            entry.pending > 0 ? t('teamSkins.pending', { count: entry.pending }) : '',
+            entry.carry > 0 ? t('teamSkins.carryLeft', { count: entry.carry }) : '',
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
+      )}
+    </>
   )
 }
 

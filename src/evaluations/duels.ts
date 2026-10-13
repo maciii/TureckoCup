@@ -161,6 +161,17 @@ export function duelOf(
       holeWinners: Object.fromEntries(
         state.holes.filter((h) => h.decided).map((h) => [String(h.hole), h.winner]),
       ),
+      holeValues: Object.fromEntries(
+        state.holes
+          .filter((h) => h.decided)
+          .map((h) => [
+            String(h.hole),
+            [left, right].map((side) => {
+              const value = scorer.stroke(side.players, h.hole, netOption)
+              return value === undefined || value === CONCEDED ? null : value
+            }),
+          ]),
+      ),
     }
   }
 
@@ -199,6 +210,7 @@ export function duelOf(
   const higherWins = format === 'stableford'
   // Po jamkách pro zápis: kdo jamku bere, nebo dělená - jen tam, kde zapsaly obě strany.
   const holeWinners: Record<string, 0 | 1 | null> = {}
+  const holeValues: Record<string, number[]> = {}
   for (const hole of common) {
     const valueOf = (side: GameSide) => {
       const stroke = scorer.counted(side.players, hole, net) ?? 0
@@ -208,6 +220,7 @@ export function duelOf(
     }
     const va = valueOf(left)
     const vb = valueOf(right)
+    holeValues[String(hole)] = [va, vb]
     holeWinners[String(hole)] =
       va === vb ? null : (higherWins ? va > vb : va < vb) ? 0 : 1
   }
@@ -218,6 +231,7 @@ export function duelOf(
   return {
     id,
     holeWinners,
+    holeValues,
     sides: [describe(left, a), describe(right, b)],
     leader,
     notation: leader === null ? 'AS' : `+${diff}`,

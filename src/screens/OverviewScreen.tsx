@@ -16,6 +16,7 @@ import {
   formatDate,
   formatDay,
   playerLabel,
+  tappable,
   teamName,
 } from './common'
 import GameResults from './GameResults'
@@ -28,6 +29,7 @@ import BonusResults from './BonusResults'
 import MenuSheet from './MenuSheet'
 import LiveNow from './LiveNow'
 import { AwardIntro, AwardsSection } from './Awards'
+import { IndividualDetail, PositionDetail, TeamScoreDetail } from './TournamentDetails'
 import Welcome, { welcomeSeen, markWelcomeSeen } from './Welcome'
 import TeamSkinsOverview from './TeamSkinsOverview'
 import { computeAwards } from '../evaluations/awards'
@@ -40,6 +42,12 @@ import { flightHolesStarted } from '../model/round'
 export default function OverviewScreen({ playRoute }: { playRoute: Route | null }) {
   const { state, meta } = useData()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [detail, setDetail] = useState<
+    | { kind: 'team' }
+    | { kind: 'individual'; id: string }
+    | { kind: 'position'; position: number }
+    | null
+  >(null)
   const { isStandalone, isMobile } = usePwaInstall()
   const pickup = pickupRuleOf(state.tournament?.pickup)
   const bonusConfig = bonusConfigOf(state.tournament?.bonuses)
@@ -204,6 +212,17 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
               {t('overview.played', { played, total: state.rounds.length })}
               {summary.provisional ? ` · ${t('overview.provisional')}` : ''}
             </p>
+            {summary.rounds.length > 0 && (
+              <p className="center px">
+                <button
+                  type="button"
+                  className="scope-link"
+                  onClick={() => setDetail({ kind: 'team' })}
+                >
+                  {t('detail.teamScoreOpen')} ›
+                </button>
+              </p>
+            )}
           </>
         )}
 
@@ -307,7 +326,8 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
               {summary.individuals.map((entry) => (
                 <li
                   key={entry.id}
-                  className={`row${entry.position === 1 && entry.rounds > 0 ? ' leader' : ''}`}
+                  className={`row tappable${entry.position === 1 && entry.rounds > 0 ? ' leader' : ''}`}
+                  {...tappable(() => setDetail({ kind: 'individual', id: entry.id }))}
                 >
                   <span className="position">
                     {entry.rounds > 0 ? entry.position : '·'}
@@ -324,6 +344,7 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
                     </span>
                   </span>
                   <Pill teamId={entry.teamId}>{entry.stableford}</Pill>
+                  <span className="chev">›</span>
                 </li>
               ))}
             </ol>
@@ -338,7 +359,13 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
           >
             <ul className="list" style={{ listStyle: 'none', margin: 0 }}>
               {summary.positions.map((balance) => (
-                <li key={balance.position} className="duel">
+                <li
+                  key={balance.position}
+                  className="duel tappable"
+                  {...tappable(() =>
+                    setDetail({ kind: 'position', position: balance.position }),
+                  )}
+                >
                   <span className="duel-side">
                     <span className="nm">
                       <TeamBadge teamId="A" />
@@ -393,6 +420,31 @@ export default function OverviewScreen({ playRoute }: { playRoute: Route | null 
 
       {state.tournament && meta.status !== 'loading' && !welcomeIntro && (
         <AwardIntro summary={awards} players={state.players} me={me} />
+      )}
+
+      {detail?.kind === 'team' && (
+        <TeamScoreDetail
+          summary={summary}
+          teams={teams}
+          onClose={() => setDetail(null)}
+        />
+      )}
+      {detail?.kind === 'individual' && (
+        <IndividualDetail
+          summary={summary}
+          playerId={detail.id}
+          players={state.players}
+          bonusConfig={bonusConfig}
+          onClose={() => setDetail(null)}
+        />
+      )}
+      {detail?.kind === 'position' && (
+        <PositionDetail
+          summary={summary}
+          position={detail.position}
+          players={state.players}
+          onClose={() => setDetail(null)}
+        />
       )}
 
       {menuOpen && (

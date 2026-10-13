@@ -2,7 +2,9 @@ import type { BonusConfig, Player, TeamId, TournamentRound } from '../model/type
 import type { BonusSummary } from '../evaluations/bonuses'
 import { bonusBreakdown } from '../evaluations/bonuses'
 import { dynamicKey, t } from '../i18n'
+import { useState } from 'react'
 import { Section, Standings } from './common'
+import PlayerDetail from './PlayerDetail'
 
 interface Props {
   round: TournamentRound
@@ -17,6 +19,7 @@ interface Props {
  * `sideBetSection`): kdo kolik bodů uhrál a za co.
  */
 export default function BonusResults({ round, players, config, summary }: Props) {
+  const [detail, setDetail] = useState<string | null>(null)
   const pendingNote =
     summary.pending > 0 ? t('round.pendingHoles', { count: summary.pending }) : undefined
   return (
@@ -34,6 +37,7 @@ export default function BonusResults({ round, players, config, summary }: Props)
         rows={summary.rows}
         players={players}
         value={(row) => String(row.value)}
+        onSelect={(row) => setDetail(row.id)}
         meta={(row) => {
           const parts = bonusBreakdown(round, config, row.id).map(
             ({ bonus, count }) =>
@@ -42,6 +46,16 @@ export default function BonusResults({ round, players, config, summary }: Props)
           return parts.length > 0 ? parts.join(' · ') : undefined
         }}
       />
+      {detail && (
+        <PlayerDetail
+          kind="bonus"
+          round={round}
+          playerId={detail}
+          players={players}
+          bonusConfig={config}
+          onClose={() => setDetail(null)}
+        />
+      )}
     </Section>
   )
 }

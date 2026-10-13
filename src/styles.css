@@ -3991,3 +3991,331 @@ a.menu-item {
 .welcome-intro .welcome-award-name {
   color: var(--on-dark);
 }
+
+/* --- detaily (rozpis zápasu, hráče, souhrnů) ----------------------------- */
+
+/* Klepací řádek s detailem: jemný náznak, že vede dál. */
+.duel.tappable,
+.row.tappable {
+  cursor: pointer;
+}
+
+.duel.tappable:active,
+.row.tappable:active {
+  background: var(--brand-soft);
+}
+
+.duel.tappable .duel-center .m::after {
+  content: ' ›';
+}
+
+.detail-sub .hint {
+  margin: 2px 0 0;
+}
+
+.detail-body {
+  padding-top: 6px;
+}
+
+.md-sides {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.md-side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.md-side.right {
+  order: 3;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.md-notation {
+  order: 2;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.md-side-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--ink);
+  min-width: 0;
+}
+
+.md-side.right .md-side-name {
+  flex-direction: row-reverse;
+}
+
+.md-side-hcp {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.md-scroll {
+  overflow-x: auto;
+  padding: 0 12px;
+}
+
+.md-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.md-table th,
+.md-table td {
+  padding: 4px 2px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+}
+
+.md-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg);
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.md-table td.num {
+  color: var(--ink-3);
+  font-weight: 700;
+}
+
+.md-table td.hole {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.md-table .mark-cell {
+  position: relative;
+}
+
+.md-dots {
+  position: absolute;
+  top: 1px;
+  left: 50%;
+  transform: translateX(8px);
+  font-size: 9px;
+  line-height: 1;
+  letter-spacing: -1px;
+  color: var(--green);
+}
+
+.md-table td.val {
+  min-width: 26px;
+  font-weight: 800;
+  color: var(--ink-2);
+}
+
+/* Kdo jamku vzal: buňka strany v barvě týmu. */
+.md-val {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 4px;
+  border-radius: 6px;
+}
+
+.md-val.win.team-a {
+  background: var(--team-a);
+  color: var(--team-a-ink);
+}
+
+.md-val.win.team-b {
+  background: var(--team-b);
+  color: var(--team-b-ink);
+}
+
+.md-status {
+  display: inline-block;
+  min-width: 34px;
+  padding: 1px 4px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.md-status.team-a {
+  background: var(--team-a-soft);
+  color: var(--team-a-text);
+}
+
+.md-status.team-b {
+  background: var(--team-b-soft);
+  color: var(--team-b-text);
+}
+
+.md-legend {
+  margin-top: 8px;
+}
+
+.detail-player {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.md-val.muted {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.pd-table tfoot th,
+.pd-table tfoot td {
+  border-bottom: none;
+  font-weight: 800;
+  color: var(--ink);
+  padding-top: 8px;
+}
+
+.pd-bonus .row.void {
+  opacity: 0.55;
+}
+
+.pd-hole {
+  flex: none;
+  width: 26px;
+  font-size: 15px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.pd-mark {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--gold-soft);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.pd-points {
+  flex: none;
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.pd-total {
+  margin: 10px 0 0;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.td-list {
+  list-style: none;
+  margin: 0;
+}
+
+.td-round {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.td-round:first-child {
+  border-top: none;
+}
+
+.td-round-title {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.td-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.td-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.td-chip-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.td-match {
+  margin-top: 8px;
+}
+
+.td-team-round {
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.td-team-round:first-child {
+  border-top: none;
+}
+
+.td-games {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.td-games li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.td-points {
+  flex: none;
+  font-weight: 800;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}

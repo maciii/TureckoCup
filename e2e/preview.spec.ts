@@ -541,3 +541,79 @@ test('uvítání podle hry dne: Texas porovná dvojice, brutto rány na soupeře
   await expect(page.locator('.welcome-card .welcome-enter-btn')).toHaveCount(1)
   expect(errors()).toEqual([])
 })
+
+test('detaily na klepnutí: zápasy po jamkách, hráči v tabulkách, souhrny po kolech', async ({
+  page,
+}) => {
+  const errors = collectErrors(page)
+  const close = () => page.getByRole('button', { name: 'Zavřít' }).last().click()
+  await openPreview(page)
+
+  // Týmové skóre po kolech a hrách.
+  await page.getByRole('button', { name: /Body po kolech a hrách/ }).click()
+  const team = page.getByRole('dialog', { name: 'Týmové skóre' })
+  await expect(team.locator('.td-team-round')).toHaveCount(4)
+  await expectNoHorizontalOverflow(page)
+  await close()
+
+  // Jednotlivec po kolech, z kola rozpis Stablefordu po jamkách (list nad listem).
+  const individuals = page.locator('section', {
+    has: page.getByRole('heading', { name: 'Jednotlivci v turnaji' }),
+  })
+  await individuals.locator('li.row').first().click()
+  const person = page.getByRole('dialog', { name: 'Jednotlivci v turnaji' })
+  await expect(person.locator('.td-round')).toHaveCount(4)
+  await person.locator('.td-chip').first().click()
+  await expect(
+    page.getByRole('dialog', { name: 'Stableford' }).locator('tbody tr'),
+  ).toHaveCount(18)
+  await close()
+  await close()
+
+  // Bilance pozice: singly po kolech, klepnutím rozpis zápasu.
+  const positions = page
+    .locator('section', { has: page.getByRole('heading', { name: 'Singly pozic' }) })
+    .last()
+  await positions.locator('li.duel').first().click()
+  const position = page.getByRole('dialog', { name: /Pozice 1/ })
+  await expect(position.locator('.td-match')).toHaveCount(4)
+  await position.locator('li.duel').first().click()
+  await expect(page.locator('.match-detail tbody tr')).toHaveCount(18)
+  await close()
+  await close()
+
+  // Kolo 3: Four-ball po jamkách se čtyřmi hráči a vítězi jamek, tabulky hráčů.
+  await openPreview(page, '#/round/r3')
+  await page
+    .getByRole('button', { name: /Rozpis zápasu Ota \+ Mac/ })
+    .first()
+    .click()
+  const match = page.locator('.match-detail')
+  await expect(match.locator('tbody tr')).toHaveCount(18)
+  await expect(match.locator('thead th.who')).toHaveCount(4)
+  await expect(match.locator('.md-val.win').first()).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+  await close()
+  const stableford = page.locator('section', {
+    has: page.getByRole('heading', { name: /^Stableford/ }),
+  })
+  await stableford.locator('li.row').first().click()
+  await expect(page.locator('.detail-sheet tbody tr')).toHaveCount(18)
+  await close()
+  const bonus = page.locator('section', {
+    has: page.getByRole('heading', { name: 'Extra body' }),
+  })
+  await bonus.locator('li.row').first().click()
+  await expect(page.getByRole('dialog', { name: 'Extra body' })).toContainText('Celkem')
+  await close()
+
+  // Kolo 4: Team Skins kola s rozbalením jamky na rány všech osmi.
+  await openPreview(page, '#/round/r4')
+  await page.getByRole('button', { name: /Rozpis jamek/ }).click()
+  const hole = page.locator('.detail-sheet .ts-hole').first()
+  await hole.locator('.ts-hole-row').click()
+  await expect(hole.locator('.ts-hole-scores li')).toHaveCount(8)
+  await expectNoHorizontalOverflow(page)
+  await close()
+  expect(errors()).toEqual([])
+})

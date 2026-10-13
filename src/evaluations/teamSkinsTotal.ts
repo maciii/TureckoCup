@@ -93,100 +93,114 @@ export function teamSkinsSummary(
   players: Player[],
   mode: SkinsMode,
 ): TeamSkinsSummary {
-  const net = mode === 'net'
-  const game = overviewGame(net)
+  const game = overviewGame(mode === 'net')
   const totals: Record<TeamId, number> = { A: 0, B: 0 }
   const result: TeamSkinsRound[] = []
   for (const round of rounds) {
     if (round.status === 'planned') continue
-    const context: EvaluationContext = {
-      round,
-      players,
-      pickup: DEFAULT_PICKUP,
-      bonuses: DEFAULT_BONUS_CONFIG,
-    }
-    const evaluated = teamSkins(context, game)
-    const options = { net, allowance: 1 }
-    const order = holeOrder(round, round.flights[0])
-    const byHole = new Map(evaluated.holes.map((h) => [h.hole, h]))
-    const holes: TeamSkinsHole[] = []
-    for (const hole of order) {
-      const outcome = byHole.get(hole)
-      if (!outcome?.decided) continue
-      const best = Object.fromEntries(
-        TEAM_IDS.map((team) => {
-          const value = teamBestBall(
-            context,
-            teamPlayers(round, players, team),
-            hole,
-            options,
-          )
-          return [team, value === undefined || value === CONCEDED ? null : value]
-        }),
-      ) as Record<TeamId, number | null>
-      const winnerPlayers = outcome.winners
-      const winner =
-        winnerPlayers.length > 0
-          ? (TEAM_IDS.find((team) =>
-              teamPlayers(round, players, team).includes(winnerPlayers[0]!),
-            ) ?? null)
-          : null
-      const winningScore = winner ? best[winner] : null
-      holes.push({
-        hole,
-        par: parAt(round, hole),
-        winner,
-        skins: winner ? (outcome.value ?? 1) : 0,
-        carry: outcome.carry ?? 0,
-        players:
-          winner && winningScore !== null
-            ? teamPlayers(round, players, winner).filter(
-                (id) => netScoreAt(round, id, hole, options) === winningScore,
-              )
-            : [],
-        best,
-        scores: TEAM_IDS.flatMap((team) =>
-          teamPlayers(round, players, team)
-            .map((id): TeamSkinsScore => {
-              const raw = scoreAt(round, id, hole)
-              const value = netScoreAt(round, id, hole, options)
-              const counted = value === undefined || value === CONCEDED ? null : value
-              return {
-                id,
-                team,
-                gross: raw === undefined || raw === PICKED_UP ? null : raw,
-                strokes: net ? strokesReceived(round, id, hole, 1) : 0,
-                value: counted,
-                best: counted !== null && counted === best[team],
-              }
-            })
-            .sort((a, b) =>
-              a.value === null
-                ? b.value === null
-                  ? 0
-                  : 1
-                : b.value === null
-                  ? -1
-                  : a.value - b.value,
-            ),
-        ),
-      })
-    }
-    const roundTotals: Record<TeamId, number> = {
-      A: evaluated.rows.find((r) => r.id === 'A')?.value ?? 0,
-      B: evaluated.rows.find((r) => r.id === 'B')?.value ?? 0,
-    }
-    totals.A += roundTotals.A
-    totals.B += roundTotals.B
-    result.push({
-      round,
-      totals: roundTotals,
-      holes,
-      carry: evaluated.carry ?? 0,
-      pending: evaluated.pending,
-    })
+    const entry = teamSkinsRound(round, players, game)
+    totals.A += entry.totals.A
+    totals.B += entry.totals.B
+    result.push(entry)
   }
   return { mode, totals, rounds: result }
+}
+
+/**
+ * Rozpis Team Skins jednoho kola podle dané hry (nastavení kola, nebo jednotné
+ * nastavení souhrnu zájezdu): rozhodnuté jamky v pořadí hraní, kdo skin vzal
+ * a rány všech osmi.
+ */
+export function teamSkinsRound(
+  round: TournamentRound,
+  players: Player[],
+  game: GameConfig,
+  pickup = DEFAULT_PICKUP,
+): TeamSkinsRound {
+  const net = game.options.net
+  const options = { net, allowance: game.options.allowance }
+  const context: EvaluationContext = {
+    round,
+    players,
+    pickup,
+    bonuses: DEFAULT_BONUS_CONFIG,
+  }
+  const evaluated = teamSkins(context, game)
+  const order = holeOrder(round, round.flights[0])
+  const byHole = new Map(evaluated.holes.map((h) => [h.hole, h]))
+  const holes: TeamSkinsHole[] = []
+  for (const hole of order) {
+    const outcome = byHole.get(hole)
+    if (!outcome?.decided) continue
+    const best = Object.fromEntries(
+      TEAM_IDS.map((team) => {
+        const value = teamBestBall(
+          context,
+          teamPlayers(round, players, team),
+          hole,
+          options,
+        )
+        return [team, value === undefined || value === CONCEDED ? null : value]
+      }),
+    ) as Record<TeamId, number | null>
+    const winnerPlayers = outcome.winners
+    const winner =
+      winnerPlayers.length > 0
+        ? (TEAM_IDS.find((team) =>
+            teamPlayers(round, players, team).includes(winnerPlayers[0]!),
+          ) ?? null)
+        : null
+    const winningScore = winner ? best[winner] : null
+    holes.push({
+      hole,
+      par: parAt(round, hole),
+      winner,
+      skins: winner ? (outcome.value ?? 1) : 0,
+      carry: outcome.carry ?? 0,
+      players:
+        winner && winningScore !== null
+          ? teamPlayers(round, players, winner).filter(
+              (id) => netScoreAt(round, id, hole, options) === winningScore,
+            )
+          : [],
+      best,
+      scores: TEAM_IDS.flatMap((team) =>
+        teamPlayers(round, players, team)
+          .map((id): TeamSkinsScore => {
+            const raw = scoreAt(round, id, hole)
+            const value = netScoreAt(round, id, hole, options)
+            const counted = value === undefined || value === CONCEDED ? null : value
+            return {
+              id,
+              team,
+              gross: raw === undefined || raw === PICKED_UP ? null : raw,
+              strokes: net ? strokesReceived(round, id, hole, options.allowance) : 0,
+              value: counted,
+              best: counted !== null && counted === best[team],
+            }
+          })
+          .sort((a, b) =>
+            a.value === null
+              ? b.value === null
+                ? 0
+                : 1
+              : b.value === null
+                ? -1
+                : a.value - b.value,
+          ),
+      ),
+    })
+  }
+  return {
+    round,
+    totals: {
+      A: evaluated.rows.find((r) => r.id === 'A')?.value ?? 0,
+      B: evaluated.rows.find((r) => r.id === 'B')?.value ?? 0,
+    },
+    holes,
+    carry: evaluated.carry ?? 0,
+    pending: evaluated.pending,
+  }
 }
 
 /* --- Skins jednotlivců přes kola (odznak Skinař) --------------------------- */

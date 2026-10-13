@@ -296,3 +296,20 @@ označuje jako **předběžné**.
   varianta by byla nekonzistentní.
 - Lykia Links drží CR 74,7 ze slope tabulky (scorekarta uvádí 74,0); admin
   může hrací HCP přepsat ručně.
+
+## Detaily na klepnutí
+
+Každý výsledek jde rozkliknout na rozpis, ze kterého vznikl. Nic se
+neukládá - rozpis je ze stejných raw dat a evaluací jako výsledek:
+
+- **Zápas** (`MatchDetail`): jamky v pořadí hraní flightu, rány hráčů (u Texasu
+  rána dvojice), tečky ran z HCP podle allowance hry, `DuelResult.holeValues`
+  (hodnota strany, se kterou zápas počítá) a `holeWinners`; průběžný stav
+  podle druhu hry (jamkovka UP, součtové formáty rozdíl, Best + Součet body,
+  Four-ball Skins skiny bez bodů za birdie).
+- **Hráč ve hře kola** (`PlayerDetail`): Stableford po jamkách, Skins s výsledkem
+  jamky ve skupině hráče, extra body s důvodem, proč se nepočítají.
+- **Team Skins kola**: `teamSkinsRound` s nastavením hry kola (souhrn zájezdu
+  používá totéž s jednotným nastavením).
+- **Souhrny na přehledu** (`TournamentDetails`): týmové skóre po kolech a hrách,
+  jednotlivec po kolech, bilance pozice po kolech.

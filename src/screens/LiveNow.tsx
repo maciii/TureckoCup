@@ -117,6 +117,8 @@ export default function LiveNow({ round, results }: Props) {
                 duel={duel}
                 players={state.players}
                 format={result.game.options.format ?? 'strokes-net'}
+                round={round}
+                game={result.game}
               />
             ))}
           </ul>

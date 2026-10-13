@@ -151,6 +151,13 @@ describe('duely pozic', () => {
     expect(result.teamPoints).toEqual({ A: 0, B: 0 })
     // Po jamkách pro zápis: jamky 1 a 2 bere Ota, jamka 3 čeká na Pavlose.
     expect(duel.holeWinners).toEqual({ '0': 0, '1': 0 })
+    // Rozpis zápasu: netto rány obou stran na společných jamkách.
+    const net = (id: string, hole: number, gross: number) =>
+      gross - strokesReceived(round, id, hole, round.games[3]!.options.allowance)
+    expect(duel.holeValues).toEqual({
+      '0': [net('p3', 0, 4), net('p2', 0, 5)],
+      '1': [net('p3', 1, 4), net('p2', 1, 5)],
+    })
   })
 
   it('jamkovka pozic dává bod za vyhraný duel po dohrání', () => {
@@ -171,6 +178,12 @@ describe('duely pozic', () => {
     expect(Object.keys(duel2.holeWinners!).length).toBeGreaterThan(0)
     expect(Object.values(duel2.holeWinners!)).toContain(0)
     expect(Object.values(duel1.holeWinners!).every((w) => w === null)).toBe(true)
+    // Rozpis: hodnoty jsou na stejných jamkách jako výsledky a sedí s vítězem jamky.
+    expect(Object.keys(duel2.holeValues!)).toEqual(Object.keys(duel2.holeWinners!))
+    for (const [hole, winner] of Object.entries(duel2.holeWinners!)) {
+      const [a, b] = duel2.holeValues![hole]!
+      expect(winner).toBe(a === b ? null : a! < b! ? 0 : 1)
+    }
     // Pozice 3 a 4: hráči bez indexu (0 ran) hrají stejně - remízy.
     expect(result.teamPoints).toEqual({ A: 2.5, B: 1.5 })
   })

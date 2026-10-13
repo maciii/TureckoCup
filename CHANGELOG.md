@@ -3,6 +3,26 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.34.0] – 2026-10-13
+
+### Přidáno
+
+- **Detaily na klepnutí u všech her** (kolo, přehled, karta živého kola,
+  zápis):
+  - **Zápas** (singly pozic, Four-ball, Texas, Best + Součet, Four-ball Skins):
+    rozpis po jamkách - rány všech hráčů s tečkami ran z HCP, hodnota strany,
+    se kterou zápas počítá (netto/brutto lepší míč, body), vítěz jamky
+    v barvě týmu a průběžný stav (UP, rozdíl ran, body, skiny).
+  - **Stableford a Skins:** řádek hráče otevře jeho jamky - rány, netto,
+    body, u skinů vzatý skin s bankem, jinak kdo jamku vzal nebo dělená.
+  - **Extra body:** hráč po jamkách - co, za kolik a proč se nepočítá.
+  - **Team Skins kola:** rozpis jamek jako u zájezdu, s rozbalením na rány
+    všech osmi.
+  - **Přehled:** týmové skóre po kolech a hrách; jednotlivec po kolech
+    (Stableford, skiny, extra s proklikem na rozpis kola); bilance pozice
+    po kolech s proklikem na rozpis zápasu.
+- `DuelResult.holeValues`: hodnota obou stran na jamce pro rozpis zápasu.
+
 ## [0.33.0] – 2026-10-13
 
 ### Přidáno

@@ -70,6 +70,12 @@ export interface DuelResult {
    * `null` dělená. Chybějící klíč = jamka ještě nemá rány obou stran.
    */
   holeWinners?: Record<string, 0 | 1 | null>
+  /**
+   * Hodnota obou stran na jamce, se kterou zápas počítá (rána lepšího míče
+   * brutto/netto, Stablefordovy body; Best + Součet body jamky); `null` =
+   * strana jamku zvedla. Jen jamky, kde zapsaly obě strany - pro rozpis zápasu.
+   */
+  holeValues?: Record<string, (number | null)[]>
   /** Best + Součet: rozpad bodů obou stran po jamkách (pro zápis a scorekartu). */
   holePoints?: Record<string, SidePoints[]>
   /** Four-ball Skins: strany, které směly na jamce dublovat (stav před jamkou). */

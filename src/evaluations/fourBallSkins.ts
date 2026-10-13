@@ -1,6 +1,7 @@
 import type { DoubleBy, GameSide, PlayerId } from '../model/types'
 import { PICKED_UP } from '../model/types'
 import {
+  CONCEDED,
   gameHoles,
   holeMultiplier,
   holeOrder,
@@ -170,6 +171,17 @@ export const fourBallSkins: Evaluate = (context, game): EvaluationResult => {
         result.holes
           .filter((h) => h.decided)
           .map((h) => [String(h.hole), h.winner as 0 | 1 | null]),
+      ),
+      holeValues: Object.fromEntries(
+        result.holes
+          .filter((h) => h.decided)
+          .map((h) => [
+            String(h.hole),
+            ([0, 1] as const).map((side) => {
+              const value = bestBall(side, h.hole)
+              return value === undefined || value === CONCEDED ? null : value
+            }),
+          ]),
       ),
       mayDouble,
       doubles,

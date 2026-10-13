@@ -167,6 +167,7 @@ export const bestAggregate: Evaluate = (context, game): EvaluationResult => {
     const totals: [number, number] = [0, 0]
     const holeWinners: Record<string, 0 | 1 | null> = {}
     const points: Record<string, SidePoints[]> = {}
+    const values: Record<string, number[]> = {}
     let pending = 0
     let played = 0
     for (const hole of order) {
@@ -190,6 +191,7 @@ export const bestAggregate: Evaluate = (context, game): EvaluationResult => {
       holeWinners[String(hole)] =
         hp[0].total === hp[1].total ? null : hp[0].total > hp[1].total ? 0 : 1
       points[String(hole)] = hp
+      values[String(hole)] = [hp[0].total, hp[1].total]
     }
     const finished = order.length > 0 && pending === 0
     const leader: 0 | 1 | null =
@@ -209,6 +211,7 @@ export const bestAggregate: Evaluate = (context, game): EvaluationResult => {
       finished,
       pending,
       holeWinners,
+      holeValues: values,
       holePoints: points,
     })
   }

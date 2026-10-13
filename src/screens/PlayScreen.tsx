@@ -630,6 +630,8 @@ export default function PlayScreen({ roundId, flight }: Props) {
                         duel={duel}
                         players={state.players}
                         format={result.game.options.format ?? 'strokes-net'}
+                        round={round}
+                        game={result.game}
                       />
                     ))}
                   </ul>
@@ -803,6 +805,8 @@ function OtherFlightSheet({
                     duel={duel}
                     players={state.players}
                     format={result.game.options.format ?? 'strokes-net'}
+                    round={round}
+                    game={result.game}
                   />
                 ))}
               </ul>

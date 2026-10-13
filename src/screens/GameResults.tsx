@@ -1,7 +1,9 @@
-import type { Player, TeamId, TournamentRound } from '../model/types'
+import { useState } from 'react'
+import type { GameConfig, Player, TeamId, TournamentRound } from '../model/types'
 import type { DuelResult, EvaluationResult } from '../evaluations'
 import { t } from '../i18n'
 import { hasSides } from '../evaluations'
+import MatchDetail from './MatchDetail'
 import {
   Pill,
   Section,
@@ -10,8 +12,14 @@ import {
   gameDescription,
   gameTitle,
   sideLabel,
+  tappable,
   teamName,
 } from './common'
+import PlayerDetail from './PlayerDetail'
+import DetailSheet from './DetailSheet'
+import { TeamSkinsRoundHoles } from './TeamSkinsOverview'
+import { teamSkinsRound } from '../evaluations/teamSkinsTotal'
+import type { PlayerDetailKind } from './PlayerDetail'
 
 interface Props {
   round: TournamentRound
@@ -23,6 +31,10 @@ interface Props {
 /** Výsledky jedné hry kola - tabulka podle druhu hry, ve stylu seznamů s děliči. */
 export default function GameResults({ round, players, result, teams }: Props) {
   const { game } = result
+  const [detail, setDetail] = useState<{ kind: PlayerDetailKind; id: string } | null>(
+    null,
+  )
+  const [teamSkinsOpen, setTeamSkinsOpen] = useState(false)
   const format = game.options.format ?? 'strokes-net'
   const isDuel = game.kind === 'position-duel' || hasSides(game.kind)
   const note =
@@ -44,6 +56,7 @@ export default function GameResults({ round, players, result, teams }: Props) {
           rows={result.rows}
           players={players}
           value={(row) => String(row.value)}
+          onSelect={(row) => setDetail({ kind: 'stableford', id: row.id })}
           meta={(row) =>
             row.holes > 0
               ? `${t('common.holes', { count: row.holes })} · ${t('common.strokes', { count: row.secondary ?? 0 })}`
@@ -57,6 +70,7 @@ export default function GameResults({ round, players, result, teams }: Props) {
           rows={result.rows}
           players={players}
           value={(row) => String(row.value)}
+          onSelect={(row) => setDetail({ kind: 'skins', id: row.id })}
           meta={(row) => {
             const flight = round.flights.findIndex((f) => f.players.includes(row.id))
             return flight >= 0 ? t('round.flight', { number: flight + 1 }) : undefined
@@ -91,15 +105,64 @@ export default function GameResults({ round, players, result, teams }: Props) {
               })
               .join(' · ') || t('common.dash')}
           </p>
+          <p className="center px">
+            <button
+              type="button"
+              className="scope-link"
+              onClick={() => setTeamSkinsOpen(true)}
+            >
+              {t('detail.teamSkinsHoles')} ›
+            </button>
+          </p>
+          {teamSkinsOpen && (
+            <DetailSheet
+              title={gameTitle(game)}
+              className="ts-sheet"
+              subtitle={
+                <p className="hint">
+                  {gameDescription(game)} · {t('teamSkins.tapHint')}
+                </p>
+              }
+              onClose={() => setTeamSkinsOpen(false)}
+            >
+              <div className="ts-rounds">
+                <section className="ts-round">
+                  <TeamSkinsRoundHoles
+                    entry={teamSkinsRound(round, players, game)}
+                    net={game.options.net}
+                    players={players}
+                    teams={teams}
+                  />
+                </section>
+              </div>
+            </DetailSheet>
+          )}
         </>
       )}
 
       {isDuel && (
         <ul className="list" style={{ listStyle: 'none', margin: 0 }}>
           {(result.duels ?? []).map((duel) => (
-            <DuelRow key={duel.id} duel={duel} players={players} format={format} />
+            <DuelRow
+              key={duel.id}
+              duel={duel}
+              players={players}
+              format={format}
+              round={round}
+              game={game}
+            />
           ))}
         </ul>
+      )}
+      {detail && (
+        <PlayerDetail
+          kind={detail.kind}
+          round={round}
+          playerId={detail.id}
+          players={players}
+          result={result}
+          onClose={() => setDetail(null)}
+        />
       )}
     </Section>
   )
@@ -108,17 +171,23 @@ export default function GameResults({ round, players, result, teams }: Props) {
 /**
  * Řádek jednoho zápasu (duel pozic, Four-ball, Best + Součet): strany,
  * stav v notaci a kolik jamek je odehráno. Sdílí ho výsledky hry
- * a karta „Právě se hraje“ na přehledu.
+ * a karta „Právě se hraje“ na přehledu. S kolem a hrou je řádek klepací
+ * a otevře rozpis zápasu po jamkách.
  */
 export function DuelRow({
   duel,
   players,
   format,
+  round,
+  game,
 }: {
   duel: DuelResult
   players: Player[]
   format: string
+  round?: TournamentRound
+  game?: GameConfig
 }) {
+  const [open, setOpen] = useState(false)
   const [left, right] = duel.sides
   if (!left || !right) return null
   const started = duel.sides.some((s) => s.holes > 0 || s.value > 0)
@@ -138,8 +207,20 @@ export function DuelRow({
   ]
     .filter(Boolean)
     .join(' · ')
+  const detail = round !== undefined && game !== undefined
   return (
-    <li className="duel">
+    <li
+      className={`duel${detail ? ' tappable' : ''}`}
+      {...(detail
+        ? {
+            ...tappable(() => setOpen(true)),
+            'aria-label': t('detail.openMatch', {
+              left: sideLabel(players, left.players),
+              right: sideLabel(players, right.players),
+            }),
+          }
+        : {})}
+    >
       <span className={`duel-side${duel.finished && duel.leader === 1 ? ' dim' : ''}`}>
         <span className="nm">
           <TeamBadge teamId={left.teamId} />
@@ -171,6 +252,15 @@ export function DuelRow({
         </span>
         <span className="sub">{valueOf(right.value, right.holes)}</span>
       </span>
+      {open && detail && (
+        <MatchDetail
+          round={round}
+          game={game}
+          duel={duel}
+          players={players}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </li>
   )
 }

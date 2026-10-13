@@ -167,11 +167,14 @@ export function Standings({
   players,
   value,
   meta,
+  onSelect,
 }: {
   rows: StandingRow[]
   players: Player[]
   value: (row: StandingRow) => string
   meta?: (row: StandingRow) => string | undefined
+  /** Klepnutí na řádek otevře detail (rozpis hráče). */
+  onSelect?: (row: StandingRow) => void
 }) {
   if (rows.length === 0) return null
   return (
@@ -179,7 +182,8 @@ export function Standings({
       {rows.map((row) => (
         <li
           key={row.id}
-          className={`row${row.position === 1 && row.holes > 0 ? ' leader' : ''}`}
+          className={`row${row.position === 1 && row.holes > 0 ? ' leader' : ''}${onSelect ? ' tappable' : ''}`}
+          {...(onSelect ? tappable(() => onSelect(row)) : {})}
         >
           <span className="position">{row.holes > 0 ? row.position : '·'}</span>
           <span className="row-main">
@@ -194,10 +198,26 @@ export function Standings({
             {meta?.(row) && <span className="row-meta">{meta(row)}</span>}
           </span>
           <Pill teamId={row.teamId}>{value(row)}</Pill>
+          {onSelect && <span className="chev">›</span>}
         </li>
       ))}
     </ol>
   )
+}
+
+/** Vlastnosti klepacího řádku (seznam s detailem): role tlačítka i klávesnice. */
+export function tappable(open: () => void) {
+  return {
+    role: 'button' as const,
+    tabIndex: 0,
+    onClick: open,
+    onKeyDown: (e: { key: string; preventDefault: () => void }) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        open()
+      }
+    },
+  }
 }
 
 /**
