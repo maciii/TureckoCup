@@ -4126,6 +4126,17 @@ a.menu-item {
 }
 
 /* Kdo jamku vzal: buňka strany v barvě týmu. */
+/* Brutto bez sloupce hodnoty: vítěznou ránu podbarví tým. */
+.md-table td.mark-cell.win.team-a {
+  background: var(--team-a-soft);
+  box-shadow: inset 0 -3px 0 var(--team-a);
+}
+
+.md-table td.mark-cell.win.team-b {
+  background: var(--team-b-soft);
+  box-shadow: inset 0 -3px 0 var(--team-b);
+}
+
 .md-val {
   display: inline-flex;
   align-items: center;

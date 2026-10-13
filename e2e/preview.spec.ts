@@ -607,8 +607,18 @@ test('detaily na klepnutí: zápasy po jamkách, hráči v tabulkách, souhrny p
   await expect(page.getByRole('dialog', { name: 'Extra body' })).toContainText('Celkem')
   await close()
 
-  // Kolo 4: Team Skins kola s rozbalením jamky na rány všech osmi.
+  // Kolo 4: singly brutto bez sloupce hodnoty (opakoval by ránu), vítěz jamky
+  // je podbarvená rána.
   await openPreview(page, '#/round/r4')
+  await page
+    .getByRole('button', { name: /Rozpis zápasu Ota proti/ })
+    .first()
+    .click()
+  await expect(page.locator('.match-detail thead th.val')).toHaveCount(0)
+  await expect(page.locator('.match-detail td.mark-cell.win').first()).toBeVisible()
+  await close()
+
+  // Kolo 4: Team Skins kola s rozbalením jamky na rány všech osmi.
   await page.getByRole('button', { name: /Rozpis jamek/ }).click()
   const hole = page.locator('.detail-sheet .ts-hole').first()
   await hole.locator('.ts-hole-row').click()

@@ -81,6 +81,9 @@ export default function MatchDetail({
           ? 'match'
           : 'diff'
   const higherWins = game.kind === 'best-aggregate' || format === 'stableford'
+  // Sloupec hodnoty strany jen tam, kde se liší od zapsané rány (netto, body);
+  // u brutto by jen opakoval ránu - vítěze jamky pak nese barva rány samotné.
+  const showValue = usesHcp || higherWins
 
   const columnsOf = (ids: PlayerId[]): ScoreColumn[] =>
     texas
@@ -224,9 +227,9 @@ export default function MatchDetail({
                   {column.label || <TeamBadge teamId={left.teamId} />}
                 </th>
               ))}
-              <th className="val">{valueLabel}</th>
+              {showValue && <th className="val">{valueLabel}</th>}
               <th className="status">{t('detail.status')}</th>
-              <th className="val">{valueLabel}</th>
+              {showValue && <th className="val">{valueLabel}</th>}
               {sides[1]!.columns.map((column) => (
                 <th key={column.key} className="who">
                   {column.label || <TeamBadge teamId={right.teamId} />}
@@ -245,15 +248,24 @@ export default function MatchDetail({
                     column={column}
                     hole={row.hole}
                     round={round}
+                    win={
+                      !showValue &&
+                      row.winner === 0 &&
+                      column.score(row.hole) === row.values?.[0]
+                        ? left.teamId
+                        : undefined
+                    }
                   />
                 ))}
-                <td className="val">
-                  <span
-                    className={`md-val${row.winner === 0 ? ` win team-${(left.teamId ?? 'a').toLowerCase()}` : ''}`}
-                  >
-                    {valueText(row.values?.[0])}
-                  </span>
-                </td>
+                {showValue && (
+                  <td className="val">
+                    <span
+                      className={`md-val${row.winner === 0 ? ` win team-${(left.teamId ?? 'a').toLowerCase()}` : ''}`}
+                    >
+                      {valueText(row.values?.[0])}
+                    </span>
+                  </td>
+                )}
                 <td className="status">
                   {row.status ? (
                     <span
@@ -263,19 +275,28 @@ export default function MatchDetail({
                     </span>
                   ) : null}
                 </td>
-                <td className="val">
-                  <span
-                    className={`md-val${row.winner === 1 ? ` win team-${(right.teamId ?? 'b').toLowerCase()}` : ''}`}
-                  >
-                    {valueText(row.values?.[1])}
-                  </span>
-                </td>
+                {showValue && (
+                  <td className="val">
+                    <span
+                      className={`md-val${row.winner === 1 ? ` win team-${(right.teamId ?? 'b').toLowerCase()}` : ''}`}
+                    >
+                      {valueText(row.values?.[1])}
+                    </span>
+                  </td>
+                )}
                 {sides[1]!.columns.map((column) => (
                   <MarkCell
                     key={column.key}
                     column={column}
                     hole={row.hole}
                     round={round}
+                    win={
+                      !showValue &&
+                      row.winner === 1 &&
+                      column.score(row.hole) === row.values?.[1]
+                        ? right.teamId
+                        : undefined
+                    }
                   />
                 ))}
               </tr>
@@ -284,7 +305,11 @@ export default function MatchDetail({
         </table>
       </div>
       <p className="hint center px md-legend">
-        {usesHcp ? t('detail.legendHcp') : t('detail.legend')}
+        {usesHcp
+          ? t('detail.legendHcp')
+          : showValue
+            ? t('detail.legend')
+            : t('detail.legendGross')}
       </p>
     </DetailSheet>
   )
@@ -294,14 +319,17 @@ function MarkCell({
   column,
   hole,
   round,
+  win,
 }: {
   column: ScoreColumn
   hole: number
   round: TournamentRound
+  /** Tým, který jamku touhle ranou vzal (brutto bez sloupce hodnoty). */
+  win?: TeamId
 }) {
   const strokes = column.strokes(hole)
   return (
-    <td className="mark-cell">
+    <td className={`mark-cell${win ? ` win team-${win.toLowerCase()}` : ''}`}>
       <ScoreMark score={column.score(hole)} par={parAt(round, hole)} />
       {strokes > 0 && <span className="md-dots">{'•'.repeat(strokes)}</span>}
     </td>

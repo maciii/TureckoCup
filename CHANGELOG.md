@@ -3,6 +3,14 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.34.1] – 2026-10-13
+
+### Změněno
+
+- **Rozpis zápasu brutto bez sloupců „brutto“:** opakovaly jen zapsanou ránu.
+  Vítěze jamky teď nese podbarvená rána (u dvojic jejich lepší míč). Sloupec
+  hodnoty strany zůstává jen u netto a bodů, kde se od rány liší.
+
 ## [0.34.0] – 2026-10-13
 
 ### Přidáno

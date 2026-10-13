@@ -249,6 +249,8 @@ export const cs = {
   'detail.status': 'Stav',
   'detail.legend':
     'Číslo strany je rána, se kterou zápas počítá (u dvojic lepší míč); barva = kdo jamku vzal. Stav je průběžný po jamce.',
+  'detail.legendGross':
+    'Podbarvená rána = kdo jamku vzal (u dvojic jeho lepší míč). Stav je průběžný po jamce.',
   'detail.legendHcp':
     'Tečky jsou rány z HCP na jamce. Číslo strany je rána, se kterou zápas počítá (u dvojic lepší míč); barva = kdo jamku vzal. Stav je průběžný po jamce.',
   'detail.teamSkinsHoles': 'Rozpis jamek: kdo skin vzal a čím',
