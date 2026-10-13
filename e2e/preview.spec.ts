@@ -440,6 +440,17 @@ test('Texas scramble dvojic: HCP dvojic v adminu, zápis za dvojici oběma partn
     /primary/,
   )
   await expect(match.locator('.match-hole')).toContainText('jamku bere')
+  // Scorekarta: jeden řádek na dvojici (hrají jeden míček), rána dvojice je nejlepší zapsaná.
+  await page.getByRole('button', { name: 'Scorekarta' }).click()
+  const card = page.locator('.sheet table.scorecard').first()
+  await expect(card.locator('.player-label')).toHaveCount(2)
+  await expect(card.locator('.player-label.pair').first()).toHaveAttribute(
+    'title',
+    / \+ /,
+  )
+  await expect(
+    card.locator('tbody tr').nth(1).locator('td .mark').first(),
+  ).not.toHaveText('–')
   await expectNoHorizontalOverflow(page)
   expect(errors()).toEqual([])
 })

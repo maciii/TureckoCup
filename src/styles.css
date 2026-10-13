@@ -1504,6 +1504,23 @@ a {
   gap: 4px;
 }
 
+/* Jméno, u dvojice Texasu dvě jména pod sebou (jeden řádek = jeden míček). */
+.scorecard .player-label .names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.scorecard .player-label .names > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scorecard .player-label.pair .names {
+  line-height: 1.15;
+}
+
 .scorecard .player-label .hcp {
   font-size: 9px;
   font-weight: 700;

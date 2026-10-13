@@ -136,6 +136,8 @@ dvojici druhého týmu ve flightu.
   tečkami u dvojice.
 - **Formát:** jako Four-ball - jamkovka (výchozí, s dormie), netto/brutto rány
   nebo Stableford dvojice; body do týmu za výhru a remízu zápasu.
+- **Scorekarta:** taky řádek za dvojici - rána dvojice je stejná „lepší ze
+  zapsaných“ jako v evaluaci, HCP a netto dvojice, extra body obou partnerů.
 - Individuální hry (Stableford, Skins) v kole Texasu dostanou skóre dvojice
   u obou partnerů - pro jednotlivce nemají smysl, admin je z kola odebere.
 

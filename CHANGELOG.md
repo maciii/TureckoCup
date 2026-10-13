@@ -3,6 +3,14 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.32.2] – 2026-10-13
+
+### Změněno
+
+- **Scorekarta u Texas scramble:** jeden řádek na dvojici (jména obou pod
+  sebou, HCP dvojice, rána dvojice = nejlepší zapsaná, × když obě zvedly),
+  součty a netto za dvojici, extra body obou partnerů v buňce dvojice.
+
 ## [0.32.1] – 2026-10-13
 
 ### Přidáno

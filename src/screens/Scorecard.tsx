@@ -1,6 +1,8 @@
-import type { Player, TeamId, TournamentRound } from '../model/types'
+import type { Flight, Player, PlayerId, TeamId, TournamentRound } from '../model/types'
 import { PICKED_UP } from '../model/types'
 import {
+  CONCEDED,
+  flightPairs,
   grossTotal,
   hasHandicap,
   holeCount,
@@ -16,6 +18,7 @@ import {
 import type { EvaluationResult } from '../evaluations'
 import { bonusConfigOf, hasBonuses } from '../model/bonuses'
 import { bonusAwardsAt, bonusTotal } from '../evaluations/bonuses'
+import { texasGrossAt, texasHandicap } from '../evaluations/texas'
 import { useData } from '../data'
 import { t } from '../i18n'
 import { ScoreMark, formatToPar } from './common'
@@ -32,10 +35,18 @@ interface Props {
   flightIndex?: number
 }
 
+/** Řádek karty: hráč, u Texas scramble dvojice (hraje jeden míček). */
+interface CardRow {
+  key: string
+  ids: PlayerId[]
+  team: TeamId | undefined
+}
+
 /**
  * Scorekarta jako klasická golfová karta: jamky ve sloupcích, dvě devítky pod
  * sebou, hráči v řádcích (vzor Zavařovák). Jamka v hlavičce je kolečko
- * obarvené týmem, který na ní vzal skin.
+ * obarvené týmem, který na ní vzal skin. U Texas scramble hraje dvojice jeden
+ * míček, takže má jeden řádek s ranou dvojice a jejím HCP.
  */
 export default function Scorecard({
   round,
@@ -47,10 +58,71 @@ export default function Scorecard({
 }: Props) {
   const bonusConfig = bonusConfigOf(useData().state.tournament?.bonuses)
   const withBonuses = hasBonuses(bonusConfig)
-  const flights =
-    flightIndex === undefined
-      ? round.flights
-      : round.flights.filter((_, i) => i === flightIndex)
+  const texas = round.games.find((game) => game.kind === 'texas-scramble')
+  const pairs = texas ? flightPairs(round, players) : []
+  const flights = round.flights
+    .map((flight, index) => rowsOf(flight, index))
+    .filter((_, i) => flightIndex === undefined || i === flightIndex)
+
+  function rowsOf(flight: Flight, index: number): CardRow[] {
+    const sides = pairs[index]?.sides
+    if (sides) {
+      const paired = new Set(sides.flatMap((side) => side.players))
+      return [
+        ...sides.map((side) => ({
+          key: side.id,
+          ids: side.players,
+          team: teamOf(players, side.players[0]!),
+        })),
+        ...flight.players
+          .filter((id) => !paired.has(id))
+          .map((id) => ({ key: id, ids: [id], team: teamOf(players, id) })),
+      ]
+    }
+    return playOrder(round, flight, players).map((id) => ({
+      key: id,
+      ids: [id],
+      team: teamOf(players, id),
+    }))
+  }
+
+  /** Rána řádku: hráče, u dvojice Texasu nejlepší zapsaná (vše zvednuté = ×). */
+  function rowScore(row: CardRow, hole: number): number | undefined {
+    if (row.ids.length === 1) return scoreAt(round, row.ids[0]!, hole)
+    const gross = texasGrossAt(round, row.ids, hole)
+    return gross === CONCEDED ? PICKED_UP : gross
+  }
+
+  function rowHandicap(row: CardRow): number | null {
+    if (!row.ids.every((id) => hasHandicap(round, id))) return null
+    return texas && row.ids.length > 1
+      ? texasHandicap(round, row.ids, texas.options)
+      : playingHandicap(round, row.ids[0]!)
+  }
+
+  function rowTotals(row: CardRow): { played: number; gross: number; toPar: number } {
+    if (row.ids.length === 1) {
+      const id = row.ids[0]!
+      const gross = grossTotal(round, id)
+      return {
+        played: holesCompleted(round, id),
+        gross,
+        toPar: gross - parForPlayedHoles(round, id),
+      }
+    }
+    let played = 0
+    let gross = 0
+    let par = 0
+    for (let hole = 0; hole < count; hole++) {
+      const score = rowScore(row, hole)
+      // Jako u hráče: dohraná jamka je zapsaná rána, zvednutá se nepočítá.
+      if (score === undefined || score === PICKED_UP) continue
+      played += 1
+      gross += score
+      par += parAt(round, hole)
+    }
+    return { played, gross, toPar: gross - par }
+  }
   const count = holeCount(round)
   const nines =
     count === 18
@@ -70,15 +142,16 @@ export default function Scorecard({
     return round.playerIds.some((id) => scoreAt(round, id, hole) !== undefined)
   }
 
-  function skinWon(id: string, hole: number): boolean {
-    return skins?.holes.find((h) => h.hole === hole)?.winners.includes(id) ?? false
+  function skinWon(row: CardRow, hole: number): boolean {
+    const winners = skins?.holes.find((h) => h.hole === hole)?.winners ?? []
+    return row.ids.some((id) => winners.includes(id))
   }
 
-  function sum(id: string, from: number, to: number): number | null {
+  function sum(row: CardRow, from: number, to: number): number | null {
     let strokes = 0
     let played = 0
     for (let hole = from; hole < to; hole++) {
-      const score = scoreAt(round, id, hole)
+      const score = rowScore(row, hole)
       if (score === undefined || score === PICKED_UP) continue
       strokes += score
       played += 1
@@ -132,47 +205,55 @@ export default function Scorecard({
             ))}
             <td className="par-cell">{parSum}</td>
           </tr>
-          {flights.flatMap((flight, fi) =>
-            playOrder(round, flight, players).map((id, pi) => (
-              <tr key={id} className={fi > 0 && pi === 0 ? 'flight-gap' : undefined}>
-                <th className="player-label" title={shortName(players, id)}>
-                  <span
-                    className={`team-badge team-${(teamOf(players, id) ?? 'a').toLowerCase()}`}
+          {flights.flatMap((rows, fi) =>
+            rows.map((row, pi) => {
+              const hcp = rowHandicap(row)
+              const marks = (hole: number) =>
+                row.ids.flatMap((id) => bonusAwardsAt(round, bonusConfig, id, hole))
+              return (
+                <tr
+                  key={row.key}
+                  className={fi > 0 && pi === 0 ? 'flight-gap' : undefined}
+                >
+                  <th
+                    className={`player-label${row.ids.length > 1 ? ' pair' : ''}`}
+                    title={row.ids.map((id) => shortName(players, id)).join(' + ')}
                   >
-                    {teamOf(players, id)}
-                  </span>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {shortName(players, id)}
-                  </span>
-                  {hasHandicap(round, id) && (
-                    <span className="hcp">{playingHandicap(round, id)}</span>
-                  )}
-                </th>
-                {holes.map((hole) => (
-                  <td key={hole} className={skinWon(id, hole) ? 'skin' : undefined}>
-                    <ScoreMark
-                      score={scoreAt(round, id, hole)}
-                      par={parAt(round, hole)}
-                    />
-                    {bonusAwardsAt(round, bonusConfig, id, hole).length > 0 && (
-                      <span className="cell-marks">
-                        {bonusAwardsAt(round, bonusConfig, id, hole).map((award) => (
-                          <span
-                            key={award.bonus.id}
-                            className={
-                              award.void ? 'void' : award.pending ? 'pending' : ''
-                            }
-                          >
-                            {award.bonus.mark}
-                          </span>
-                        ))}
-                      </span>
-                    )}
-                  </td>
-                ))}
-                <td className="sum">{sum(id, from!, to!) ?? t('common.dash')}</td>
-              </tr>
-            )),
+                    <span
+                      className={`team-badge team-${(row.team ?? 'a').toLowerCase()}`}
+                    >
+                      {row.team}
+                    </span>
+                    <span className="names">
+                      {row.ids.map((id) => (
+                        <span key={id}>{shortName(players, id)}</span>
+                      ))}
+                    </span>
+                    {hcp !== null && <span className="hcp">{hcp}</span>}
+                  </th>
+                  {holes.map((hole) => (
+                    <td key={hole} className={skinWon(row, hole) ? 'skin' : undefined}>
+                      <ScoreMark score={rowScore(row, hole)} par={parAt(round, hole)} />
+                      {marks(hole).length > 0 && (
+                        <span className="cell-marks">
+                          {marks(hole).map((award, k) => (
+                            <span
+                              key={`${award.bonus.id}-${k}`}
+                              className={
+                                award.void ? 'void' : award.pending ? 'pending' : ''
+                              }
+                            >
+                              {award.bonus.mark}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </td>
+                  ))}
+                  <td className="sum">{sum(row, from!, to!) ?? t('common.dash')}</td>
+                </tr>
+              )
+            }),
           )}
         </tbody>
       </table>
@@ -206,15 +287,15 @@ export default function Scorecard({
               </th>
             )}
           </tr>
-          {flights.flatMap((flight) =>
-            playOrder(round, flight, players).map((id) => {
-              const played = holesCompleted(round, id)
-              const gross = grossTotal(round, id)
-              const toPar = gross - parForPlayedHoles(round, id)
-              const hcp = playingHandicap(round, id)
+          {flights.flatMap((rows) =>
+            rows.map((row) => {
+              const { played, gross, toPar } = rowTotals(row)
+              const hcp = rowHandicap(row)
               return (
-                <tr key={id}>
-                  <th className="player-label">{shortName(players, id)}</th>
+                <tr key={row.key}>
+                  <th className="player-label">
+                    {row.ids.map((id) => shortName(players, id)).join(' + ')}
+                  </th>
                   <td className="par-cell" style={{ textAlign: 'left' }}>
                     {played > 0 ? t('common.holes', { count: played }) : ''}
                   </td>
@@ -222,13 +303,14 @@ export default function Scorecard({
                     {played > 0 ? `${gross} (${formatToPar(toPar)})` : t('common.dash')}
                   </td>
                   <td className="sum" style={{ textAlign: 'right' }}>
-                    {played === count && hasHandicap(round, id)
-                      ? gross - hcp
-                      : t('common.dash')}
+                    {played === count && hcp !== null ? gross - hcp : t('common.dash')}
                   </td>
                   {withBonuses && (
                     <td className="sum bonus-sum" style={{ textAlign: 'right' }}>
-                      {bonusTotal(round, bonusConfig, id)}
+                      {row.ids.reduce(
+                        (total, id) => total + bonusTotal(round, bonusConfig, id),
+                        0,
+                      )}
                     </td>
                   )}
                 </tr>
