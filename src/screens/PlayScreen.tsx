@@ -9,7 +9,7 @@ import { stablefordAt } from '../evaluations/stableford'
 import { t } from '../i18n'
 import { MAX_STROKES, PICKED_UP } from '../model/types'
 import type { PlayerId, TournamentRound } from '../model/types'
-import { isValidTime } from '../model/schedule'
+import { flightProgress, isValidTime } from '../model/schedule'
 import { pickupRuleOf } from '../model/pickup'
 import HoleStatus from './HoleStatus'
 import MatchHead, { duelGroups } from './MatchHead'
@@ -721,7 +721,7 @@ export default function PlayScreen({ roundId, flight }: Props) {
 
 /**
  * Náhled na jiný flight: kde je, jak si hráči vedou (rány proti paru,
- * Stableford) a stav Team Skins. Zavření vrací zpět na vlastní flight
+ * Stableford), zápasy, scorekarta a stav Team Skins. Zavření vrací zpět na vlastní flight
  * i jamku - zápis se nepřepíná, aby nikdo omylem nepsal do cizího flightu.
  */
 function OtherFlightSheet({
@@ -742,6 +742,7 @@ function OtherFlightSheet({
   const stableford = results.find((r) => r.game.kind === 'individual-stableford')
   const teamSkins = results.find((r) => r.game.kind === 'team-skins')
   const matches = flightMatches(results, flight.players)
+  const progress = flightProgress(round, flight)
   const rows = [...flight.players].sort((a, b) => {
     const pa = stableford?.rows.find((r) => r.id === a)?.value ?? 0
     const pb = stableford?.rows.find((r) => r.id === b)?.value ?? 0
@@ -808,6 +809,18 @@ function OtherFlightSheet({
             </div>
           )
         })}
+        {/* Scorekarta flightu: rány po jamkách, aktuální jamka flightu zvýrazněná. */}
+        <div className="other-flight-scorecard">
+          <p className="eyebrow">{t('round.scorecard')}</p>
+          <Scorecard
+            round={round}
+            players={state.players}
+            skins={results.find((r) => r.game.kind === 'individual-skins')}
+            teamSkins={teamSkins}
+            currentHole={progress.finished ? undefined : progress.hole}
+            flightIndex={flightIndex}
+          />
+        </div>
         {teamSkins && (
           <p className="hint center px" style={{ paddingTop: 8 }}>
             {t('games.team-skins.name')}: A{' '}

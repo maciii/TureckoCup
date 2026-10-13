@@ -3,6 +3,13 @@
 Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/1.1.0/).
 Patch verzi zvedá `scripts/bump-version.mjs` při každém lokálním buildu.
 
+## [0.32.1] – 2026-10-13
+
+### Přidáno
+
+- **Scorekarta druhého flightu:** detail druhého flightu ze zápisu (klepnutí
+  na kartu „Flight 2 · … jamka“) ukazuje i jeho scorekartu s aktuální jamkou.
+
 ## [0.32.0] – 2026-10-13
 
 ### Přidáno

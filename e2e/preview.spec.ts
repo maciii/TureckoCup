@@ -376,7 +376,7 @@ test('uvítání hráče: program dne, rány na soupeře a volba rozsahu zápisu
   expect(errors()).toEqual([])
 })
 
-test('druhý flight: karta pod zápisem i detail ukazují stav singlů pozic', async ({
+test('druhý flight: karta pod zápisem i detail ukazují stav singlů pozic a scorekartu', async ({
   page,
 }) => {
   const errors = collectErrors(page)
@@ -389,6 +389,9 @@ test('druhý flight: karta pod zápisem i detail ukazují stav singlů pozic', a
   const sheet = page.getByRole('dialog', { name: 'Flight 2' })
   await expect(sheet.locator('.other-flight-matches .duel')).toHaveCount(2)
   await expect(sheet.locator('.other-flight-matches .eyebrow')).toContainText('Singly')
+  // Scorekarta druhého flightu: jen jeho čtyři hráči (první devítka).
+  const card2 = sheet.locator('.other-flight-scorecard table.scorecard').first()
+  await expect(card2.locator('.player-label')).toHaveCount(4)
   await expectNoHorizontalOverflow(page)
   expect(errors()).toEqual([])
 })
